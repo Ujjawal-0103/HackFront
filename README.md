@@ -12,9 +12,11 @@
 ---
 
 ## 1. What is Traceback?
+
 Traceback is a human-supervised verification system for AI-generated code explanations. When developers ask an AI coding assistant (such as GitHub Copilot, Cursor, or Claude Code) why a non-obvious function, workaround, or architectural choice exists in a codebase, the generated response often sounds convincing while lacking verifiable ground truth.
 
 Traceback bridges this gap by:
+
 1. Decomposing the explanation into atomic, verifiable claims.
 2. Searching authorized repository history (Git commits, diffs, pull requests, issues, ADRs).
 3. Presenting retrieved evidence with immutable provenance links (commit SHAs, PR numbers, file lines).
@@ -49,11 +51,13 @@ traceback/
 ## 3. Local Development Quickstart
 
 ### Prerequisites
+
 - **Node.js:** $\ge 20.x$ (Tested on Node v22.17.0)
 - **pnpm:** $\ge 9.x$ (`npm install -g pnpm@9`)
 - **Docker & Docker Compose:** Optional for local PostgreSQL & Redis services.
 
 ### Installation & Build
+
 ```bash
 # 1. Install all dependencies across monorepo workspaces
 pnpm install
@@ -72,6 +76,7 @@ pnpm build
 ```
 
 ### Running Locally
+
 ```bash
 # Start all applications concurrently in development mode
 pnpm dev
@@ -82,6 +87,7 @@ pnpm --filter @traceback/web dev    # Next.js Web running on http://localhost:30
 ```
 
 ### Starting Local Database Services (Optional)
+
 ```bash
 # Start PostgreSQL 16 and Redis containers
 docker compose up -d
@@ -96,20 +102,21 @@ docker compose ps
 
 The NestJS backend runs with global prefix `/api`:
 
-| Method | Endpoint | Description | Access Boundary |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/health` | Process liveness probe (`status: "ok"`, uptime, version) | Public |
-| `GET` | `/api/ready` | Dependency readiness probe (PostgreSQL & config check) | Public (Returns 200 or 503) |
-| `GET` | `/api/workspaces` | Lists authorized workspaces for authenticated user | Protected (`AuthGuard`) |
-| `GET` | `/api/workspaces/:workspaceId` | Workspace details with multi-tenant isolation | Protected (`WorkspaceGuard`) |
-| `GET` | `/api/workspaces/:workspaceId/github/repositories` | Lists accessible repositories in installation | Protected (`WorkspaceGuard`) |
-| `GET` | `/api/workspaces/:workspaceId/github/verify` | Verifies read-only repository permissions | Protected (`WorkspaceGuard`) |
+| Method | Endpoint                                           | Description                                              | Access Boundary              |
+| :----- | :------------------------------------------------- | :------------------------------------------------------- | :--------------------------- |
+| `GET`  | `/api/health`                                      | Process liveness probe (`status: "ok"`, uptime, version) | Public                       |
+| `GET`  | `/api/ready`                                       | Dependency readiness probe (PostgreSQL & config check)   | Public (Returns 200 or 503)  |
+| `GET`  | `/api/workspaces`                                  | Lists authorized workspaces for authenticated user       | Protected (`AuthGuard`)      |
+| `GET`  | `/api/workspaces/:workspaceId`                     | Workspace details with multi-tenant isolation            | Protected (`WorkspaceGuard`) |
+| `GET`  | `/api/workspaces/:workspaceId/github/repositories` | Lists accessible repositories in installation            | Protected (`WorkspaceGuard`) |
+| `GET`  | `/api/workspaces/:workspaceId/github/verify`       | Verifies read-only repository permissions                | Protected (`WorkspaceGuard`) |
 
 ---
 
 ## 5. Theming & Accessibility System
 
 Traceback enforces strict accessibility and contrast standards:
+
 - **Default Theme:** **Light Mode** (`#F8FAFC` background, `#FFFFFF` surfaces, `#0F172A` text).
 - **Secondary Theme:** **Dark Mode** (`#0B1220` background, `#111827` surfaces, `#F8FAFC` text).
 - **Behavior:** First-time visits start in light mode regardless of operating system preferences.
@@ -122,6 +129,7 @@ Traceback enforces strict accessibility and contrast standards:
 ## 6. GitHub App Integration Boundary (ADR-007)
 
 Traceback adheres strictly to the principle of least privilege:
+
 - **Requested Scopes:** Read-only access to repository contents, pull requests, and issues.
 - **Zero Write Access:** The system never performs automated source-code commits, edits, or PR merges.
 - **Credential Protection:** GitHub App private keys remain strictly on the backend and are never returned to clients or logged.
@@ -131,21 +139,22 @@ Traceback adheres strictly to the principle of least privilege:
 
 ## 7. Delivery Status & Roadmap
 
-| Sprint | Focus Area | Status | Deliverables |
-| :--- | :--- | :--- | :--- |
-| **Sprint 1** | **Product Foundation** | **Completed** | Specifications, ADRs, UX flow, threat model, evaluation plan |
-| **Sprint 2** | **Project Foundation & Access** | **Completed** | Turborepo, Next.js, NestJS, Prisma schema, theme system, CI |
-| **Sprint 3** | **Repository Ingestion** | **Next (Ready)** | BullMQ worker, rate-limit handler, commit & diff fetchers |
-| **Sprint 4** | **Evidence Store & Retrieval** | Planned | PostgreSQL + pgvector hybrid search, RRF ranker |
-| **Sprint 5** | **Claim Assessment Engine** | Planned | LLM claim extraction, grounding assessment, abstention |
-| **Sprint 6** | **Web Product Experience** | Planned | Adjudication board, human verdict tagging, report export |
-| **Sprint 7** | **Interoperability & MCP** | Planned | Read-only MCP server tools for Cursor, Claude Code |
-| **Sprint 8** | **Quality & Validation** | Planned | Adversarial tests, benchmark evaluation run, developer interviews |
-| **Sprint 9** | **Deployment & Handoff** | Planned | Production Docker deployment, runbooks, monitoring |
+| Sprint       | Focus Area                      | Status           | Deliverables                                                      |
+| :----------- | :------------------------------ | :--------------- | :---------------------------------------------------------------- |
+| **Sprint 1** | **Product Foundation**          | **Completed**    | Specifications, ADRs, UX flow, threat model, evaluation plan      |
+| **Sprint 2** | **Project Foundation & Access** | **Completed**    | Turborepo, Next.js, NestJS, Prisma schema, theme system, CI       |
+| **Sprint 3** | **Repository Ingestion**        | **Next (Ready)** | BullMQ worker, rate-limit handler, commit & diff fetchers         |
+| **Sprint 4** | **Evidence Store & Retrieval**  | Planned          | PostgreSQL + pgvector hybrid search, RRF ranker                   |
+| **Sprint 5** | **Claim Assessment Engine**     | Planned          | LLM claim extraction, grounding assessment, abstention            |
+| **Sprint 6** | **Web Product Experience**      | Planned          | Adjudication board, human verdict tagging, report export          |
+| **Sprint 7** | **Interoperability & MCP**      | Planned          | Read-only MCP server tools for Cursor, Claude Code                |
+| **Sprint 8** | **Quality & Validation**        | Planned          | Adversarial tests, benchmark evaluation run, developer interviews |
+| **Sprint 9** | **Deployment & Handoff**        | Planned          | Production Docker deployment, runbooks, monitoring                |
 
 ---
 
 ## 8. Documentation Quick Links
+
 - [`PROJECT_SPEC.md`](./PROJECT_SPEC.md) — Authoritative Product Specification
 - [`AGENTS.md`](./AGENTS.md) — Persistent Instructions for AI Assistants
 - [`docs/sprints/SPRINT_2.md`](./docs/sprints/SPRINT_2.md) — Sprint 2 Backlog & Delivery Ledger

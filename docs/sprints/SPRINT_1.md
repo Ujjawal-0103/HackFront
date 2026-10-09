@@ -123,4 +123,4 @@
 - **Deliverable:** Root `README.md`, consistency audit report.
 - **Acceptance Criteria:** All links clickable and valid; light theme default consistently reflected across all docs; roadmap and backlog align.
 - **Verification Method:** Automated file verification and final consistency review.
-- **Status:** **In Progress** (Active task).
+- **Status:** **Done**

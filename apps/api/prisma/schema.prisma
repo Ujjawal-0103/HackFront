@@ -1,0 +1,176 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 1. Identity & Multi-Tenant Boundaries
+model User {
+  id           String            @id @default(uuid())
+  email        String            @unique
+  name         String
+  avatarUrl    String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  memberships  WorkspaceMember[]
+
+  @@map("users")
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+model Workspace {
+  id                    String                 @id @default(uuid())
+  name                  String
+  slug                  String                 @unique
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  members               WorkspaceMember[]
+  repositories          Repository[]
+  gitHubInstallations   GitHubInstallation[]
+  verificationSessions  VerificationSession[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id          String        @id @default(uuid())
+  workspaceId String
+  userId      String
+  role        WorkspaceRole @default(MEMBER)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@map("workspace_members")
+}
+
+// 2. Repository & GitHub Metadata Boundaries
+model GitHubInstallation {
+  id             String    @id @default(uuid())
+  workspaceId    String
+  installationId Int       @unique // GitHub App Installation ID
+  accountLogin   String    // e.g. "org-name" or "user-name"
+  accountType    String    // "Organization" or "User"
+  permissions    Json      // Snapshot of granted permissions
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  workspace      Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@map("github_installations")
+}
+
+model Repository {
+  id             String                @id @default(uuid())
+  workspaceId    String
+  githubRepoId   Int?                  @unique
+  fullName       String                // e.g. "owner/repo"
+  defaultBranch  String                @default("main")
+  isPrivate      Boolean               @default(true)
+  indexedAt      DateTime?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  workspace      Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  sessions       VerificationSession[]
+
+  @@unique([workspaceId, fullName])
+  @@map("repositories")
+}
+
+// 3. Verification & Epistemological Claim Records
+enum SessionStatus {
+  PENDING
+  ANALYZING
+  REVIEWING
+  COMPLETED
+  FAILED
+}
+
+enum AIAssessmentConfidence {
+  HIGH_SUPPORT
+  PARTIAL_SUPPORT
+  SPARSE_EVIDENCE
+  CONTRADICTED
+}
+
+enum HumanVerdict {
+  SUPPORTED
+  CONTRADICTED
+  UNVERIFIED
+}
+
+enum EvidenceSourceType {
+  COMMIT
+  PULL_REQUEST
+  ISSUE
+  DOCUMENTATION
+  ADR
+}
+
+model VerificationSession {
+  id             String        @id @default(uuid())
+  workspaceId    String
+  repositoryId   String
+  explanation    String        @db.Text
+  codeSnippet    String?       @db.Text
+  targetFilePath String?
+  status         SessionStatus @default(PENDING)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  workspace      Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  repository     Repository    @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  claims         Claim[]
+
+  @@map("verification_sessions")
+}
+
+model Claim {
+  id                    String                 @id @default(uuid())
+  sessionId             String
+  text                  String                 @db.Text
+  targetSymbol          String?
+  preliminaryConfidence AIAssessmentConfidence @default(SPARSE_EVIDENCE)
+  humanVerdict          HumanVerdict?
+  reviewNotes           String?                @db.Text
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  session               VerificationSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  evidence              EvidenceRecord[]
+
+  @@map("claims")
+}
+
+model EvidenceRecord {
+  id           String             @id @default(uuid())
+  claimId      String
+  sourceType   EvidenceSourceType
+  referenceKey String             // Commit SHA, PR #, Issue #
+  title        String
+  author       String
+  timestamp    DateTime
+  url          String             // Clickable GitHub URL
+  snippet      String?            @db.Text
+  filePath     String?
+  lineStart    Int?
+  lineEnd      Int?
+  createdAt    DateTime           @default(now())
+
+  claim        Claim              @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@map("evidence_records")
+}

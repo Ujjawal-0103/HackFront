@@ -7,6 +7,7 @@
 ---
 
 ## 1. Evaluation Dataset Architecture (10 Benchmark Archetypes)
+
 To ensure Traceback performs accurately across complex real-world repository conditions, the evaluation dataset defines 10 distinct case archetypes:
 
 1. **ARCH-01 (Explicitly Documented Decision):** Rationale is explicitly stated in an existing ADR or comprehensive commit message.
@@ -23,7 +24,9 @@ To ensure Traceback performs accurately across complex real-world repository con
 ---
 
 ## 2. Evaluation Case Schema
+
 Each evaluation case must contain the following fields (defined in `docs/evaluation/evaluation-case-template.csv`):
+
 - `case_id`: Unique identifier (e.g., `CASE-001`).
 - `archetype`: One of the 10 defined archetypes.
 - `repo_slug`: Authorized repository (e.g., `owner/repo`).
@@ -41,32 +44,43 @@ Each evaluation case must contain the following fields (defined in `docs/evaluat
 ## 3. Quantitative Metrics & Calculation Methods
 
 ### Metric 1: Retrieval Precision & Recall at Rank K ($P@K$ and $R@K$)
+
 Measures whether the retrieval engine returns genuine historical artifacts.
 $$\text{Recall@}K = \frac{|\text{Retrieved Ground Truth Evidence in Top } K|}{|\text{Total Ground Truth Evidence}|}$$
 $$\text{Precision@}K = \frac{|\text{Retrieved Ground Truth Evidence in Top } K|}{K}$$
+
 - **Target:** $R@5 \ge 0.85$, $P@5 \ge 0.70$ on indexed repositories.
 
 ### Metric 2: Citation Validity Rate ($CVR$)
+
 Measures the percentage of surfaced evidence references that correspond to real, accessible GitHub commits, PRs, or file lines.
 $$CVR = \frac{\text{Count of Valid, Clickable Source URLs}}{\text{Total Citations Generated}} \times 100\%$$
+
 - **Target:** $100.0\%$ (Zero hallucinated citations permitted).
 
 ### Metric 3: Claim Assessment Accuracy ($CAA$)
+
 Measures agreement between the preliminary AI assessment and verified ground-truth reference labels.
 $$CAA = \frac{\text{Correctly Classified Claims}}{\text{Total Evaluated Claims}}$$
+
 - **Target:** $CAA \ge 85\%$ on benchmark dataset.
 
 ### Metric 4: Calibrated Abstention Quality ($AQ$)
+
 Measures the system's ability to abstain when evidence is absent (ARCH-04 and ARCH-02), rather than guessing.
 $$AQ = \frac{\text{True Abstentions on Sparse/Missing Cases}}{\text{Total Sparse/Missing Evidence Cases}}$$
+
 - **Target:** $AQ \ge 95\%$ (Model must not fabricate rationale when evidence is absent).
 
 ### Metric 5: Unsupported Assertion Rate ($UAR$)
+
 Measures the frequency with which the system asserts high confidence without matching evidence.
 $$UAR = \frac{\text{Claims Marked Supported Without Ground-Truth Citation}}{\text{Total Claims Marked Supported}}$$
+
 - **Target:** $UAR \le 2.0\%$.
 
 ### Metric 6: Human Review Completion Rate ($HCR$) & Workflow Latency ($WL$)
+
 - $HCR$: Percentage of started verification sessions where the human reviewer assigns verdicts to all claims.
 - $WL$: Total elapsed time from explanation submission to report export.
   - **Target:** $WL \le 90\text{ seconds}$ on benchmark tasks.
@@ -74,6 +88,7 @@ $$UAR = \frac{\text{Claims Marked Supported Without Ground-Truth Citation}}{\tex
 ---
 
 ## 4. Benchmark Execution Protocol
+
 1. Baseline tests will be executed in Sprint 4 (Evidence Store) and Sprint 5 (Claim Assessment).
 2. All empirical scores will be recorded in this directory alongside git commit hashes of the evaluated model adapter.
 3. No claims of superiority or accuracy improvements will be published without reproducible test logs.

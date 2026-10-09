@@ -1,0 +1,50 @@
+name: CI - Quality & Test Verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, Test & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm --filter @traceback/api prisma:generate
+
+      - name: Check Formatting
+        run: pnpm format:check
+
+      - name: Typecheck Workspaces
+        run: pnpm typecheck
+
+      - name: Execute Automated Test Suites
+        run: pnpm test
+
+      - name: Build Monorepo Workspaces
+        run: pnpm build

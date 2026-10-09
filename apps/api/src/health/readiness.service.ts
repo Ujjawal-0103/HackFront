@@ -1,6 +1,6 @@
-import { Injectable, HttpStatus } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { ReadinessResponse, DependencyCheck } from '@traceback/shared-types';
+import { Injectable, HttpStatus } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { ReadinessResponse, DependencyCheck } from "@traceback/shared-types";
 
 export interface DatabaseHealthIndicator {
   isHealthy(): Promise<{ healthy: boolean; message?: string }>;
@@ -26,8 +26,8 @@ export class ReadinessService {
     const isReady = configCheck.ready && dbCheck.ready;
 
     const response: ReadinessResponse = {
-      status: isReady ? 'ready' : 'not_ready',
-      service: '@traceback/api',
+      status: isReady ? "ready" : "not_ready",
+      service: "@traceback/api",
       timestamp: new Date().toISOString(),
       checks: {
         config: configCheck,
@@ -42,19 +42,19 @@ export class ReadinessService {
   }
 
   private checkConfig(): DependencyCheck {
-    const port = this.configService.get<number>('app.port');
-    const dbUrl = this.configService.get<string>('app.databaseUrl');
+    const port = this.configService.get<number>("app.port");
+    const dbUrl = this.configService.get<string>("app.databaseUrl");
 
     if (!port || !dbUrl) {
       return {
         ready: false,
-        message: 'Missing essential environment configuration',
+        message: "Missing essential environment configuration",
       };
     }
 
     return {
       ready: true,
-      message: 'Configuration validated successfully',
+      message: "Configuration validated successfully",
     };
   }
 
@@ -63,7 +63,7 @@ export class ReadinessService {
       // When database indicator is not yet bound (e.g. initial boot before connection pool)
       return {
         ready: false,
-        message: 'Database connection indicator not initialized or connected',
+        message: "Database connection indicator not initialized or connected",
       };
     }
 
@@ -71,12 +71,16 @@ export class ReadinessService {
       const result = await this.dbIndicator.isHealthy();
       return {
         ready: result.healthy,
-        message: result.message || (result.healthy ? 'Database responsive' : 'Database connection failed'),
+        message:
+          result.message ||
+          (result.healthy
+            ? "Database responsive"
+            : "Database connection failed"),
       };
     } catch (err) {
       return {
         ready: false,
-        message: err instanceof Error ? err.message : 'Database check failed',
+        message: err instanceof Error ? err.message : "Database check failed",
       };
     }
   }

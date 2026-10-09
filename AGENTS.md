@@ -1,6 +1,7 @@
 # Persistent Agent Instructions — Traceback
 
 ## 1. Project Purpose and Context
+
 Traceback is a human-supervised verification system for AI-generated explanations of existing code (Official Problem Statement: **T1.1 — Why The Code Is Like This**). Developers maintaining established repositories often receive convincing but unverified explanations from AI coding assistants regarding historical implementation decisions. Traceback connects these explanations against concrete repository artifacts (Git commits, PRs, issues, diffs, architectural records, tests) and facilitates structured human review.
 
 - **Authoritative Specification:** [`PROJECT_SPEC.md`](./PROJECT_SPEC.md) is the primary single source of truth.
@@ -9,8 +10,9 @@ Traceback is a human-supervised verification system for AI-generated explanation
 - **Current Sprint:** [`docs/sprints/SPRINT_1.md`](./docs/sprints/SPRINT_1.md)
 
 ## 2. Core Operating Principles for AI Agents
+
 1. **Inspect Before Changing:** Always inspect active workspace files, branch state, and git status before proposing or writing code. Do not infer implementation or presence solely from filenames.
-2. **Small, Atomic Git Commits:** 
+2. **Small, Atomic Git Commits:**
    - Never combine unrelated tasks into monolithic commits.
    - Stage ONLY files belonging to the completed task (`git add <specific-files>`). Never use `git add .` or `git add -A`.
    - Never push (`git push`) to a remote repository unless explicitly authorised by the user.
@@ -35,6 +37,7 @@ Traceback is a human-supervised verification system for AI-generated explanation
    - Mark human-dependent research as **Pending Human Research**.
 
 ## 3. UI and Theming Rules
+
 - **Light theme is the non-negotiable default** on first visit, regardless of OS dark mode settings.
 - Dark theme must be provided as a secondary option via an accessible theme toggle.
 - Theme preference must persist in `localStorage`.

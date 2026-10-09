@@ -6,7 +6,9 @@
 ---
 
 ## 1. Provisional Team Workstream Assignments
-*Note: All assignments are provisional and subject to formal team confirmation.*
+
+_Note: All assignments are provisional and subject to formal team confirmation._
+
 - **Ujjawal Agrawal:** Team Lead — Product decisions, architecture coordination, integration, sprint approval.
 - **Tanishka:** Frontend & UX — User experience, frontend planning, theme specification, usability.
 - **Tanishk Sharma:** Backend — Backend planning, repository integration, APIs, ingestion pipelines.
@@ -18,6 +20,7 @@
 ## 2. Sprint 1 Task Backlog (S1-01 through S1-12)
 
 ### Task S1-01: Audit the Repository
+
 - **Description:** Inspect the current working tree, git status, existing prototype presence, and environmental constraints.
 - **Suggested Owner:** Ujjawal Agrawal
 - **Dependencies:** None
@@ -27,6 +30,7 @@
 - **Status:** **Done**
 
 ### Task S1-02: Establish Repository Conventions
+
 - **Description:** Configure root `.gitignore`, `.editorconfig`, and `AGENTS.md` with persistent operating principles for AI assistants.
 - **Suggested Owner:** Ujjawal Agrawal
 - **Dependencies:** S1-01
@@ -36,6 +40,7 @@
 - **Status:** **Done**
 
 ### Task S1-03: Define the Problem and ICP
+
 - **Description:** Formulate the problem hypothesis, provisional Ideal Customer Profile, current developer workarounds, and epistemological assumptions.
 - **Suggested Owner:** Tannu Kumari
 - **Dependencies:** S1-02
@@ -45,6 +50,7 @@
 - **Status:** **Done** (Note: Empirical validation remains pending human interviews).
 
 ### Task S1-04: Research Competitors
+
 - **Description:** Research existing AI coding assistants (GitHub Copilot, Cursor, Claude Code, Antigravity, CodeSource, Codex) regarding historical code capabilities, citations, and PR analysis.
 - **Suggested Owner:** Tannu Kumari / Ayush Kushwaha
 - **Dependencies:** S1-03
@@ -54,6 +60,7 @@
 - **Status:** **Done**
 
 ### Task S1-05: Prepare Developer Interviews
+
 - **Description:** Prepare semi-structured interview kit with 8 past-behavior inquiries and screening notes template.
 - **Suggested Owner:** Tannu Kumari
 - **Dependencies:** S1-03
@@ -63,6 +70,7 @@
 - **Status:** **Done** (Field interview execution marked **Pending Human Research**).
 
 ### Task S1-06: Define Product Requirements and Exclusions
+
 - **Description:** Author authoritative `PROJECT_SPEC.md` answering the 8 foundational questions, defining RF-01 through RF-10, RN-01 through RN-12, and explicit scope exclusions.
 - **Suggested Owner:** Ujjawal Agrawal
 - **Dependencies:** S1-02, S1-03
@@ -72,6 +80,7 @@
 - **Status:** **Done**
 
 ### Task S1-07: Document Core User Flow and Themes
+
 - **Description:** Document the 5-stage canonical user journey, 10 error/edge states, and WCAG AA design tokens (Light default, Dark secondary).
 - **Suggested Owner:** Tanishka
 - **Dependencies:** S1-06
@@ -81,6 +90,7 @@
 - **Status:** **Done** (Theme implementation deferred to Sprint 2 scaffolding per architectural blocker).
 
 ### Task S1-08: Prepare Architecture Decision Records
+
 - **Description:** Author comprehensive System Overview and 10 ADRs covering monorepo structure, frameworks, evidence storage, hybrid search, Neo4j criteria, AI boundaries, GitHub App, BullMQ, MCP, and cost controls.
 - **Suggested Owner:** Ujjawal Agrawal / Tanishk Sharma / Ayush Kushwaha
 - **Dependencies:** S1-06
@@ -90,6 +100,7 @@
 - **Status:** **Done**
 
 ### Task S1-09: Document Security Threats
+
 - **Description:** Formulate comprehensive 4-category threat model (Repository Security, Prompt Injection, Evidence Integrity, API Abuse).
 - **Suggested Owner:** Tanishk Sharma / Ayush Kushwaha
 - **Dependencies:** S1-08
@@ -99,6 +110,7 @@
 - **Status:** **Done**
 
 ### Task S1-10: Define Evaluation Strategy
+
 - **Description:** Create benchmark evaluation plan with 10 case archetypes, quantitative metrics ($R@K$, $CVR$, $CAA$, $AQ$, $UAR$), mathematical calculation formulas, and benchmark template.
 - **Suggested Owner:** Tannu Kumari / Ayush Kushwaha
 - **Dependencies:** S1-06, S1-08
@@ -108,6 +120,7 @@
 - **Status:** **Done** (Benchmark execution scheduled for Sprints 4 & 5).
 
 ### Task S1-11: Create Nine-Sprint Roadmap
+
 - **Description:** Define the delivery roadmap covering the full defined V1 scope across nine sprints.
 - **Suggested Owner:** Ujjawal Agrawal
 - **Dependencies:** S1-01 through S1-10
@@ -117,6 +130,7 @@
 - **Status:** **Done**
 
 ### Task S1-12: Review Documentation Consistency & Onboarding
+
 - **Description:** Audit all created documents for cross-referencing integrity, ensure root README provides onboarding, and check that no contradictory specifications exist.
 - **Suggested Owner:** Ujjawal Agrawal
 - **Dependencies:** S1-01 through S1-11

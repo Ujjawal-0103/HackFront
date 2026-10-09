@@ -1,8 +1,8 @@
-import { Module, OnModuleInit } from '@nestjs/common';
-import { HealthController } from './health.controller';
-import { HealthService } from './health.service';
-import { ReadinessService } from './readiness.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { Module, OnModuleInit } from "@nestjs/common";
+import { HealthController } from "./health.controller";
+import { HealthService } from "./health.service";
+import { ReadinessService } from "./readiness.service";
+import { PrismaService } from "../prisma/prisma.service";
 
 @Module({
   controllers: [HealthController],

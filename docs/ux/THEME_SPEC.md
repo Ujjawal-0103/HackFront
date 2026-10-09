@@ -23,32 +23,34 @@
 ## 2. Shared Design Tokens Palette
 
 ### 2.1 Light Theme (Default)
-| Token Name | Hex Value | Purpose / Usage | WCAG Contrast vs Surface |
-| :--- | :--- | :--- | :--- |
-| `--color-bg-page` | `#F8FAFC` | Page body background (Slate 50) | N/A |
-| `--color-surface-main` | `#FFFFFF` | Main card/modal surfaces | N/A |
-| `--color-text-primary` | `#0F172A` | Primary headings and body copy (Slate 900) | 18.2:1 (AAA) |
-| `--color-text-secondary` | `#475569` | Secondary captions, timestamps (Slate 600) | 5.8:1 (AA) |
-| `--color-border` | `#E2E8F0` | Structural borders, dividers (Slate 200) | 1.3:1 (Subtle boundary) |
-| `--color-accent-primary` | `#2563EB` | Interactive buttons, active links (Blue 600) | 4.8:1 (AA) |
-| `--color-accent-focus` | `#1D4ED8` | Keyboard focus ring | Visible outline |
-| `--color-status-success` | `#15803D` | 'Supported' claim verdict (Green 700) | 5.2:1 (AA) |
-| `--color-status-warning` | `#B45309` | 'Unverified / Sparse' claim verdict (Amber 700) | 4.9:1 (AA) |
-| `--color-status-error` | `#B91C1C` | 'Contradicted' claim verdict (Red 700) | 5.6:1 (AA) |
+
+| Token Name               | Hex Value | Purpose / Usage                                 | WCAG Contrast vs Surface |
+| :----------------------- | :-------- | :---------------------------------------------- | :----------------------- |
+| `--color-bg-page`        | `#F8FAFC` | Page body background (Slate 50)                 | N/A                      |
+| `--color-surface-main`   | `#FFFFFF` | Main card/modal surfaces                        | N/A                      |
+| `--color-text-primary`   | `#0F172A` | Primary headings and body copy (Slate 900)      | 18.2:1 (AAA)             |
+| `--color-text-secondary` | `#475569` | Secondary captions, timestamps (Slate 600)      | 5.8:1 (AA)               |
+| `--color-border`         | `#E2E8F0` | Structural borders, dividers (Slate 200)        | 1.3:1 (Subtle boundary)  |
+| `--color-accent-primary` | `#2563EB` | Interactive buttons, active links (Blue 600)    | 4.8:1 (AA)               |
+| `--color-accent-focus`   | `#1D4ED8` | Keyboard focus ring                             | Visible outline          |
+| `--color-status-success` | `#15803D` | 'Supported' claim verdict (Green 700)           | 5.2:1 (AA)               |
+| `--color-status-warning` | `#B45309` | 'Unverified / Sparse' claim verdict (Amber 700) | 4.9:1 (AA)               |
+| `--color-status-error`   | `#B91C1C` | 'Contradicted' claim verdict (Red 700)          | 5.6:1 (AA)               |
 
 ### 2.2 Dark Theme (Secondary)
-| Token Name | Hex Value | Purpose / Usage | WCAG Contrast vs Surface |
-| :--- | :--- | :--- | :--- |
-| `--color-bg-page` | `#0B1220` | Dark page background | N/A |
-| `--color-surface-main` | `#111827` | Dark card/modal surfaces (Gray 900) | N/A |
-| `--color-text-primary` | `#F8FAFC` | Dark primary text (Slate 50) | 17.5:1 (AAA) |
-| `--color-text-secondary` | `#CBD5E1` | Dark secondary captions (Slate 300) | 8.9:1 (AAA) |
-| `--color-border` | `#334155` | Dark structural borders (Slate 700) | 3.2:1 (AA boundary) |
-| `--color-accent-primary` | `#60A5FA` | Dark interactive accent (Blue 400) | 7.1:1 (AAA) |
-| `--color-accent-focus` | `#93C5FD` | Dark keyboard focus ring | High visibility |
-| `--color-status-success` | `#4ADE80` | 'Supported' claim verdict (Green 400) | 8.2:1 (AAA) |
-| `--color-status-warning` | `#FBBF24` | 'Unverified / Sparse' verdict (Amber 400) | 10.4:1 (AAA) |
-| `--color-status-error` | `#F87171` | 'Contradicted' claim verdict (Red 400) | 6.5:1 (AAA) |
+
+| Token Name               | Hex Value | Purpose / Usage                           | WCAG Contrast vs Surface |
+| :----------------------- | :-------- | :---------------------------------------- | :----------------------- |
+| `--color-bg-page`        | `#0B1220` | Dark page background                      | N/A                      |
+| `--color-surface-main`   | `#111827` | Dark card/modal surfaces (Gray 900)       | N/A                      |
+| `--color-text-primary`   | `#F8FAFC` | Dark primary text (Slate 50)              | 17.5:1 (AAA)             |
+| `--color-text-secondary` | `#CBD5E1` | Dark secondary captions (Slate 300)       | 8.9:1 (AAA)              |
+| `--color-border`         | `#334155` | Dark structural borders (Slate 700)       | 3.2:1 (AA boundary)      |
+| `--color-accent-primary` | `#60A5FA` | Dark interactive accent (Blue 400)        | 7.1:1 (AAA)              |
+| `--color-accent-focus`   | `#93C5FD` | Dark keyboard focus ring                  | High visibility          |
+| `--color-status-success` | `#4ADE80` | 'Supported' claim verdict (Green 400)     | 8.2:1 (AAA)              |
+| `--color-status-warning` | `#FBBF24` | 'Unverified / Sparse' verdict (Amber 400) | 10.4:1 (AAA)             |
+| `--color-status-error`   | `#F87171` | 'Contradicted' claim verdict (Red 400)    | 6.5:1 (AAA)              |
 
 ---
 
@@ -58,37 +60,39 @@
 /* tokens.css */
 :root {
   /* Default: Light Mode */
-  --bg-page: #F8FAFC;
-  --surface-main: #FFFFFF;
-  --text-primary: #0F172A;
+  --bg-page: #f8fafc;
+  --surface-main: #ffffff;
+  --text-primary: #0f172a;
   --text-secondary: #475569;
-  --border: #E2E8F0;
-  --accent-primary: #2563EB;
-  --accent-focus: #1D4ED8;
-  --status-success: #15803D;
-  --status-warning: #B45309;
-  --status-error: #B91C1C;
+  --border: #e2e8f0;
+  --accent-primary: #2563eb;
+  --accent-focus: #1d4ed8;
+  --status-success: #15803d;
+  --status-warning: #b45309;
+  --status-error: #b91c1c;
 }
 
 [data-theme="dark"] {
   /* Secondary: Dark Mode */
-  --bg-page: #0B1220;
+  --bg-page: #0b1220;
   --surface-main: #111827;
-  --text-primary: #F8FAFC;
-  --text-secondary: #CBD5E1;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
   --border: #334155;
-  --accent-primary: #60A5FA;
-  --accent-focus: #93C5FD;
-  --status-success: #4ADE80;
-  --status-warning: #FBBF24;
-  --status-error: #F87171;
+  --accent-primary: #60a5fa;
+  --accent-focus: #93c5fd;
+  --status-success: #4ade80;
+  --status-warning: #fbbf24;
+  --status-error: #f87171;
 }
 
 body {
   background-color: var(--bg-page);
   color: var(--text-primary);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 ```
 
@@ -98,30 +102,30 @@ body {
 
 ```javascript
 // theme-controller.js
-const THEME_STORAGE_KEY = 'traceback-theme-preference';
+const THEME_STORAGE_KEY = "traceback-theme-preference";
 
 export function initializeTheme() {
   // Non-negotiable: Default to 'light' regardless of window.matchMedia('(prefers-color-scheme: dark)')
   const savedPreference = localStorage.getItem(THEME_STORAGE_KEY);
-  const activeTheme = savedPreference === 'dark' ? 'dark' : 'light';
+  const activeTheme = savedPreference === "dark" ? "dark" : "light";
   applyTheme(activeTheme);
   return activeTheme;
 }
 
 export function toggleTheme() {
-  const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  const currentTheme = document.documentElement.getAttribute("data-theme") || "light";
+  const newTheme = currentTheme === "dark" ? "light" : "dark";
   applyTheme(newTheme);
   localStorage.setItem(THEME_STORAGE_KEY, newTheme);
   return newTheme;
 }
 
 function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  const toggleBtn = document.getElementById('theme-toggle-btn');
+  document.documentElement.setAttribute("data-theme", theme);
+  const toggleBtn = document.getElementById("theme-toggle-btn");
   if (toggleBtn) {
-    toggleBtn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
-    toggleBtn.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
+    toggleBtn.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+    toggleBtn.setAttribute("aria-label", `Switch to ${theme === "dark" ? "light" : "dark"} mode`);
   }
 }
 ```
@@ -129,6 +133,7 @@ function applyTheme(theme) {
 ---
 
 ## 5. Architectural Status & Blocker Documentation
+
 - **Starter Prototype Audit Finding:** The initial workspace audit confirmed that the starter prototype was absent.
-- **Architectural Decision:** Per non-negotiable instruction: *"If the existing application architecture does not permit a safe interface change during Sprint 1, document the exact blocker and create a testable theme specification. Do not rebuild the frontend from scratch simply to change its theme."*
+- **Architectural Decision:** Per non-negotiable instruction: _"If the existing application architecture does not permit a safe interface change during Sprint 1, document the exact blocker and create a testable theme specification. Do not rebuild the frontend from scratch simply to change its theme."_
 - **Blocker Summary:** Because no existing frontend or prototype files were present in the repository, UI code modifications could not be safely patched into existing views without prematurely constructing the full production frontend. Consequently, all theme tokens, accessibility requirements (TH-01 through TH-08), and state persistence logic are authoritatively specified here and ready for binding during Sprint 2 / Sprint 6 UI scaffolding.

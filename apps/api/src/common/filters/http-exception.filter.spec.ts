@@ -1,24 +1,27 @@
-import { ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
-import { HttpExceptionFilter } from './http-exception.filter';
+import { ArgumentsHost, HttpException, HttpStatus } from "@nestjs/common";
+import { HttpExceptionFilter } from "./http-exception.filter";
 
-describe('HttpExceptionFilter', () => {
+describe("HttpExceptionFilter", () => {
   let filter: HttpExceptionFilter;
 
   beforeEach(() => {
     filter = new HttpExceptionFilter();
   });
 
-  it('should format HttpException into structured ApiErrorResponse envelope', () => {
+  it("should format HttpException into structured ApiErrorResponse envelope", () => {
     const mockJson = jest.fn();
     const mockStatus = jest.fn().mockReturnValue({ json: mockJson });
     const mockHost = {
       switchToHttp: () => ({
         getResponse: () => ({ status: mockStatus }),
-        getRequest: () => ({ url: '/api/test' }),
+        getRequest: () => ({ url: "/api/test" }),
       }),
     } as unknown as ArgumentsHost;
 
-    const exception = new HttpException('Bad Request Sample', HttpStatus.BAD_REQUEST);
+    const exception = new HttpException(
+      "Bad Request Sample",
+      HttpStatus.BAD_REQUEST,
+    );
     filter.catch(exception, mockHost);
 
     expect(mockStatus).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
@@ -26,23 +29,25 @@ describe('HttpExceptionFilter', () => {
       expect.objectContaining({
         success: false,
         error: expect.objectContaining({
-          message: 'Bad Request Sample',
+          message: "Bad Request Sample",
         }),
       }),
     );
   });
 
-  it('should mask unhandled internal errors without leaking internal stack traces', () => {
+  it("should mask unhandled internal errors without leaking internal stack traces", () => {
     const mockJson = jest.fn();
     const mockStatus = jest.fn().mockReturnValue({ json: mockJson });
     const mockHost = {
       switchToHttp: () => ({
         getResponse: () => ({ status: mockStatus }),
-        getRequest: () => ({ url: '/api/unhandled' }),
+        getRequest: () => ({ url: "/api/unhandled" }),
       }),
     } as unknown as ArgumentsHost;
 
-    const secretError = new Error('FATAL: password authentication failed for user "postgres"');
+    const secretError = new Error(
+      'FATAL: password authentication failed for user "postgres"',
+    );
     filter.catch(secretError, mockHost);
 
     expect(mockStatus).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -50,13 +55,13 @@ describe('HttpExceptionFilter', () => {
       expect.objectContaining({
         success: false,
         error: expect.objectContaining({
-          code: 'INTERNAL_UNHANDLED',
-          message: 'An unexpected internal error occurred',
+          code: "INTERNAL_UNHANDLED",
+          message: "An unexpected internal error occurred",
         }),
       }),
     );
     // Crucial check: database secret error message is NOT sent to client
     const sentPayload = mockJson.mock.calls[0][0];
-    expect(sentPayload.error.message).not.toContain('password authentication');
+    expect(sentPayload.error.message).not.toContain("password authentication");
   });
 });

@@ -1,4 +1,4 @@
-import { WorkspaceRole } from '@traceback/shared-types';
+import { WorkspaceRole } from "@traceback/shared-types";
 
 export interface AuthenticatedUser {
   id: string;

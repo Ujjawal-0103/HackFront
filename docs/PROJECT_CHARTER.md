@@ -1,28 +1,32 @@
 # Project Charter — Traceback
 
 ## 1. Project Overview & Identity
+
 - **Project Name:** Traceback
 - **Innovation Theme:** AI and Developer Tools
 - **Official Problem Statement:** T1.1 — Why The Code Is Like This
 - **Project Status:** Sprint 1 — Product Foundation
 
 ### Team Structure & Provisional Workstreams
-| Team Member | Provisional Role | Core Workstream Responsibility | Confirmation Status |
-| :--- | :--- | :--- | :--- |
-| **Ujjawal Agrawal** | Team Lead | Product decisions, architecture coordination, integration, sprint approval | Provisional |
-| **Tanishka** | Frontend & UX Lead | User experience, frontend planning, theme specification, usability | Provisional |
-| **Tanishk Sharma** | Backend Lead | Backend planning, repository integration, APIs, ingestion pipelines | Provisional |
-| **Tannu Kumari** | Research & QA Lead | User research, documentation, evidence ledger, quality assurance | Provisional |
-| **Ayush Kushwaha** | Retrieval & AI Lead | Evidence retrieval, graph investigation, AI interoperability, MCP planning | Provisional |
 
-*Note: Workstream assignments are provisional and subject to formal confirmation by team members.*
+| Team Member         | Provisional Role    | Core Workstream Responsibility                                             | Confirmation Status |
+| :------------------ | :------------------ | :------------------------------------------------------------------------- | :------------------ |
+| **Ujjawal Agrawal** | Team Lead           | Product decisions, architecture coordination, integration, sprint approval | Provisional         |
+| **Tanishka**        | Frontend & UX Lead  | User experience, frontend planning, theme specification, usability         | Provisional         |
+| **Tanishk Sharma**  | Backend Lead        | Backend planning, repository integration, APIs, ingestion pipelines        | Provisional         |
+| **Tannu Kumari**    | Research & QA Lead  | User research, documentation, evidence ledger, quality assurance           | Provisional         |
+| **Ayush Kushwaha**  | Retrieval & AI Lead | Evidence retrieval, graph investigation, AI interoperability, MCP planning | Provisional         |
+
+_Note: Workstream assignments are provisional and subject to formal confirmation by team members._
 
 ---
 
 ## 2. Problem Statement & Motivation
-Developers working on established, multi-contributor software repositories regularly encounter intricate workarounds, legacy constraints, or non-obvious design choices. When asking contemporary AI coding assistants (such as GitHub Copilot, Cursor, or Claude Code) *"Why was this implemented this way?"*, the assistants frequently generate fluent, plausible explanations that sound authoritative but may rely on hallucinated assumptions rather than repository history.
+
+Developers working on established, multi-contributor software repositories regularly encounter intricate workarounds, legacy constraints, or non-obvious design choices. When asking contemporary AI coding assistants (such as GitHub Copilot, Cursor, or Claude Code) _"Why was this implemented this way?"_, the assistants frequently generate fluent, plausible explanations that sound authoritative but may rely on hallucinated assumptions rather than repository history.
 
 A developer cannot easily discern whether:
+
 1. The explanation is genuinely supported by past Git commits, PR discussions, and architectural decision records.
 2. The explanation was inferred solely from current code syntax and keyword matching.
 3. The explanation contradicts historical evidence recorded in previous bug reports or pull requests.
@@ -32,9 +36,11 @@ Traceback solves this by introducing a human-supervised verification layer that 
 ---
 
 ## 3. Product Vision & Principles
+
 Traceback is an evidence-grounded verification companion, not an autonomous agent or a conversational replacement for existing coding assistants.
 
 ### Core Product Principles
+
 1. **Keyword similarity is not proof of correctness:** Lexical match does not establish historical rationale.
 2. **Missing evidence does not prove a claim is false:** Incomplete repository history represents uncertainty, not contradiction.
 3. **Tests reflect current behaviour, not historical intent:** Passing tests demonstrate what code executes, not why it was designed.
@@ -49,6 +55,7 @@ Traceback is an evidence-grounded verification companion, not an autonomous agen
 ---
 
 ## 4. Strategic Scope Boundaries
+
 - **In Scope (V1):**
   - Read-only ingestion of Git commits, diffs, PRs, and issues for authorized repositories.
   - Explanation decomposition into verifiable claims.

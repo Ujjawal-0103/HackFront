@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { HealthResponse } from '@traceback/shared-types';
+import { Injectable } from "@nestjs/common";
+import { HealthResponse } from "@traceback/shared-types";
 
 @Injectable()
 export class HealthService {
@@ -8,9 +8,9 @@ export class HealthService {
   getHealth(): HealthResponse {
     const uptimeSeconds = Math.floor((Date.now() - this.startTime) / 1000);
     return {
-      status: 'ok',
-      service: '@traceback/api',
-      version: '0.1.0',
+      status: "ok",
+      service: "@traceback/api",
+      version: "0.1.0",
       timestamp: new Date().toISOString(),
       uptimeSeconds,
     };

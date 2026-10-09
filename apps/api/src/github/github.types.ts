@@ -14,9 +14,9 @@ export interface GitHubRepositoryMetadata {
   defaultBranch: string;
   isPrivate: boolean;
   permissions: {
-    contents: 'read' | 'write' | 'none';
-    issues: 'read' | 'write' | 'none';
-    pullRequests: 'read' | 'write' | 'none';
+    contents: "read" | "write" | "none";
+    issues: "read" | "write" | "none";
+    pullRequests: "read" | "write" | "none";
   };
 }
 

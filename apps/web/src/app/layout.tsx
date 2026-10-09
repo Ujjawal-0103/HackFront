@@ -1,10 +1,10 @@
-import type { Metadata } from 'next';
-import './globals.css';
-import { ThemeProvider } from '../context/ThemeContext';
+import type { Metadata } from "next";
+import "./globals.css";
+import { ThemeProvider } from "../context/ThemeContext";
 
 export const metadata: Metadata = {
-  title: 'Traceback — Code Rationale Verification',
-  description: 'Verify the evidence behind AI-generated code explanations.',
+  title: "Traceback — Code Rationale Verification",
+  description: "Verify the evidence behind AI-generated code explanations.",
 };
 
 export default function RootLayout({

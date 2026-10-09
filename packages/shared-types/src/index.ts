@@ -4,20 +4,13 @@
  */
 
 // 1. Core Verification & Epistemological Enums
-export type HumanVerdict = 'SUPPORTED' | 'CONTRADICTED' | 'UNVERIFIED';
+export type HumanVerdict = "SUPPORTED" | "CONTRADICTED" | "UNVERIFIED";
 
 export type AIAssessmentConfidence =
-  | 'HIGH_SUPPORT'
-  | 'PARTIAL_SUPPORT'
-  | 'SPARSE_EVIDENCE'
-  | 'CONTRADICTED';
+  "HIGH_SUPPORT" | "PARTIAL_SUPPORT" | "SPARSE_EVIDENCE" | "CONTRADICTED";
 
 export type EvidenceSourceType =
-  | 'COMMIT'
-  | 'PULL_REQUEST'
-  | 'ISSUE'
-  | 'DOCUMENTATION'
-  | 'ADR';
+  "COMMIT" | "PULL_REQUEST" | "ISSUE" | "DOCUMENTATION" | "ADR";
 
 // 2. Evidence & Provenance Contracts
 export interface EvidenceReference {
@@ -54,14 +47,14 @@ export interface VerificationSession {
   codeSnippet?: string;
   targetFilePath?: string;
   claims: ClaimItem[];
-  status: 'PENDING' | 'ANALYZING' | 'REVIEWING' | 'COMPLETED' | 'FAILED';
+  status: "PENDING" | "ANALYZING" | "REVIEWING" | "COMPLETED" | "FAILED";
   createdAt: string;
   updatedAt: string;
 }
 
 // 3. API Envelopes & Health Contracts
 export interface HealthResponse {
-  status: 'ok';
+  status: "ok";
   service: string;
   version: string;
   timestamp: string;
@@ -75,7 +68,7 @@ export interface DependencyCheck {
 }
 
 export interface ReadinessResponse {
-  status: 'ready' | 'not_ready';
+  status: "ready" | "not_ready";
   service: string;
   timestamp: string;
   checks: {
@@ -104,7 +97,7 @@ export interface ApiErrorResponse {
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 // 4. Workspace & Identity Boundaries
-export type WorkspaceRole = 'OWNER' | 'ADMIN' | 'MEMBER' | 'VIEWER';
+export type WorkspaceRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
 
 export interface UserIdentity {
   id: string;

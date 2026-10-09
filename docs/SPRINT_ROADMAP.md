@@ -7,25 +7,27 @@
 ---
 
 ## Roadmap Executive Summary
+
 The Traceback V1 roadmap spans nine focused, sequentially dependent sprints designed to transform the product hypothesis into a secure, validated, and deployed human-supervised verification system.
 
-| Sprint | Focus Area | Primary Milestone Deliverable | Suggested Lead | Status |
-| :--- | :--- | :--- | :--- | :--- |
-| **Sprint 1** | Product Foundation | Problem definition, research kit, UX flow, ADRs, threat model, evaluation plan | Ujjawal Agrawal | **Active (Sprint 1)** |
-| **Sprint 2** | Project Foundation & Access | Next.js/NestJS monorepo, CI/CD, Prisma schema, GitHub App auth, theme tokens | Tanishk Sharma | Planned |
-| **Sprint 3** | Repository Ingestion | Robust Git & GitHub API ingestion (commits, diffs, PRs, issues) with rate-limiting | Tanishk Sharma | Planned |
-| **Sprint 4** | Evidence Store & Retrieval | PostgreSQL + pgvector hybrid search, provenance records, RRF ranking benchmark | Ayush Kushwaha | Planned |
-| **Sprint 5** | Claim Assessment Engine | Claim extraction, grounding verification adapter, citation validator, abstention | Ayush Kushwaha | Planned |
-| **Sprint 6** | Web Product Experience | Web UI with light/dark theme, review board, human verdict tagging, export reports | Tanishka | Planned |
-| **Sprint 7** | Interoperability & MCP | Read-only MCP server tools for IDE clients (Cursor, Claude Code, Antigravity) | Ayush Kushwaha | Planned |
-| **Sprint 8** | Quality & Validation | Adversarial security tests, benchmark evaluation run, end-to-end integration tests | Tannu Kumari | Planned |
-| **Sprint 9** | Deployment & Handoff | Production Docker/Cloud deployment, runbooks, monitoring, automated backups | Ujjawal Agrawal | Planned |
+| Sprint       | Focus Area                  | Primary Milestone Deliverable                                                      | Suggested Lead  | Status                |
+| :----------- | :-------------------------- | :--------------------------------------------------------------------------------- | :-------------- | :-------------------- |
+| **Sprint 1** | Product Foundation          | Problem definition, research kit, UX flow, ADRs, threat model, evaluation plan     | Ujjawal Agrawal | **Active (Sprint 1)** |
+| **Sprint 2** | Project Foundation & Access | Next.js/NestJS monorepo, CI/CD, Prisma schema, GitHub App auth, theme tokens       | Tanishk Sharma  | Planned               |
+| **Sprint 3** | Repository Ingestion        | Robust Git & GitHub API ingestion (commits, diffs, PRs, issues) with rate-limiting | Tanishk Sharma  | Planned               |
+| **Sprint 4** | Evidence Store & Retrieval  | PostgreSQL + pgvector hybrid search, provenance records, RRF ranking benchmark     | Ayush Kushwaha  | Planned               |
+| **Sprint 5** | Claim Assessment Engine     | Claim extraction, grounding verification adapter, citation validator, abstention   | Ayush Kushwaha  | Planned               |
+| **Sprint 6** | Web Product Experience      | Web UI with light/dark theme, review board, human verdict tagging, export reports  | Tanishka        | Planned               |
+| **Sprint 7** | Interoperability & MCP      | Read-only MCP server tools for IDE clients (Cursor, Claude Code, Antigravity)      | Ayush Kushwaha  | Planned               |
+| **Sprint 8** | Quality & Validation        | Adversarial security tests, benchmark evaluation run, end-to-end integration tests | Tannu Kumari    | Planned               |
+| **Sprint 9** | Deployment & Handoff        | Production Docker/Cloud deployment, runbooks, monitoring, automated backups        | Ujjawal Agrawal | Planned               |
 
 ---
 
 ## Detailed Sprint Specifications (1 through 9)
 
 ### Sprint 1: Product Foundation
+
 - **Objective:** Establish clear product specifications, research kits, architecture decisions, security threat models, and delivery roadmaps.
 - **Dependencies:** Initial repository creation.
 - **Work Items:**
@@ -46,6 +48,7 @@ The Traceback V1 roadmap spans nine focused, sequentially dependent sprints desi
 ---
 
 ### Sprint 2: Project Foundation and Secure Access
+
 - **Objective:** Scaffolding the production application monorepo, continuous integration, database schemas, and least-privilege GitHub App access.
 - **Dependencies:** Sprint 1 approval.
 - **Work Items:**
@@ -64,6 +67,7 @@ The Traceback V1 roadmap spans nine focused, sequentially dependent sprints desi
 ---
 
 ### Sprint 3: Repository Ingestion
+
 - **Objective:** Build robust, rate-limit-aware ingestion pipelines for Git commits, diffs, pull requests, and issues.
 - **Dependencies:** Sprint 2 (monorepo & database).
 - **Work Items:**
@@ -82,6 +86,7 @@ The Traceback V1 roadmap spans nine focused, sequentially dependent sprints desi
 ---
 
 ### Sprint 4: Evidence Store and Retrieval
+
 - **Objective:** Establish the hybrid retrieval engine combining lexical search (BM25) and dense embeddings (pgvector).
 - **Dependencies:** Sprint 3 (ingested repository data).
 - **Work Items:**
@@ -101,6 +106,7 @@ The Traceback V1 roadmap spans nine focused, sequentially dependent sprints desi
 ---
 
 ### Sprint 5: Claim Assessment Engine
+
 - **Objective:** Build the AI-grounded claim extraction, preliminary confidence assessment, citation validator, and abstention module.
 - **Dependencies:** Sprint 4 (retrieval engine).
 - **Work Items:**
@@ -119,6 +125,7 @@ The Traceback V1 roadmap spans nine focused, sequentially dependent sprints desi
 ---
 
 ### Sprint 6: Web Product Experience
+
 - **Objective:** Deliver the complete end-to-end web user interface for repository selection, claim review, human adjudication, and report export.
 - **Dependencies:** Sprint 2 (frontend setup), Sprint 5 (assessment engine).
 - **Work Items:**
@@ -138,6 +145,7 @@ The Traceback V1 roadmap spans nine focused, sequentially dependent sprints desi
 ---
 
 ### Sprint 7: Interoperability and MCP
+
 - **Objective:** Expose read-only Model Context Protocol (MCP) server tools to enable verification directly inside modern coding assistants.
 - **Dependencies:** Sprint 5 (verification engine), Sprint 6 (core flow validated).
 - **Work Items:**
@@ -155,6 +163,7 @@ The Traceback V1 roadmap spans nine focused, sequentially dependent sprints desi
 ---
 
 ### Sprint 8: Quality and Validation
+
 - **Objective:** Conduct rigorous security penetration testing, adversarial verification audits, and comprehensive user validation testing.
 - **Dependencies:** Sprints 6 and 7.
 - **Work Items:**
@@ -172,6 +181,7 @@ The Traceback V1 roadmap spans nine focused, sequentially dependent sprints desi
 ---
 
 ### Sprint 9: Deployment and Handoff
+
 - **Objective:** Deploy production infrastructure, automated monitoring, backup verification, and deliver final handoff documentation.
 - **Dependencies:** Sprint 8 approval.
 - **Work Items:**

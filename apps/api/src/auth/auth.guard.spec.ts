@@ -1,17 +1,17 @@
-import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { AuthGuard } from './auth.guard';
+import { ExecutionContext, UnauthorizedException } from "@nestjs/common";
+import { AuthGuard } from "./auth.guard";
 
-describe('AuthGuard (Identity Boundary)', () => {
+describe("AuthGuard (Identity Boundary)", () => {
   let guard: AuthGuard;
 
   beforeEach(() => {
     guard = new AuthGuard();
   });
 
-  it('should accept valid Bearer token and attach authenticated user context', () => {
+  it("should accept valid Bearer token and attach authenticated user context", () => {
     const mockRequest: any = {
       headers: {
-        authorization: 'Bearer sample-valid-token',
+        authorization: "Bearer sample-valid-token",
       },
     };
     const mockContext = {
@@ -20,13 +20,13 @@ describe('AuthGuard (Identity Boundary)', () => {
 
     expect(guard.canActivate(mockContext)).toBe(true);
     expect(mockRequest.user).toBeDefined();
-    expect(mockRequest.user.id).toBe('usr_verified_123');
+    expect(mockRequest.user.id).toBe("usr_verified_123");
   });
 
-  it('should accept dev user header in development mode', () => {
+  it("should accept dev user header in development mode", () => {
     const mockRequest: any = {
       headers: {
-        'x-user-id': 'dev_user_456',
+        "x-user-id": "dev_user_456",
       },
     };
     const mockContext = {
@@ -34,10 +34,10 @@ describe('AuthGuard (Identity Boundary)', () => {
     } as ExecutionContext;
 
     expect(guard.canActivate(mockContext)).toBe(true);
-    expect(mockRequest.user.id).toBe('dev_user_456');
+    expect(mockRequest.user.id).toBe("dev_user_456");
   });
 
-  it('should throw UnauthorizedException when no credentials are provided', () => {
+  it("should throw UnauthorizedException when no credentials are provided", () => {
     const mockRequest: any = {
       headers: {},
     };
@@ -48,10 +48,10 @@ describe('AuthGuard (Identity Boundary)', () => {
     expect(() => guard.canActivate(mockContext)).toThrow(UnauthorizedException);
   });
 
-  it('should throw UnauthorizedException on invalid token', () => {
+  it("should throw UnauthorizedException on invalid token", () => {
     const mockRequest: any = {
       headers: {
-        authorization: 'Bearer invalid-token',
+        authorization: "Bearer invalid-token",
       },
     };
     const mockContext = {

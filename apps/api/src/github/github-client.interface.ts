@@ -1,6 +1,9 @@
-import { GitHubRepositoryMetadata, RepositoryAccessPermission } from './github.types';
+import {
+  GitHubRepositoryMetadata,
+  RepositoryAccessPermission,
+} from "./github.types";
 
-export const GITHUB_CLIENT_TOKEN = 'IGitHubClient';
+export const GITHUB_CLIENT_TOKEN = "IGitHubClient";
 
 export interface IGitHubClient {
   isConfigured(): boolean;

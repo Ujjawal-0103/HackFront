@@ -6,6 +6,7 @@
 ---
 
 ## 1. Overview
+
 Modern AI coding tools excel at generating syntax, refactoring routines, and explaining snippets in the editor. However, their treatment of historical repository context (version control history, PR reviews, issue tickets) varies significantly. This document analyzes leading tools using verified documentation from official sources as of October 2026.
 
 ---
@@ -13,6 +14,7 @@ Modern AI coding tools excel at generating syntax, refactoring routines, and exp
 ## 2. Competitive Matrix
 
 ### 2.1 GitHub Copilot (Microsoft / GitHub)
+
 - **Official Sources:** [github.com/features/copilot](https://github.com/features/copilot), [docs.github.com](https://docs.github.com)
 - **Date Checked:** 2026-10-09
 - **Advertised Historical-Code Capabilities:**
@@ -29,6 +31,7 @@ Modern AI coding tools excel at generating syntax, refactoring routines, and exp
 ---
 
 ### 2.2 Cursor (Anysphere)
+
 - **Official Sources:** [cursor.com](https://cursor.com), [docs.cursor.com](https://docs.cursor.com)
 - **Date Checked:** 2026-10-09
 - **Advertised Historical-Code Capabilities:**
@@ -46,11 +49,12 @@ Modern AI coding tools excel at generating syntax, refactoring routines, and exp
 ---
 
 ### 2.3 Claude Code (Anthropic)
+
 - **Official Sources:** [anthropic.com](https://anthropic.com), [docs.anthropic.com/en/docs/agents-and-tools/claude-code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code)
 - **Date Checked:** 2026-10-09
 - **Advertised Historical-Code Capabilities:**
   - Native Terminal Git Agent: Directly invokes local Git binary (`git log`, `git diff`, `git show`, `git blame`).
-  - Natural Language Git Queries: Answers queries such as *"Summarize the changes in the last 5 commits"* or *"Find the commit where feature X was added"*.
+  - Natural Language Git Queries: Answers queries such as _"Summarize the changes in the last 5 commits"_ or _"Find the commit where feature X was added"_.
   - Commands: Interactive `/diff`, `/review`, `/review [PR#]`.
 - **Evidence and Citation Support:** Displays terminal output of actual git commands run; outputs commit SHAs and diff snippets.
 - **Persistent Context & Decision Records:** Reads `CLAUDE.md` in repository root for project conventions; manages conversation context with `/compact`.
@@ -62,6 +66,7 @@ Modern AI coding tools excel at generating syntax, refactoring routines, and exp
 ---
 
 ### 2.4 Google Antigravity
+
 - **Official Sources:** IDE Environment Specification & Builtin Skills
 - **Date Checked:** 2026-10-09
 - **Advertised Historical-Code Capabilities:**
@@ -78,6 +83,7 @@ Modern AI coding tools excel at generating syntax, refactoring routines, and exp
 ---
 
 ### 2.5 CodeSource & Git-Integrated Code Search Tools (Sourcegraph, Greptile, CodeScene)
+
 - **Official Sources:** [sourcegraph.com](https://sourcegraph.com), [codescene.com](https://codescene.com), [usegitai.com](https://usegitai.com)
 - **Date Checked:** 2026-10-09
 - **Advertised Historical-Code Capabilities:**
@@ -93,6 +99,7 @@ Modern AI coding tools excel at generating syntax, refactoring routines, and exp
 ---
 
 ### 2.6 OpenAI Codex / ChatGPT Code Interpreter
+
 - **Official Sources:** [openai.com](https://openai.com)
 - **Date Checked:** 2026-10-09
 - **Advertised Historical-Code Capabilities:**
@@ -108,6 +115,7 @@ Modern AI coding tools excel at generating syntax, refactoring routines, and exp
 ---
 
 ## 3. Summary of Competitive Gaps
+
 1. **No Existing Tool Isolates Atomic Claims for Adjudication:** Existing tools answer queries in freeform prose where speculation is indistinguishable from fact.
-2. **Absence of Calibrated Abstention:** Generative tools are trained to answer; they rarely state *"There is no evidence in the last 4 years of Git history explaining this decision."*
+2. **Absence of Calibrated Abstention:** Generative tools are trained to answer; they rarely state _"There is no evidence in the last 4 years of Git history explaining this decision."_
 3. **No Tri-State Human Adjudication Workflow:** No current tool structures human review into `Supported`, `Contradicted`, and `Unverified` claims with shareable audit reports.

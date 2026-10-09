@@ -6,6 +6,7 @@
 ---
 
 ## 1. Participant Metadata & Qualification
+
 - **Participant Code:** `[P-01 / P-02 / ...]`
 - **Interview Date & Time:** `[YYYY-MM-DD HH:MM]`
 - **Interviewer Name:** `[Tannu Kumari / Ujjawal Agrawal / Team Member]`
@@ -21,14 +22,16 @@
 ---
 
 ## 2. Recent Incident & Context
+
 - **Specific Module / Code Encountered:**
-  - *Description:* `[Brief description of the function, pattern, or workaround under investigation]`
-  - *Why it seemed non-obvious:* `[Why was the rationale confusing or counter-intuitive?]`
-  - *Original Author Availability:* `[Still at org / Left org / Unknown author]`
+  - _Description:_ `[Brief description of the function, pattern, or workaround under investigation]`
+  - _Why it seemed non-obvious:_ `[Why was the rationale confusing or counter-intuitive?]`
+  - _Original Author Availability:_ `[Still at org / Left org / Unknown author]`
 
 ---
 
 ## 3. Investigation Workflow & Workarounds
+
 - **Step-by-Step Path Taken:**
   1. `[e.g., Ran git blame in VS Code]`
   2. `[e.g., Found commit from 2021 with message "fix: sync issue"]`
@@ -40,6 +43,7 @@
 ---
 
 ## 4. Role of AI Assistant & Hallucination Observations
+
 - **Exact Query Posed to AI:** `[e.g., "Why does this function catch ECONNRESET and retry 3 times?"]`
 - **AI Response Summary:** `[Summary of the AI explanation received]`
 - **Plausibility vs. Veracity:**
@@ -51,6 +55,7 @@
 ---
 
 ## 5. Verification Technique & Resolution
+
 - **How Verification Was Performed:** `[How did the engineer confirm or refute the AI claim?]`
 - **Total Time Spent (Minutes):** `[e.g., 35 minutes]`
 - **Final Outcome:** `[Code preserved / Code refactored / Kept with added comment / Inconclusive]`
@@ -59,12 +64,14 @@
 ---
 
 ## 6. Contradictory Evidence & Edge Cases
+
 - **Did the participant's behavior contradict our initial assumptions?**
   - `[e.g., Participant did not care about historical rationale and simply deleted the code, or relied exclusively on tests]`
 
 ---
 
 ## 7. Evidence Classification
+
 - [ ] **Verified Evidence:** Directly observed behavior corroborated by screen share / commit logs.
 - [ ] **Reported Incident:** Self-reported past incident (anecdotal).
 - [ ] **Unresolved Assumption:** Claim requires further corroborating interviews.
@@ -72,4 +79,5 @@
 ---
 
 ## 8. Follow-Up Questions & Next Steps
+
 - `[Specific questions to probe in subsequent interviews or product iterations]`

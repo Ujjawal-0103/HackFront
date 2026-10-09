@@ -54,7 +54,7 @@ traceback/
 
 - **Node.js:** $\ge 20.x$ (Tested on Node v22.17.0)
 - **pnpm:** $\ge 9.x$ (`npm install -g pnpm@9`)
-- **Docker & Docker Compose:** Optional for local PostgreSQL & Redis services.
+- **Docker Desktop:** Required for running the local PostgreSQL 16 & Redis containers.
 
 ### Installation & Build
 
@@ -62,16 +62,22 @@ traceback/
 # 1. Install all dependencies across monorepo workspaces
 pnpm install
 
-# 2. Generate Prisma Client
-pnpm --filter @traceback/api prisma:generate
+# 2. Start local PostgreSQL 16 database (bound to host port 5434)
+docker compose up -d postgres
 
-# 3. Typecheck all workspaces
+# 3. Apply development database migrations & generate Prisma Client
+pnpm prisma:migrate:dev
+
+# 4. Check migration status
+pnpm prisma:migrate:status
+
+# 5. Typecheck all workspaces
 pnpm typecheck
 
-# 4. Run automated test suites (27 tests across web and api)
+# 6. Run automated test suites (32 tests across web and api)
 pnpm test
 
-# 5. Build all packages and applications
+# 7. Build all packages and applications
 pnpm build
 ```
 
@@ -86,15 +92,22 @@ pnpm --filter @traceback/api dev    # NestJS API running on http://localhost:300
 pnpm --filter @traceback/web dev    # Next.js Web running on http://localhost:3000
 ```
 
-### Starting Local Database Services (Optional)
+### Local Database Services & Configuration
+
+PostgreSQL is containerized via `docker-compose.yml` and bound to host port **`5434`** (container port `5432`):
 
 ```bash
-# Start PostgreSQL 16 and Redis containers
-docker compose up -d
+# Start PostgreSQL service
+docker compose up -d postgres
 
-# Check service health
-docker compose ps
+# Check database container readiness
+docker compose exec postgres pg_isready
+
+# Inspect database tables
+docker compose exec postgres psql -U postgres -d traceback_dev -c "\dt"
 ```
+
+_Note on Port 5434:_ Port 5434 was chosen because default host port 5432 is typically occupied by existing local PostgreSQL instances on developer machines, and 5433 by virtualization backends. Port 5434 avoids collisions.
 
 ---
 
@@ -135,9 +148,35 @@ Traceback adheres strictly to the principle of least privilege:
 - **Credential Protection:** GitHub App private keys remain strictly on the backend and are never returned to clients or logged.
 - **Mock Sandbox:** When live GitHub App credentials are not provided in environment variables, the system operates seamlessly in sandbox mode using `MockGitHubClient` for testing and evaluation.
 
+### Live GitHub App Configuration Steps (Sprint 3 Preparation)
+
+To connect a live GitHub repository rather than using the mock sandbox:
+
+1. Navigate to **GitHub Settings → Developer settings → GitHub Apps → New GitHub App**.
+2. Set **GitHub App name** (e.g. `Traceback-Advisory-Verifier`).
+3. Set **Homepage URL** to `http://localhost:3000`.
+4. Under **Permissions → Repository permissions**:
+   - `Contents`: **Read-only**
+   - `Issues`: **Read-only**
+   - `Pull requests`: **Read-only**
+5. Generate a **Private key** and download the `.pem` file to `secrets/github-app-private-key.pem` (never commit this file).
+6. Copy the **App ID**, **Client ID**, and **Client secret** into `.env`.
+7. Install the GitHub App on your target repositories.
+
 ---
 
-## 7. Delivery Status & Roadmap
+## 7. Troubleshooting Common Setup Issues
+
+| Symptom                                                                                     | Probable Cause                                           | Resolution                                                                                                                     |
+| :------------------------------------------------------------------------------------------ | :------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------- |
+| `bind: An attempt was made to access a socket in a way forbidden by its access permissions` | Host port conflict on 5432 or 5433                       | `docker-compose.yml` binds PostgreSQL to host port `5434`. Ensure `DATABASE_URL` uses port `5434`.                             |
+| `EPERM: operation not permitted, rename query_engine-windows.dll.node`                      | Active dev server locking the Prisma query engine binary | Stop any running background dev servers (`pnpm dev` or `nest start`) before running `prisma:generate` or `prisma:migrate:dev`. |
+| `service "postgres" is not running`                                                         | Docker Desktop engine stopped                            | Launch Docker Desktop on Windows and verify `docker compose ps` shows `traceback-postgres` as `Up (healthy)`.                  |
+| `None of the selected packages has a "prisma:migrate:dev" script`                           | Attempting to run unmapped scripts                       | Use root scripts: `pnpm prisma:migrate:dev` or `pnpm --filter @traceback/api prisma:migrate:dev`.                              |
+
+---
+
+## 8. Delivery Status & Roadmap
 
 | Sprint       | Focus Area                      | Status           | Deliverables                                                      |
 | :----------- | :------------------------------ | :--------------- | :---------------------------------------------------------------- |

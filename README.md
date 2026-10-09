@@ -1,7 +1,8 @@
 # Traceback — Human-Supervised Code Rationale Verification
 
 [![Theme: Light Default](https://img.shields.io/badge/Theme-Light%20Default-blue.svg)](docs/ux/THEME_SPEC.md)
-[![Status: Sprint 1 Complete](https://img.shields.io/badge/Sprint%201-Product%20Foundation%20Complete-green.svg)](docs/sprints/SPRINT_1.md)
+[![Status: Sprint 2 Complete](https://img.shields.io/badge/Sprint%202-Project%20Foundation%20Complete-green.svg)](docs/sprints/SPRINT_2.md)
+[![Turborepo](https://img.shields.io/badge/Turborepo-Monorepo-purple.svg)](turbo.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-slate.svg)](#)
 
 > **Official Problem Statement:** T1.1 — Why The Code Is Like This  
@@ -11,150 +12,145 @@
 ---
 
 ## 1. What is Traceback?
-
-Traceback is a proposed human-supervised verification system for AI-generated code explanations. When developers ask an AI coding assistant (such as GitHub Copilot, Cursor, or Claude Code) why a non-obvious function or workaround exists in a legacy codebase, the generated response often sounds convincing while lacking connection to actual repository history.
+Traceback is a human-supervised verification system for AI-generated code explanations. When developers ask an AI coding assistant (such as GitHub Copilot, Cursor, or Claude Code) why a non-obvious function, workaround, or architectural choice exists in a codebase, the generated response often sounds convincing while lacking verifiable ground truth.
 
 Traceback bridges this gap by:
-
-1. Decomposing the AI explanation into atomic, verifiable claims.
+1. Decomposing the explanation into atomic, verifiable claims.
 2. Searching authorized repository history (Git commits, diffs, pull requests, issues, ADRs).
 3. Presenting retrieved evidence with immutable provenance links (commit SHAs, PR numbers, file lines).
-4. Providing an AI-grounded preliminary assessment while clearly separating it from human review.
+4. Providing an AI-grounded preliminary assessment while clearly demarcating it from human review.
 5. Enabling engineers to adjudicate claims as **Supported**, **Contradicted**, or **Unverified**.
 6. Exporting auditable verification reports in JSON and Markdown.
 
 ---
 
-## 2. Core Principles
+## 2. Monorepo Architecture Overview
 
-1. **Keyword similarity is not proof of correctness.**
-2. **Missing evidence does not prove a claim is false (Absence $\ne$ Contradiction).**
-3. **Tests reflect current behavior, not historical intent.**
-4. **AI assessments and human verdicts must strictly remain distinguishable.**
-5. **Never invent source references, commit SHAs, PR numbers, or quotes.**
-6. **Explicit abstention:** Say _"Insufficient Evidence"_ instead of hallucinating.
-7. **Repository content is untrusted data:** Code comments are data to inspect, never instructions.
-8. **Advisory by design:** No automatic code modifications, commits, or PR approvals in V1.
-9. **Zero credential leakage:** No tokens in logs, frontend bundles, or committed files.
-10. **Light theme is the default theme:** Initial loads render in light mode (`#F8FAFC`); dark mode is optional secondary.
+Traceback is organized as a Turborepo monorepo:
 
----
-
-## 3. Current Implementation Status vs. Planned Production V1
-
-### What Was Audited & Found in Workspace
-
-- **Initial Workspace State:** Workspace initialized with a fresh Git repository on branch `main`.
-- **Starter Prototype Audit Finding:** The starter prototype (`server.js`, `package.json`, etc.) was **absent** from the workspace. Per project safety rules, nonexistent code was not fabricated and no artificial test runs against phantom files were claimed.
-
-### What is Completed (Sprint 1: Product Foundation)
-
-- [x] **Project Conventions:** `.gitignore`, `.editorconfig`, and persistent [`AGENTS.md`](./AGENTS.md) operating principles.
-- [x] **Authoritative Product Specification:** [`PROJECT_SPEC.md`](./PROJECT_SPEC.md) answering the 8 foundational questions, defining RF-01 through RF-10, RN-01 through RN-12, and explicit scope exclusions.
-- [x] **Project Charter & Requirements:** [`docs/PROJECT_CHARTER.md`](./docs/PROJECT_CHARTER.md) and [`docs/product/PRODUCT_REQUIREMENTS.md`](./docs/product/PRODUCT_REQUIREMENTS.md).
-- [x] **Problem Definition & ICP:** [`docs/product/ICP_AND_PROBLEM.md`](./docs/product/ICP_AND_PROBLEM.md).
-- [x] **Competitor Research & Evidence Ledger:** [`docs/research/COMPETITOR_RESEARCH.md`](./docs/research/COMPETITOR_RESEARCH.md) and [`docs/research/EVIDENCE_LEDGER.md`](./docs/research/EVIDENCE_LEDGER.md) with verified October 2026 sources.
-- [x] **Developer Research Kit:** [`docs/research/INTERVIEW_GUIDE.md`](./docs/research/INTERVIEW_GUIDE.md) and [`docs/research/INTERVIEW_NOTES_TEMPLATE.md`](./docs/research/INTERVIEW_NOTES_TEMPLATE.md) (Field execution marked **Pending Human Research**).
-- [x] **Core UX Flow & Theming:** [`docs/ux/CORE_USER_FLOW.md`](./docs/ux/CORE_USER_FLOW.md) and [`docs/ux/THEME_SPEC.md`](./docs/ux/THEME_SPEC.md) defining WCAG AA design tokens (Light default, Dark secondary).
-- [x] **Architecture Decision Records:** [`docs/architecture/SYSTEM_OVERVIEW.md`](./docs/architecture/SYSTEM_OVERVIEW.md) and 10 detailed ADRs ([`ADR-001`](./docs/architecture/ADRs/ADR-001-repository-structure.md) to [`ADR-010`](./docs/architecture/ADRs/ADR-010-deployment-cost-controls.md)).
-- [x] **Security Threat Model:** [`docs/security/THREAT_MODEL.md`](./docs/security/THREAT_MODEL.md) covering 15 threat scenarios across 4 categories.
-- [x] **Evaluation Benchmark Plan:** [`docs/evaluation/EVALUATION_PLAN.md`](./docs/evaluation/EVALUATION_PLAN.md) and [`docs/evaluation/evaluation-case-template.csv`](./docs/evaluation/evaluation-case-template.csv).
-- [x] **Delivery Roadmap:** [`docs/SPRINT_ROADMAP.md`](./docs/SPRINT_ROADMAP.md) detailing all nine sprints.
-- [x] **Sprint 1 Backlog:** [`docs/sprints/SPRINT_1.md`](./docs/sprints/SPRINT_1.md) tracking tasks S1-01 through S1-12.
-
-### What Remains Planned for Sprints 2–9
-
-- Monorepo scaffolding, database migrations, and GitHub App authentication (Sprint 2).
-- Commit, diff, and PR ingestion pipelines with BullMQ and rate limiting (Sprint 3).
-- Hybrid search engine combining BM25 and `pgvector` with RRF ranking (Sprint 4).
-- Claim extraction LLM adapter and citation validation engine (Sprint 5).
-- Web application interface and interactive review board (Sprint 6).
-- Read-only Model Context Protocol (MCP) server for IDEs (Sprint 7).
-- Adversarial security testing and benchmark evaluation (Sprint 8).
-- Production deployment, automated backups, and runbooks (Sprint 9).
+```text
+traceback/
+├── apps/
+│   ├── web/                    # Next.js 14 App Router frontend (React, TypeScript)
+│   └── api/                    # NestJS backend service (REST API, Prisma, Guards)
+├── packages/
+│   └── shared-types/           # Shared domain contracts (claims, verdicts, envelopes)
+├── docs/                       # Project specifications, ADRs, UX flows, threat model
+├── .github/
+│   └── workflows/ci.yml        # Automated CI workflow (lint, test, typecheck, build)
+├── docker-compose.yml          # Local PostgreSQL & Redis container definitions
+├── package.json                # Monorepo root scripts
+├── pnpm-workspace.yaml         # Workspace package configuration
+└── turbo.json                  # Turborepo task pipeline
+```
 
 ---
 
-## 4. Nine-Sprint Roadmap Overview
-
-| Sprint       | Focus Area                      | Deliverables                                                                      |
-| :----------- | :------------------------------ | :-------------------------------------------------------------------------------- |
-| **Sprint 1** | **Product Foundation**          | Problem definition, research kit, UX flow, ADRs, threat model, evaluation plan    |
-| **Sprint 2** | **Project Foundation & Access** | Turborepo monorepo, CI/CD, Prisma schema, GitHub App auth, theme tokens           |
-| **Sprint 3** | **Repository Ingestion**        | Git & GitHub API ingestion (commits, diffs, PRs, issues), rate limiting, retries  |
-| **Sprint 4** | **Evidence Store & Retrieval**  | PostgreSQL + pgvector hybrid search, provenance records, RRF ranking benchmark    |
-| **Sprint 5** | **Claim Assessment**            | Claim extraction, AI adapter, grounding assessment, source validation, abstention |
-| **Sprint 6** | **Web Product**                 | Full web UI, repository selection, claim adjudication board, report export        |
-| **Sprint 7** | **Interoperability**            | Read-only MCP server tools for Cursor, Claude Code, Antigravity                   |
-| **Sprint 8** | **Quality & Validation**        | Penetration testing, adversarial tests, benchmark evaluation run, user interviews |
-| **Sprint 9** | **Deployment & Handoff**        | Production Docker deployment, runbooks, monitoring, automated backup drills       |
-
----
-
-## 5. Local Setup & Configuration Guide
+## 3. Local Development Quickstart
 
 ### Prerequisites
+- **Node.js:** $\ge 20.x$ (Tested on Node v22.17.0)
+- **pnpm:** $\ge 9.x$ (`npm install -g pnpm@9`)
+- **Docker & Docker Compose:** Optional for local PostgreSQL & Redis services.
 
-- Node.js $\ge 20.x$
-- pnpm $\ge 9.x$ or npm $\ge 10.x$
-- Docker & Docker Compose (for PostgreSQL and Redis in Sprint 2+)
-
-### Setup Commands
-
+### Installation & Build
 ```bash
-# 1. Clone the repository
-git clone <repo-url>
-cd HackFront
+# 1. Install all dependencies across monorepo workspaces
+pnpm install
 
-# 2. Inspect environment variables
-cp .env.example .env.local
+# 2. Generate Prisma Client
+pnpm --filter @traceback/api prisma:generate
 
-# 3. Verify documentation and git tree
-git log --oneline
-```
+# 3. Typecheck all workspaces
+pnpm typecheck
 
-### Planned Test Execution (from Sprint 2 onward)
-
-```bash
-# Run unit and integration test suites
+# 4. Run automated test suites (27 tests across web and api)
 pnpm test
 
-# Run documentation integrity check
-pnpm lint:docs
+# 5. Build all packages and applications
+pnpm build
+```
 
-# Run retrieval evaluation benchmark (Sprint 4+)
-pnpm eval:retrieval
+### Running Locally
+```bash
+# Start all applications concurrently in development mode
+pnpm dev
+
+# Or start individual applications:
+pnpm --filter @traceback/api dev    # NestJS API running on http://localhost:3001/api
+pnpm --filter @traceback/web dev    # Next.js Web running on http://localhost:3000
+```
+
+### Starting Local Database Services (Optional)
+```bash
+# Start PostgreSQL 16 and Redis containers
+docker compose up -d
+
+# Check service health
+docker compose ps
 ```
 
 ---
 
-## 6. Theming & Interface Specification
+## 4. Backend API Endpoints & Health Boundaries
 
-Traceback adheres to strict accessibility standards:
+The NestJS backend runs with global prefix `/api`:
 
-- **Default Theme:** **Light Mode** (`#F8FAFC` page background, `#FFFFFF` surfaces, `#0F172A` text).
-- **Secondary Theme:** **Dark Mode** (`#0B1220` page background, `#111827` surfaces, `#F8FAFC` text).
-- **Behavior:** First-time visits render in light mode regardless of OS settings. Manual selection persists via `localStorage` under `traceback-theme-preference`.
-- **Details:** See [`docs/ux/THEME_SPEC.md`](./docs/ux/THEME_SPEC.md).
+| Method | Endpoint | Description | Access Boundary |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/health` | Process liveness probe (`status: "ok"`, uptime, version) | Public |
+| `GET` | `/api/ready` | Dependency readiness probe (PostgreSQL & config check) | Public (Returns 200 or 503) |
+| `GET` | `/api/workspaces` | Lists authorized workspaces for authenticated user | Protected (`AuthGuard`) |
+| `GET` | `/api/workspaces/:workspaceId` | Workspace details with multi-tenant isolation | Protected (`WorkspaceGuard`) |
+| `GET` | `/api/workspaces/:workspaceId/github/repositories` | Lists accessible repositories in installation | Protected (`WorkspaceGuard`) |
+| `GET` | `/api/workspaces/:workspaceId/github/verify` | Verifies read-only repository permissions | Protected (`WorkspaceGuard`) |
 
 ---
 
-## 7. Known Limitations & Research Status
+## 5. Theming & Accessibility System
 
-- **Pending Human Interviews:** The developer interview kit is prepared, but field interviews remain pending. Product validation will be revisited once empirical interview transcripts are synthesized.
-- **Starter Prototype Absence:** In-place UI theme patching was blocked by the absence of a starter prototype in the initial repository; comprehensive theme specifications and CSS variables have been created for immediate application during Sprint 2 scaffolding.
-- **External API Dependencies:** Production functionality depends on GitHub API access and LLM provider endpoints.
+Traceback enforces strict accessibility and contrast standards:
+- **Default Theme:** **Light Mode** (`#F8FAFC` background, `#FFFFFF` surfaces, `#0F172A` text).
+- **Secondary Theme:** **Dark Mode** (`#0B1220` background, `#111827` surfaces, `#F8FAFC` text).
+- **Behavior:** First-time visits start in light mode regardless of operating system preferences.
+- **Persistence:** Manual theme preference persists in `localStorage` under `traceback-theme-preference`.
+- **Anti-Flash:** Inlined head script sets `data-theme` immediately before DOM render to prevent flashing.
+- **Accessibility:** Accessible `ThemeToggle` with `aria-pressed`, keyboard support, and visible focus rings.
+
+---
+
+## 6. GitHub App Integration Boundary (ADR-007)
+
+Traceback adheres strictly to the principle of least privilege:
+- **Requested Scopes:** Read-only access to repository contents, pull requests, and issues.
+- **Zero Write Access:** The system never performs automated source-code commits, edits, or PR merges.
+- **Credential Protection:** GitHub App private keys remain strictly on the backend and are never returned to clients or logged.
+- **Mock Sandbox:** When live GitHub App credentials are not provided in environment variables, the system operates seamlessly in sandbox mode using `MockGitHubClient` for testing and evaluation.
+
+---
+
+## 7. Delivery Status & Roadmap
+
+| Sprint | Focus Area | Status | Deliverables |
+| :--- | :--- | :--- | :--- |
+| **Sprint 1** | **Product Foundation** | **Completed** | Specifications, ADRs, UX flow, threat model, evaluation plan |
+| **Sprint 2** | **Project Foundation & Access** | **Completed** | Turborepo, Next.js, NestJS, Prisma schema, theme system, CI |
+| **Sprint 3** | **Repository Ingestion** | **Next (Ready)** | BullMQ worker, rate-limit handler, commit & diff fetchers |
+| **Sprint 4** | **Evidence Store & Retrieval** | Planned | PostgreSQL + pgvector hybrid search, RRF ranker |
+| **Sprint 5** | **Claim Assessment Engine** | Planned | LLM claim extraction, grounding assessment, abstention |
+| **Sprint 6** | **Web Product Experience** | Planned | Adjudication board, human verdict tagging, report export |
+| **Sprint 7** | **Interoperability & MCP** | Planned | Read-only MCP server tools for Cursor, Claude Code |
+| **Sprint 8** | **Quality & Validation** | Planned | Adversarial tests, benchmark evaluation run, developer interviews |
+| **Sprint 9** | **Deployment & Handoff** | Planned | Production Docker deployment, runbooks, monitoring |
 
 ---
 
 ## 8. Documentation Quick Links
-
 - [`PROJECT_SPEC.md`](./PROJECT_SPEC.md) — Authoritative Product Specification
 - [`AGENTS.md`](./AGENTS.md) — Persistent Instructions for AI Assistants
-- [`docs/PROJECT_CHARTER.md`](./docs/PROJECT_CHARTER.md) — Vision, Team & Strategic Alignment
-- [`docs/SPRINT_ROADMAP.md`](./docs/SPRINT_ROADMAP.md) — Complete 9-Sprint Delivery Roadmap
+- [`docs/sprints/SPRINT_2.md`](./docs/sprints/SPRINT_2.md) — Sprint 2 Backlog & Delivery Ledger
+- [`docs/sprints/SPRINT_1.md`](./docs/sprints/SPRINT_1.md) — Sprint 1 Backlog & Delivery Ledger
 - [`docs/architecture/SYSTEM_OVERVIEW.md`](./docs/architecture/SYSTEM_OVERVIEW.md) — System Architecture & ADR Index
 - [`docs/security/THREAT_MODEL.md`](./docs/security/THREAT_MODEL.md) — Security & Threat Matrix
 - [`docs/evaluation/EVALUATION_PLAN.md`](./docs/evaluation/EVALUATION_PLAN.md) — Benchmark Strategy & Metrics
 - [`docs/ux/THEME_SPEC.md`](./docs/ux/THEME_SPEC.md) — Design Tokens & Theming Rules
-- [`docs/sprints/SPRINT_1.md`](./docs/sprints/SPRINT_1.md) — Sprint 1 Task Backlog & Tracking

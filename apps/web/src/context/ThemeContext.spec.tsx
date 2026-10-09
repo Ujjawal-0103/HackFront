@@ -100,4 +100,26 @@ describe("Theme System & Persistence (TH-01 through TH-08)", () => {
     });
     expect(updatedToggle).toHaveAttribute("aria-pressed", "true");
   });
+
+  it("TH-01/TH-05: ignores OS prefers-color-scheme: dark and keeps light mode default on first visit", () => {
+    window.matchMedia = jest.fn().mockImplementation((query) => ({
+      matches: query === "(prefers-color-scheme: dark)",
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    }));
+
+    render(
+      <ThemeProvider>
+        <ThemeConsumer />
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByTestId("current-theme").textContent).toBe("light");
+    expect(document.documentElement.getAttribute("data-theme")).toBe("light");
+  });
 });

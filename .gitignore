@@ -9,6 +9,7 @@ build/
 out/
 .next/
 .cache/
+*.tsbuildinfo
 
 # Testing and coverage
 coverage/

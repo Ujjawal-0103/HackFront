@@ -37,6 +37,27 @@ describe("AuthGuard (Identity Boundary)", () => {
     expect(mockRequest.user.id).toBe("dev_user_456");
   });
 
+  it("should reject dev user header when in production mode", () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = "production";
+    try {
+      const mockRequest: any = {
+        headers: {
+          "x-user-id": "dev_user_456",
+        },
+      };
+      const mockContext = {
+        switchToHttp: () => ({ getRequest: () => mockRequest }),
+      } as ExecutionContext;
+
+      expect(() => guard.canActivate(mockContext)).toThrow(
+        UnauthorizedException,
+      );
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+    }
+  });
+
   it("should throw UnauthorizedException when no credentials are provided", () => {
     const mockRequest: any = {
       headers: {},

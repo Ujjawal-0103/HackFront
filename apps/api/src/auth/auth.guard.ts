@@ -40,6 +40,11 @@ export class AuthGuard implements CanActivate {
     }
 
     if (devUserId) {
+      if (process.env.NODE_ENV === "production") {
+        throw new UnauthorizedException(
+          "Development identity header is forbidden in production environment",
+        );
+      }
       request.user = {
         id: devUserId,
         email: `${devUserId}@example.com`,

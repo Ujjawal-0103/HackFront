@@ -4,6 +4,7 @@ import { configuration } from './config/configuration';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { WorkspacesModule } from './workspaces/workspaces.module';
+import { GitHubModule } from './github/github.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
     PrismaModule,
     HealthModule,
     WorkspacesModule,
+    GitHubModule,
   ],
 })
 export class AppModule {}

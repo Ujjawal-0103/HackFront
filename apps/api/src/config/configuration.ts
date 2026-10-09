@@ -13,7 +13,7 @@ export const configuration = (): { app: AppConfig } => {
   const corsOrigin = process.env.WEB_URL || "http://localhost:3000";
   const databaseUrl =
     process.env.DATABASE_URL ||
-    "postgresql://postgres:postgres@localhost:5432/traceback_dev?schema=public";
+    "postgresql://postgres:postgrespassword@localhost:5434/traceback_dev?schema=public";
   const redisHost = process.env.REDIS_HOST || "localhost";
   const redisPort = parseInt(process.env.REDIS_PORT || "6379", 10);
 

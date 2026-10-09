@@ -10,7 +10,11 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
-    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
+    "prisma:generate": "pnpm --filter @traceback/api prisma:generate",
+    "prisma:validate": "pnpm --filter @traceback/api prisma:validate",
+    "prisma:migrate:dev": "pnpm --filter @traceback/api prisma:migrate:dev",
+    "prisma:migrate:status": "pnpm --filter @traceback/api prisma:migrate:status"
   },
   "devDependencies": {
     "prettier": "^3.5.0",

@@ -57,7 +57,9 @@ describe("IngestionPersistenceService (Sprint 3 Part 4)", () => {
       ],
     }).compile();
 
-    service = module.get<IngestionPersistenceService>(IngestionPersistenceService);
+    service = module.get<IngestionPersistenceService>(
+      IngestionPersistenceService,
+    );
   });
 
   afterEach(() => {
@@ -87,7 +89,10 @@ describe("IngestionPersistenceService (Sprint 3 Part 4)", () => {
         indexedAt: new Date(),
       });
 
-      const result = await service.upsertRepositoryMetadata(mockRepoId, rawMetadata);
+      const result = await service.upsertRepositoryMetadata(
+        mockRepoId,
+        rawMetadata,
+      );
 
       expect(mockPrisma.repository.update).toHaveBeenCalledWith({
         where: { id: mockRepoId },
@@ -331,7 +336,12 @@ describe("IngestionPersistenceService (Sprint 3 Part 4)", () => {
         id: "pr-comment-uuid-1",
       });
 
-      const res = await service.persistPullRequest(mockRepoId, rawPr, mockComments, mockReviews);
+      const res = await service.persistPullRequest(
+        mockRepoId,
+        rawPr,
+        mockComments,
+        mockReviews,
+      );
 
       expect(mockPrisma.pullRequest.upsert).toHaveBeenCalledWith({
         where: {
@@ -366,14 +376,19 @@ describe("IngestionPersistenceService (Sprint 3 Part 4)", () => {
 
       // 1 standard comment + 1 review comment
       expect(mockPrisma.pullRequestComment.upsert).toHaveBeenCalledTimes(2);
-      expect(res).toEqual({ pullRequestId: "pr-record-uuid-42", commentsCount: 2 });
+      expect(res).toEqual({
+        pullRequestId: "pr-record-uuid-42",
+        commentsCount: 2,
+      });
     });
 
     it("should persist a batch of pull requests using comments and reviews map", async () => {
       mockPrisma.pullRequest.upsert.mockResolvedValue({ id: "pr-1" });
       mockPrisma.pullRequestComment.upsert.mockResolvedValue({ id: "c-1" });
 
-      const commentsMap = new Map<number, GitHubComment[]>([[42, mockComments]]);
+      const commentsMap = new Map<number, GitHubComment[]>([
+        [42, mockComments],
+      ]);
       const reviewsMap = new Map<number, GitHubReview[]>([[42, mockReviews]]);
 
       const batchResult = await service.persistPullRequests(
@@ -422,7 +437,11 @@ describe("IngestionPersistenceService (Sprint 3 Part 4)", () => {
         id: "issue-comment-record-1",
       });
 
-      const res = await service.persistIssue(mockRepoId, rawIssue, mockIssueComments);
+      const res = await service.persistIssue(
+        mockRepoId,
+        rawIssue,
+        mockIssueComments,
+      );
 
       expect(mockPrisma.issue.upsert).toHaveBeenCalledWith({
         where: {
@@ -452,7 +471,10 @@ describe("IngestionPersistenceService (Sprint 3 Part 4)", () => {
       });
 
       expect(mockPrisma.issueComment.upsert).toHaveBeenCalledTimes(1);
-      expect(res).toEqual({ issueId: "issue-record-uuid-101", commentsCount: 1 });
+      expect(res).toEqual({
+        issueId: "issue-record-uuid-101",
+        commentsCount: 1,
+      });
     });
 
     it("should skip issues that are pull requests to prevent duplicates", async () => {
@@ -478,7 +500,10 @@ describe("IngestionPersistenceService (Sprint 3 Part 4)", () => {
         isPullRequest: true,
       };
 
-      const batchResult = await service.persistIssues(mockRepoId, [rawIssue, prAsIssue]);
+      const batchResult = await service.persistIssues(mockRepoId, [
+        rawIssue,
+        prAsIssue,
+      ]);
       expect(batchResult).toEqual({ issuesCount: 1, commentsCount: 0 });
     });
   });
@@ -532,7 +557,9 @@ describe("IngestionPersistenceService (Sprint 3 Part 4)", () => {
         new Error("Database unique constraint violation / connection failed"),
       );
 
-      await expect(service.persistCommit(mockRepoId, rawCommit)).rejects.toThrow(
+      await expect(
+        service.persistCommit(mockRepoId, rawCommit),
+      ).rejects.toThrow(
         "Database unique constraint violation / connection failed",
       );
     });

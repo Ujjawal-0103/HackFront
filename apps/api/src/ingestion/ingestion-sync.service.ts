@@ -44,7 +44,11 @@ export class IngestionSyncService {
     workspaceIdParam?: string,
     trigger: SyncTrigger = "MANUAL",
   ): Promise<TriggerSyncResponse> {
-    if (!repositoryId || typeof repositoryId !== "string" || !repositoryId.trim()) {
+    if (
+      !repositoryId ||
+      typeof repositoryId !== "string" ||
+      !repositoryId.trim()
+    ) {
       throw new BadRequestException("Repository ID is required");
     }
 
@@ -56,7 +60,12 @@ export class IngestionSyncService {
       throw new NotFoundException(`Repository "${repositoryId}" not found`);
     }
 
-    await this.verifyAccess(repository.workspaceId, userId, workspaceIdParam, repositoryId);
+    await this.verifyAccess(
+      repository.workspaceId,
+      userId,
+      workspaceIdParam,
+      repositoryId,
+    );
 
     // Verify that the repository's workspace has an associated GitHub App installation
     const installation = await this.prisma.gitHubInstallation.findFirst({
@@ -148,7 +157,11 @@ export class IngestionSyncService {
     userId: string,
     workspaceIdParam?: string,
   ): Promise<RepositorySyncStatusResponse> {
-    if (!repositoryId || typeof repositoryId !== "string" || !repositoryId.trim()) {
+    if (
+      !repositoryId ||
+      typeof repositoryId !== "string" ||
+      !repositoryId.trim()
+    ) {
       throw new BadRequestException("Repository ID is required");
     }
 
@@ -160,7 +173,12 @@ export class IngestionSyncService {
       throw new NotFoundException(`Repository "${repositoryId}" not found`);
     }
 
-    await this.verifyAccess(repository.workspaceId, userId, workspaceIdParam, repositoryId);
+    await this.verifyAccess(
+      repository.workspaceId,
+      userId,
+      workspaceIdParam,
+      repositoryId,
+    );
 
     const syncJobs = await this.prisma.repositorySyncJob.findMany({
       where: { repositoryId: repository.id },
@@ -178,7 +196,9 @@ export class IngestionSyncService {
         pullRequests: j.pullRequestsCount,
         issues: j.issuesCount,
       },
-      errorMessage: j.errorMessage ? sanitizeErrorMessage(j.errorMessage) : undefined,
+      errorMessage: j.errorMessage
+        ? sanitizeErrorMessage(j.errorMessage)
+        : undefined,
       startedAt: j.startedAt ? j.startedAt.toISOString() : undefined,
       completedAt: j.completedAt ? j.completedAt.toISOString() : undefined,
       createdAt: j.createdAt.toISOString(),
@@ -190,7 +210,9 @@ export class IngestionSyncService {
 
     return {
       repositoryId: repository.id,
-      lastIndexedAt: repository.indexedAt ? repository.indexedAt.toISOString() : undefined,
+      lastIndexedAt: repository.indexedAt
+        ? repository.indexedAt.toISOString()
+        : undefined,
       activeJob,
       recentJobs,
     };
@@ -234,7 +256,9 @@ export class IngestionSyncService {
         pullRequests: job.pullRequestsCount,
         issues: job.issuesCount,
       },
-      errorMessage: job.errorMessage ? sanitizeErrorMessage(job.errorMessage) : undefined,
+      errorMessage: job.errorMessage
+        ? sanitizeErrorMessage(job.errorMessage)
+        : undefined,
       startedAt: job.startedAt ? job.startedAt.toISOString() : undefined,
       completedAt: job.completedAt ? job.completedAt.toISOString() : undefined,
       createdAt: job.createdAt.toISOString(),
@@ -256,7 +280,10 @@ export class IngestionSyncService {
       );
     }
 
-    const membership = await this.workspacesService.getMembership(workspaceId, userId);
+    const membership = await this.workspacesService.getMembership(
+      workspaceId,
+      userId,
+    );
     if (!membership) {
       throw new ForbiddenException(
         `Cross-workspace access denied: User "${userId}" does not have access to workspace "${workspaceId}"`,

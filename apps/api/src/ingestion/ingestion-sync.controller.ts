@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Param,
-  Body,
-  UseGuards,
-} from "@nestjs/common";
+import { Controller, Post, Get, Param, Body, UseGuards } from "@nestjs/common";
 import { AuthGuard } from "../auth/auth.guard";
 import { CurrentUser } from "../auth/current-user.decorator";
 import { AuthenticatedUser } from "../auth/auth.types";
@@ -59,11 +52,7 @@ export class IngestionSyncController {
     @Param("workspaceId") workspaceId: string | undefined,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<RepositorySyncStatusResponse> {
-    return this.syncService.getSyncStatus(
-      repositoryId,
-      user.id,
-      workspaceId,
-    );
+    return this.syncService.getSyncStatus(repositoryId, user.id, workspaceId);
   }
 
   /**
@@ -76,10 +65,6 @@ export class IngestionSyncController {
     @Param("workspaceId") workspaceId: string | undefined,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<RepositorySyncSummary> {
-    return this.syncService.getSyncJobDetails(
-      jobId,
-      user.id,
-      workspaceId,
-    );
+    return this.syncService.getSyncJobDetails(jobId, user.id, workspaceId);
   }
 }

@@ -1,7 +1,10 @@
 import { Test } from "@nestjs/testing";
 import { ConfigService, ConfigModule } from "@nestjs/config";
 import { GitHubModule } from "./github.module";
-import { GITHUB_BASE_URL_TOKEN, GITHUB_INGESTION_ADAPTER_TOKEN } from "./github-adapter.interface";
+import {
+  GITHUB_BASE_URL_TOKEN,
+  GITHUB_INGESTION_ADAPTER_TOKEN,
+} from "./github-adapter.interface";
 import { GitHubIngestionAdapter } from "./github-ingestion.adapter";
 import {
   GitHubAuthError,
@@ -80,8 +83,16 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
           sha: "7a8b9c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b",
           commit: {
             message: "fix: memoize row count mapper",
-            author: { name: "Alex", email: "alex@co.com", date: "2025-04-12T10:00:00Z" },
-            committer: { name: "Alex", email: "alex@co.com", date: "2025-04-12T10:00:00Z" },
+            author: {
+              name: "Alex",
+              email: "alex@co.com",
+              date: "2025-04-12T10:00:00Z",
+            },
+            committer: {
+              name: "Alex",
+              email: "alex@co.com",
+              date: "2025-04-12T10:00:00Z",
+            },
           },
           html_url: "https://github.com/org/repo/commit/7a8b9c",
           parents: [{ sha: "parent1" }],
@@ -105,7 +116,9 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
       });
 
       expect(result.items).toHaveLength(1);
-      expect(result.items[0].sha).toBe("7a8b9c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b");
+      expect(result.items[0].sha).toBe(
+        "7a8b9c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b",
+      );
       expect(result.hasMore).toBe(false);
       expect(result.rateLimit?.remaining).toBe(4950);
     });
@@ -133,14 +146,20 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
 
       expect(result.items).toHaveLength(30);
       expect(result.hasMore).toBe(true);
-      expect(result.nextUrl).toBe("https://api.github.com/repos/org/repo/commits?page=2");
+      expect(result.nextUrl).toBe(
+        "https://api.github.com/repos/org/repo/commits?page=2",
+      );
     });
 
     it("should extract nextUrl from Link header and parse continuation URL", async () => {
       const mockCommits = [
         {
           sha: "c1",
-          commit: { message: "msg", author: { name: "A", date: "2026-01-01" }, committer: { name: "A", date: "2026-01-01" } },
+          commit: {
+            message: "msg",
+            author: { name: "A", date: "2026-01-01" },
+            committer: { name: "A", date: "2026-01-01" },
+          },
           parents: [],
         },
       ];
@@ -154,16 +173,25 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
         json: async () => mockCommits,
       } as Response);
 
-      const result = await adapter.getCommits("Ujjawal-0103", "HackFront", { page: 1, perPage: 30 });
+      const result = await adapter.getCommits("Ujjawal-0103", "HackFront", {
+        page: 1,
+        perPage: 30,
+      });
       expect(result.hasMore).toBe(true);
-      expect(result.nextUrl).toBe("https://mock.api.github.test/repos/Ujjawal-0103/HackFront/commits?page=2&per_page=30");
+      expect(result.nextUrl).toBe(
+        "https://mock.api.github.test/repos/Ujjawal-0103/HackFront/commits?page=2&per_page=30",
+      );
     });
 
     it("should fetch commits from continuation URL safely", async () => {
       const mockCommits = [
         {
           sha: "c2",
-          commit: { message: "page 2 commit", author: { name: "B", date: "2026-01-02" }, committer: { name: "B", date: "2026-01-02" } },
+          commit: {
+            message: "page 2 commit",
+            author: { name: "B", date: "2026-01-02" },
+            committer: { name: "B", date: "2026-01-02" },
+          },
           parents: [],
         },
       ];
@@ -175,8 +203,13 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
         json: async () => mockCommits,
       } as Response);
 
-      const continuationUrl = "https://mock.api.github.test/repos/Ujjawal-0103/HackFront/commits?page=2&per_page=30";
-      const result = await adapter.getCommitsFromContinuationUrl("Ujjawal-0103", "HackFront", continuationUrl);
+      const continuationUrl =
+        "https://mock.api.github.test/repos/Ujjawal-0103/HackFront/commits?page=2&per_page=30";
+      const result = await adapter.getCommitsFromContinuationUrl(
+        "Ujjawal-0103",
+        "HackFront",
+        continuationUrl,
+      );
 
       expect(result.items).toHaveLength(1);
       expect(result.items[0].sha).toBe("c2");
@@ -192,7 +225,9 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
           "Ujjawal-0103",
           "HackFront",
         ),
-      ).toBe("https://mock.api.github.test/repos/Ujjawal-0103/HackFront/commits?page=2");
+      ).toBe(
+        "https://mock.api.github.test/repos/Ujjawal-0103/HackFront/commits?page=2",
+      );
 
       expect(
         adapter.validateContinuationUrl(
@@ -267,7 +302,11 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
         json: async () => mockDetail,
       } as Response);
 
-      const detail = await adapter.getCommit("Ujjawal-0103", "HackFront", "abc1234");
+      const detail = await adapter.getCommit(
+        "Ujjawal-0103",
+        "HackFront",
+        "abc1234",
+      );
 
       expect(detail.sha).toBe("abc1234");
       expect(detail.stats.total).toBe(12);
@@ -356,7 +395,11 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
         json: async () => mockFilePayload,
       } as Response);
 
-      const file = await adapter.getFileContent("Ujjawal-0103", "HackFront", "README.md");
+      const file = await adapter.getFileContent(
+        "Ujjawal-0103",
+        "HackFront",
+        "README.md",
+      );
       expect(file.content).toBe("# Welcome to Traceback");
       expect(file.size).toBe(32);
     });
@@ -377,9 +420,15 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
       } as Response);
 
       await expect(
-        adapter.getFileContent("Ujjawal-0103", "HackFront", "large-bundle.js", undefined, {
-          maxSizeBytes: 1024 * 1024,
-        }),
+        adapter.getFileContent(
+          "Ujjawal-0103",
+          "HackFront",
+          "large-bundle.js",
+          undefined,
+          {
+            maxSizeBytes: 1024 * 1024,
+          },
+        ),
       ).rejects.toThrow(GitHubPayloadTooLargeError);
     });
   });
@@ -397,7 +446,9 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
       global.fetch = fetchSpy;
 
       await expect(
-        adapter.getRepository("Ujjawal-0103", "HackFront", { token: "ghp_secretToken12345678901234567890" }),
+        adapter.getRepository("Ujjawal-0103", "HackFront", {
+          token: "ghp_secretToken12345678901234567890",
+        }),
       ).rejects.toThrow(GitHubAuthError);
 
       // Verify no retry was performed on 401
@@ -410,7 +461,9 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
         status: 403,
         statusText: "Forbidden",
         headers: new Headers({ "x-ratelimit-remaining": "4000" }),
-        json: async () => ({ message: "Must have push access or SSO authorization" }),
+        json: async () => ({
+          message: "Must have push access or SSO authorization",
+        }),
       } as Response);
 
       await expect(
@@ -479,7 +532,9 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
         status: 503,
         statusText: "Service Unavailable",
         headers: new Headers(),
-        json: async () => ({ message: "GitHub service temporarily unavailable" }),
+        json: async () => ({
+          message: "GitHub service temporarily unavailable",
+        }),
       } as Response);
       global.fetch = fetchSpy;
 
@@ -496,18 +551,25 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
       abortController.abort(); // Pre-aborted signal
 
       await expect(
-        adapter.getRepository("Ujjawal-0103", "HackFront", { signal: abortController.signal }),
+        adapter.getRepository("Ujjawal-0103", "HackFront", {
+          signal: abortController.signal,
+        }),
       ).rejects.toThrow(GitHubTransientError);
     });
 
     it("should never expose secret token in error message", async () => {
-      const sensitiveToken = "ghp_secretPersonalAccessToken98765432101234567890";
-      global.fetch = jest.fn().mockRejectedValue(
-        new Error(`Failed to authenticate with token ${sensitiveToken}`),
-      );
+      const sensitiveToken =
+        "ghp_secretPersonalAccessToken98765432101234567890";
+      global.fetch = jest
+        .fn()
+        .mockRejectedValue(
+          new Error(`Failed to authenticate with token ${sensitiveToken}`),
+        );
 
       try {
-        await adapter.getRepository("Ujjawal-0103", "HackFront", { token: sensitiveToken });
+        await adapter.getRepository("Ujjawal-0103", "HackFront", {
+          token: sensitiveToken,
+        });
         fail("Should have thrown");
       } catch (err: any) {
         expect(err.message).not.toContain(sensitiveToken);
@@ -516,7 +578,8 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
     });
 
     it("should redact bare fine-grained PATs, classic tokens, and bearer credentials", () => {
-      const bareFineGrained = "github_pat_11ABCD_mockSecretFineGrainedToken9876543210";
+      const bareFineGrained =
+        "github_pat_11ABCD_mockSecretFineGrainedToken9876543210";
       const bareClassicPat = "ghp_mockClassicPersonalAccessToken1234567890";
       const bareInstallation = "ghs_mockInstallationToken123456789012345";
       const bareOAuth = "gho_mockOAuthAccessToken12345678901234567890";
@@ -524,16 +587,28 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
       const tokenHeader = "token secret_token_header_val_xyz789";
 
       // 1. Direct sanitizer check on bare fine-grained PAT
-      const sanitizedPat = sanitizeErrorMessage(`Failed with bare fine-grained token ${bareFineGrained}`);
+      const sanitizedPat = sanitizeErrorMessage(
+        `Failed with bare fine-grained token ${bareFineGrained}`,
+      );
       expect(sanitizedPat).not.toContain(bareFineGrained);
       expect(sanitizedPat).toContain("[REDACTED_GITHUB_TOKEN]");
 
       // 2. Direct sanitizer checks on other token forms
-      expect(sanitizeErrorMessage(`Token: ${bareClassicPat}`)).not.toContain(bareClassicPat);
-      expect(sanitizeErrorMessage(`Token: ${bareInstallation}`)).not.toContain(bareInstallation);
-      expect(sanitizeErrorMessage(`Token: ${bareOAuth}`)).not.toContain(bareOAuth);
-      expect(sanitizeErrorMessage(`Auth: ${bearerHeader}`)).toBe("Auth: Bearer [REDACTED_TOKEN]");
-      expect(sanitizeErrorMessage(`Auth: ${tokenHeader}`)).toBe("Auth: token [REDACTED_TOKEN]");
+      expect(sanitizeErrorMessage(`Token: ${bareClassicPat}`)).not.toContain(
+        bareClassicPat,
+      );
+      expect(sanitizeErrorMessage(`Token: ${bareInstallation}`)).not.toContain(
+        bareInstallation,
+      );
+      expect(sanitizeErrorMessage(`Token: ${bareOAuth}`)).not.toContain(
+        bareOAuth,
+      );
+      expect(sanitizeErrorMessage(`Auth: ${bearerHeader}`)).toBe(
+        "Auth: Bearer [REDACTED_TOKEN]",
+      );
+      expect(sanitizeErrorMessage(`Auth: ${tokenHeader}`)).toBe(
+        "Auth: token [REDACTED_TOKEN]",
+      );
 
       // 3. GitHubAdapterError hierarchy sanitizes message and endpoint for bare fine-grained PAT
       const errorInstance = new GitHubAuthError(
@@ -547,13 +622,18 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
     });
 
     it("should redact bare fine-grained PAT when adapter encounters network failure", async () => {
-      const fineGrainedToken = "github_pat_11ABCD_mockSecretFineGrainedToken9876543210";
-      global.fetch = jest.fn().mockRejectedValue(
-        new Error(`Connection failed using ${fineGrainedToken}`),
-      );
+      const fineGrainedToken =
+        "github_pat_11ABCD_mockSecretFineGrainedToken9876543210";
+      global.fetch = jest
+        .fn()
+        .mockRejectedValue(
+          new Error(`Connection failed using ${fineGrainedToken}`),
+        );
 
       try {
-        await adapter.getRepository("Ujjawal-0103", "HackFront", { token: fineGrainedToken });
+        await adapter.getRepository("Ujjawal-0103", "HackFront", {
+          token: fineGrainedToken,
+        });
         fail("Should have thrown");
       } catch (err: any) {
         expect(err.message).not.toContain(fineGrainedToken);
@@ -577,7 +657,9 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
         ],
       }).compile();
 
-      const instance = moduleRef.get<GitHubIngestionAdapter>(GitHubIngestionAdapter);
+      const instance = moduleRef.get<GitHubIngestionAdapter>(
+        GitHubIngestionAdapter,
+      );
       expect(instance).toBeDefined();
       expect(instance).toBeInstanceOf(GitHubIngestionAdapter);
     });
@@ -601,10 +683,16 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
         ],
       }).compile();
 
-      const instance = moduleRef.get<GitHubIngestionAdapter>(GitHubIngestionAdapter);
+      const instance = moduleRef.get<GitHubIngestionAdapter>(
+        GitHubIngestionAdapter,
+      );
       expect(instance).toBeDefined();
       expect(
-        instance.validateContinuationUrl(`${customUrl}/repos/owner/repo/commits`, "owner", "repo"),
+        instance.validateContinuationUrl(
+          `${customUrl}/repos/owner/repo/commits`,
+          "owner",
+          "repo",
+        ),
       ).toBe(`${customUrl}/repos/owner/repo/commits`);
     });
 
@@ -624,22 +712,27 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
         ],
       }).compile();
 
-      const instance = moduleRef.get<GitHubIngestionAdapter>(GitHubIngestionAdapter);
+      const instance = moduleRef.get<GitHubIngestionAdapter>(
+        GitHubIngestionAdapter,
+      );
       expect(instance).toBeDefined();
       expect(
-        instance.validateContinuationUrl(`${tokenUrl}/repos/owner/repo/commits`, "owner", "repo"),
+        instance.validateContinuationUrl(
+          `${tokenUrl}/repos/owner/repo/commits`,
+          "owner",
+          "repo",
+        ),
       ).toBe(`${tokenUrl}/repos/owner/repo/commits`);
     });
 
     it("should compile within GitHubModule context without DI resolution errors", async () => {
       const moduleRef = await Test.createTestingModule({
-        imports: [
-          ConfigModule.forRoot({ isGlobal: true }),
-          GitHubModule,
-        ],
+        imports: [ConfigModule.forRoot({ isGlobal: true }), GitHubModule],
       }).compile();
 
-      const instance = moduleRef.get<GitHubIngestionAdapter>(GitHubIngestionAdapter);
+      const instance = moduleRef.get<GitHubIngestionAdapter>(
+        GitHubIngestionAdapter,
+      );
       expect(instance).toBeDefined();
       const tokenInstance = moduleRef.get(GITHUB_INGESTION_ADAPTER_TOKEN);
       expect(tokenInstance).toBeDefined();

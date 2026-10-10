@@ -22,8 +22,13 @@ describe("GitHubWebhookService (Sprint 3 Part 7)", () => {
 
   const testSecret = "test-webhook-secret-987654";
 
-  function createSignature(payload: string | Buffer, secret = testSecret): string {
-    const buf = Buffer.isBuffer(payload) ? payload : Buffer.from(payload, "utf8");
+  function createSignature(
+    payload: string | Buffer,
+    secret = testSecret,
+  ): string {
+    const buf = Buffer.isBuffer(payload)
+      ? payload
+      : Buffer.from(payload, "utf8");
     const hmac = crypto.createHmac("sha256", secret).update(buf).digest("hex");
     return `sha256=${hmac}`;
   }
@@ -76,7 +81,10 @@ describe("GitHubWebhookService (Sprint 3 Part 7)", () => {
         if (key === "app.nodeEnv") {
           return "test";
         }
-        if (key === "app.githubWebhookSecret" || key === "GITHUB_WEBHOOK_SECRET") {
+        if (
+          key === "app.githubWebhookSecret" ||
+          key === "GITHUB_WEBHOOK_SECRET"
+        ) {
           return testSecret;
         }
         return undefined;
@@ -104,7 +112,9 @@ describe("GitHubWebhookService (Sprint 3 Part 7)", () => {
       const rawBody = Buffer.from(JSON.stringify(samplePushPayload), "utf8");
       const signature = createSignature(rawBody, testSecret);
 
-      expect(verifyGitHubWebhookSignature(rawBody, signature, testSecret)).toBe(true);
+      expect(verifyGitHubWebhookSignature(rawBody, signature, testSecret)).toBe(
+        true,
+      );
     });
 
     it("should reject tampered or invalid signature", () => {
@@ -112,10 +122,18 @@ describe("GitHubWebhookService (Sprint 3 Part 7)", () => {
       const validSig = createSignature(rawBody, testSecret);
       const invalidSig = `sha256=${"0".repeat(64)}`;
 
-      expect(verifyGitHubWebhookSignature(rawBody, invalidSig, testSecret)).toBe(false);
-      expect(verifyGitHubWebhookSignature(rawBody, "invalid-format", testSecret)).toBe(false);
-      expect(verifyGitHubWebhookSignature(rawBody, undefined, testSecret)).toBe(false);
-      expect(verifyGitHubWebhookSignature(rawBody, validSig, "wrong-secret")).toBe(false);
+      expect(
+        verifyGitHubWebhookSignature(rawBody, invalidSig, testSecret),
+      ).toBe(false);
+      expect(
+        verifyGitHubWebhookSignature(rawBody, "invalid-format", testSecret),
+      ).toBe(false);
+      expect(verifyGitHubWebhookSignature(rawBody, undefined, testSecret)).toBe(
+        false,
+      );
+      expect(
+        verifyGitHubWebhookSignature(rawBody, validSig, "wrong-secret"),
+      ).toBe(false);
     });
 
     it("should throw UnauthorizedException when signature header is missing or invalid", () => {
@@ -137,21 +155,22 @@ describe("GitHubWebhookService (Sprint 3 Part 7)", () => {
       });
       delete process.env.GITHUB_WEBHOOK_SECRET;
 
-      expect(() => service.verifySignature(Buffer.from("{}"), "sha256=123")).toThrow(
-        "GitHub webhook secret is unconfigured in production",
-      );
+      expect(() =>
+        service.verifySignature(Buffer.from("{}"), "sha256=123"),
+      ).toThrow("GitHub webhook secret is unconfigured in production");
     });
 
     it("should fail closed in production when secret is set to the predictable development fallback", () => {
       mockConfigService.get.mockImplementation((key: string) => {
         if (key === "app.nodeEnv") return "production";
-        if (key === "app.githubWebhookSecret") return "development-webhook-secret";
+        if (key === "app.githubWebhookSecret")
+          return "development-webhook-secret";
         return undefined;
       });
 
-      expect(() => service.verifySignature(Buffer.from("{}"), "sha256=123")).toThrow(
-        "GitHub webhook secret is unconfigured in production",
-      );
+      expect(() =>
+        service.verifySignature(Buffer.from("{}"), "sha256=123"),
+      ).toThrow("GitHub webhook secret is unconfigured in production");
     });
 
     it("should verify successfully in production with a valid configured secret", () => {
@@ -171,7 +190,8 @@ describe("GitHubWebhookService (Sprint 3 Part 7)", () => {
     it("should preserve local development usability with development secret fallback", () => {
       mockConfigService.get.mockImplementation((key: string) => {
         if (key === "app.nodeEnv") return "development";
-        if (key === "app.githubWebhookSecret") return "development-webhook-secret";
+        if (key === "app.githubWebhookSecret")
+          return "development-webhook-secret";
         return undefined;
       });
 
@@ -227,7 +247,10 @@ describe("GitHubWebhookService (Sprint 3 Part 7)", () => {
     });
 
     it("should safely ignore unsupported events (e.g. star, fork)", async () => {
-      const rawBody = Buffer.from(JSON.stringify({ action: "created" }), "utf8");
+      const rawBody = Buffer.from(
+        JSON.stringify({ action: "created" }),
+        "utf8",
+      );
       const signature = createSignature(rawBody);
 
       const result = await service.handleWebhookDelivery(
@@ -315,7 +338,8 @@ describe("GitHubWebhookService (Sprint 3 Part 7)", () => {
 
       expect(result).toEqual({
         status: "ignored",
-        message: 'Repository "Ujjawal-0103/HackFront" is not registered in Traceback',
+        message:
+          'Repository "Ujjawal-0103/HackFront" is not registered in Traceback',
       });
       expect(mockPrisma.repositorySyncJob.create).not.toHaveBeenCalled();
       expect(mockQueue.add).not.toHaveBeenCalled();
@@ -414,7 +438,8 @@ describe("GitHubWebhookService (Sprint 3 Part 7)", () => {
 
       expect(result).toEqual({
         status: "ignored",
-        message: "Installation 998877 does not belong to repository's workspace",
+        message:
+          "Installation 998877 does not belong to repository's workspace",
       });
       expect(mockPrisma.repositorySyncJob.create).not.toHaveBeenCalled();
       expect(mockQueue.add).not.toHaveBeenCalled();
@@ -533,7 +558,8 @@ describe("GitHubWebhookService (Sprint 3 Part 7)", () => {
         status: "unsupported_revocation_state",
         action: "suspend",
         installationId: 778899,
-        message: "Installation suspension cannot be explicitly persisted without schema status field",
+        message:
+          "Installation suspension cannot be explicitly persisted without schema status field",
       });
       // Does not delete or invent fields
       expect(mockPrisma.gitHubInstallation.delete).not.toHaveBeenCalled();

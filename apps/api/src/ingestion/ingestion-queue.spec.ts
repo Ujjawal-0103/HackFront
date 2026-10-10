@@ -13,9 +13,7 @@ describe("IngestionQueue Scaffolding (Part 2)", () => {
   });
 
   it("should define standard job names", () => {
-    expect(INGESTION_JOB_NAMES.SYNC_REPOSITORY).toBe(
-      "sync-repository-history",
-    );
+    expect(INGESTION_JOB_NAMES.SYNC_REPOSITORY).toBe("sync-repository-history");
   });
 
   it("should configure bounded retry and backoff defaults", () => {

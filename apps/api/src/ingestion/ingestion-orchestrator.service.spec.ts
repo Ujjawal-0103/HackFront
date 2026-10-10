@@ -70,9 +70,15 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
       updateSyncJob: jest.fn().mockResolvedValue({}),
       upsertRepositoryMetadata: jest.fn().mockResolvedValue({}),
       updateRepositoryIndexedAt: jest.fn().mockResolvedValue({}),
-      persistCommits: jest.fn().mockResolvedValue({ commitsCount: 2, diffsCount: 2 }),
-      persistPullRequests: jest.fn().mockResolvedValue({ prsCount: 1, commentsCount: 1 }),
-      persistIssues: jest.fn().mockResolvedValue({ issuesCount: 1, commentsCount: 1 }),
+      persistCommits: jest
+        .fn()
+        .mockResolvedValue({ commitsCount: 2, diffsCount: 2 }),
+      persistPullRequests: jest
+        .fn()
+        .mockResolvedValue({ prsCount: 1, commentsCount: 1 }),
+      persistIssues: jest
+        .fn()
+        .mockResolvedValue({ issuesCount: 1, commentsCount: 1 }),
     };
 
     mockAdapter = {
@@ -98,7 +104,15 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
         url: `https://github.com/commit/${sha}`,
         parentShas: [],
         stats: { additions: 1, deletions: 0, total: 1 },
-        files: [{ filename: "index.ts", status: "added", additions: 1, deletions: 0, changes: 1 }],
+        files: [
+          {
+            filename: "index.ts",
+            status: "added",
+            additions: 1,
+            deletions: 0,
+            changes: 1,
+          },
+        ],
       })),
       getPullRequests: jest.fn().mockResolvedValue({
         items: [{ number: 42, title: "PR #42", author: "alex", state: "open" }],
@@ -118,7 +132,14 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
         headSha: "head-sha",
       }),
       getPullRequestComments: jest.fn().mockResolvedValue({
-        items: [{ id: "c1", author: "reviewer", body: "looks good", createdAt: "2025-01-01" }],
+        items: [
+          {
+            id: "c1",
+            author: "reviewer",
+            body: "looks good",
+            createdAt: "2025-01-01",
+          },
+        ],
         hasMore: false,
       }),
       getPullRequestReviews: jest.fn().mockResolvedValue({
@@ -127,13 +148,34 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
       }),
       getIssues: jest.fn().mockResolvedValue({
         items: [
-          { number: 10, title: "Issue #10", author: "qa", state: "open", isPullRequest: false, commentsCount: 1 },
-          { number: 42, title: "PR #42 in issues", author: "alex", state: "open", isPullRequest: true, commentsCount: 0 },
+          {
+            number: 10,
+            title: "Issue #10",
+            author: "qa",
+            state: "open",
+            isPullRequest: false,
+            commentsCount: 1,
+          },
+          {
+            number: 42,
+            title: "PR #42 in issues",
+            author: "alex",
+            state: "open",
+            isPullRequest: true,
+            commentsCount: 0,
+          },
         ],
         hasMore: false,
       }),
       getIssueComments: jest.fn().mockResolvedValue({
-        items: [{ id: "ic1", author: "dev", body: "working on it", createdAt: "2025-01-01" }],
+        items: [
+          {
+            id: "ic1",
+            author: "dev",
+            body: "working on it",
+            createdAt: "2025-01-01",
+          },
+        ],
         hasMore: false,
       }),
     };
@@ -147,7 +189,9 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
       ],
     }).compile();
 
-    service = module.get<IngestionOrchestratorService>(IngestionOrchestratorService);
+    service = module.get<IngestionOrchestratorService>(
+      IngestionOrchestratorService,
+    );
   });
 
   afterEach(() => {
@@ -181,7 +225,7 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
       mockPrisma.repositorySyncJob.findUnique.mockResolvedValue(null);
 
       await expect(service.orchestrateSync(validPayload)).rejects.toThrow(
-        "Sync job record \"job-uuid-222\" not found in database",
+        'Sync job record "job-uuid-222" not found in database',
       );
     });
 
@@ -203,7 +247,7 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
       });
 
       await expect(service.orchestrateSync(validPayload)).rejects.toThrow(
-        "Repository record \"repo-uuid-111\" not found in database",
+        'Repository record "repo-uuid-111" not found in database',
       );
     });
   });
@@ -244,15 +288,22 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
       );
 
       // Metadata persisted
-      expect(mockAdapter.getRepository).toHaveBeenCalledWith("Ujjawal-0103", "HackFront");
+      expect(mockAdapter.getRepository).toHaveBeenCalledWith(
+        "Ujjawal-0103",
+        "HackFront",
+      );
       expect(mockPersistence.upsertRepositoryMetadata).toHaveBeenCalled();
 
       // Commits, PRs, issues persisted
-      expect(mockAdapter.getCommits).toHaveBeenCalledWith("Ujjawal-0103", "HackFront", {
-        page: 1,
-        perPage: 50,
-        since: undefined,
-      });
+      expect(mockAdapter.getCommits).toHaveBeenCalledWith(
+        "Ujjawal-0103",
+        "HackFront",
+        {
+          page: 1,
+          perPage: 50,
+          since: undefined,
+        },
+      );
       expect(mockPersistence.persistCommits).toHaveBeenCalledTimes(1);
       expect(mockPersistence.persistPullRequests).toHaveBeenCalledTimes(1);
       expect(mockPersistence.persistIssues).toHaveBeenCalledTimes(1);
@@ -269,7 +320,9 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
         }),
       );
 
-      expect(mockPersistence.updateRepositoryIndexedAt).toHaveBeenCalledWith("repo-uuid-111");
+      expect(mockPersistence.updateRepositoryIndexedAt).toHaveBeenCalledWith(
+        "repo-uuid-111",
+      );
 
       expect(result).toEqual({
         status: "COMPLETED",
@@ -293,11 +346,15 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
 
       await service.orchestrateSync(validPayload);
 
-      expect(mockAdapter.getCommits).toHaveBeenCalledWith("Ujjawal-0103", "HackFront", {
-        page: 1,
-        perPage: 50,
-        since: indexedDate.toISOString(),
-      });
+      expect(mockAdapter.getCommits).toHaveBeenCalledWith(
+        "Ujjawal-0103",
+        "HackFront",
+        {
+          page: 1,
+          perPage: 50,
+          since: indexedDate.toISOString(),
+        },
+      );
     });
   });
 
@@ -305,7 +362,9 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
     it("should classify non-retryable GitHubAuthError: marks job FAILED and does not re-throw", async () => {
       mockPrisma.repositorySyncJob.findUnique.mockResolvedValue(mockSyncJob);
       mockAdapter.getRepository.mockRejectedValue(
-        new GitHubAuthError("Bad credentials with token ghp_secretToken12345678901234567890"),
+        new GitHubAuthError(
+          "Bad credentials with token ghp_secretToken12345678901234567890",
+        ),
       );
 
       const result = await service.orchestrateSync(validPayload);
@@ -323,7 +382,9 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
       expect(mockPersistence.updateSyncJob).toHaveBeenCalledWith(
         "job-uuid-222",
         expect.not.objectContaining({
-          errorMessage: expect.stringContaining("ghp_secretToken12345678901234567890"),
+          errorMessage: expect.stringContaining(
+            "ghp_secretToken12345678901234567890",
+          ),
         }),
       );
 
@@ -343,15 +404,17 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
         opts: { attempts: 3 },
       };
 
-      await expect(service.orchestrateSync(validPayload, mockJob)).rejects.toThrow(
-        rateLimitError,
-      );
+      await expect(
+        service.orchestrateSync(validPayload, mockJob),
+      ).rejects.toThrow(rateLimitError);
 
       // Does NOT mark status FAILED on attempt 1
       expect(mockPersistence.updateSyncJob).toHaveBeenCalledWith(
         "job-uuid-222",
         expect.objectContaining({
-          errorMessage: expect.stringContaining("[Attempt 1] Rate limit exceeded"),
+          errorMessage: expect.stringContaining(
+            "[Attempt 1] Rate limit exceeded",
+          ),
         }),
       );
     });
@@ -366,9 +429,9 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
         opts: { attempts: 3 },
       };
 
-      await expect(service.orchestrateSync(validPayload, mockJob)).rejects.toThrow(
-        transientError,
-      );
+      await expect(
+        service.orchestrateSync(validPayload, mockJob),
+      ).rejects.toThrow(transientError);
 
       // Marks job FAILED on final attempt
       expect(mockPersistence.updateSyncJob).toHaveBeenCalledWith(
@@ -393,7 +456,9 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
         "job-uuid-222",
         expect.objectContaining({
           status: "FAILED",
-          errorMessage: expect.stringContaining("not found or has been deleted"),
+          errorMessage: expect.stringContaining(
+            "not found or has been deleted",
+          ),
           completedAt: expect.any(Date),
         }),
       );
@@ -441,7 +506,9 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
         "job-uuid-222",
         expect.objectContaining({
           status: "FAILED",
-          errorMessage: expect.stringContaining("revoked or mismatched prior to external fetch"),
+          errorMessage: expect.stringContaining(
+            "revoked or mismatched prior to external fetch",
+          ),
           completedAt: expect.any(Date),
         }),
       );
@@ -451,10 +518,14 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
   describe("Pagination Truncation and Checkpoint Preservation", () => {
     it("should flag commits as truncated when page cap is reached with authoritative hasMore next link", async () => {
       mockPrisma.repositorySyncJob.findUnique.mockResolvedValue(mockSyncJob);
-      mockAdapter.getCommits.mockImplementation((_owner: string, _repo: string, params: any) => ({
-        items: [{ sha: `sha-${params.page}`, message: `commit ${params.page}` }],
-        hasMore: true,
-      }));
+      mockAdapter.getCommits.mockImplementation(
+        (_owner: string, _repo: string, params: any) => ({
+          items: [
+            { sha: `sha-${params.page}`, message: `commit ${params.page}` },
+          ],
+          hasMore: true,
+        }),
+      );
 
       const result = await service.orchestrateSync(validPayload);
 
@@ -480,10 +551,14 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
 
     it("should not flag commits as truncated when page cap is reached with hasMore: false", async () => {
       mockPrisma.repositorySyncJob.findUnique.mockResolvedValue(mockSyncJob);
-      mockAdapter.getCommits.mockImplementation((_owner: string, _repo: string, params: any) => ({
-        items: [{ sha: `sha-${params.page}`, message: `commit ${params.page}` }],
-        hasMore: params.page < 10,
-      }));
+      mockAdapter.getCommits.mockImplementation(
+        (_owner: string, _repo: string, params: any) => ({
+          items: [
+            { sha: `sha-${params.page}`, message: `commit ${params.page}` },
+          ],
+          hasMore: params.page < 10,
+        }),
+      );
 
       const result = await service.orchestrateSync(validPayload);
 
@@ -502,7 +577,9 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
       );
 
       // Checkpoint safely advances
-      expect(mockPersistence.updateRepositoryIndexedAt).toHaveBeenCalledWith("repo-uuid-111");
+      expect(mockPersistence.updateRepositoryIndexedAt).toHaveBeenCalledWith(
+        "repo-uuid-111",
+      );
     });
 
     it("should track truncation independently across multiple entities with different outcomes", async () => {
@@ -513,13 +590,30 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
         hasMore: false,
       });
       // PRs: reaches page 10 with hasMore: true
-      mockAdapter.getPullRequests.mockImplementation((_owner: string, _repo: string, params: any) => ({
-        items: [{ number: params.page, title: `PR #${params.page}`, author: "alex", state: "open" }],
-        hasMore: true,
-      }));
+      mockAdapter.getPullRequests.mockImplementation(
+        (_owner: string, _repo: string, params: any) => ({
+          items: [
+            {
+              number: params.page,
+              title: `PR #${params.page}`,
+              author: "alex",
+              state: "open",
+            },
+          ],
+          hasMore: true,
+        }),
+      );
       // Issues: single page, complete
       mockAdapter.getIssues.mockResolvedValue({
-        items: [{ number: 1, title: "Issue #1", author: "dev", state: "open", isPullRequest: false }],
+        items: [
+          {
+            number: 1,
+            title: "Issue #1",
+            author: "dev",
+            state: "open",
+            isPullRequest: false,
+          },
+        ],
         hasMore: false,
       });
 
@@ -528,12 +622,16 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
       expect(result.status).toBe("COMPLETED");
       expect(result.isTruncated).toBe(true);
       expect(result.truncatedEntities).toEqual(["pull_requests"]);
-      expect(result.warningMessage).toContain("Additional records remain unindexed on GitHub for: pull_requests.");
+      expect(result.warningMessage).toContain(
+        "Additional records remain unindexed on GitHub for: pull_requests.",
+      );
       expect(result.warningMessage).not.toContain("commits");
       expect(result.warningMessage).not.toContain("issues");
 
       // Commits were fully fetched, so indexedAt can safely advance
-      expect(mockPersistence.updateRepositoryIndexedAt).toHaveBeenCalledWith("repo-uuid-111");
+      expect(mockPersistence.updateRepositoryIndexedAt).toHaveBeenCalledWith(
+        "repo-uuid-111",
+      );
 
       expect(mockPersistence.updateSyncJob).toHaveBeenCalledWith(
         "job-uuid-222",
@@ -547,15 +645,32 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
 
     it("should persist accurate job warning, COMPLETED status, and completion timestamp on multi-entity truncation", async () => {
       mockPrisma.repositorySyncJob.findUnique.mockResolvedValue(mockSyncJob);
-      mockAdapter.getCommits.mockImplementation((_owner: string, _repo: string, params: any) => ({
-        items: [{ sha: `sha-${params.page}`, message: `commit ${params.page}` }],
-        hasMore: true,
-      }));
-      mockAdapter.getPullRequests.mockResolvedValue({ items: [], hasMore: false });
-      mockAdapter.getIssues.mockImplementation((_owner: string, _repo: string, params: any) => ({
-        items: [{ number: params.page, title: `Issue #${params.page}`, author: "dev", state: "open", isPullRequest: false }],
-        hasMore: true,
-      }));
+      mockAdapter.getCommits.mockImplementation(
+        (_owner: string, _repo: string, params: any) => ({
+          items: [
+            { sha: `sha-${params.page}`, message: `commit ${params.page}` },
+          ],
+          hasMore: true,
+        }),
+      );
+      mockAdapter.getPullRequests.mockResolvedValue({
+        items: [],
+        hasMore: false,
+      });
+      mockAdapter.getIssues.mockImplementation(
+        (_owner: string, _repo: string, params: any) => ({
+          items: [
+            {
+              number: params.page,
+              title: `Issue #${params.page}`,
+              author: "dev",
+              state: "open",
+              isPullRequest: false,
+            },
+          ],
+          hasMore: true,
+        }),
+      );
 
       const result = await service.orchestrateSync(validPayload);
 
@@ -576,10 +691,14 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
     it("should preserve previous indexedAt checkpoint after truncated run for safe subsequent incremental sync", async () => {
       // First run: initial sync with truncated commits
       mockPrisma.repositorySyncJob.findUnique.mockResolvedValue(mockSyncJob);
-      mockAdapter.getCommits.mockImplementation((_owner: string, _repo: string, params: any) => ({
-        items: [{ sha: `sha-${params.page}`, message: `commit ${params.page}` }],
-        hasMore: true,
-      }));
+      mockAdapter.getCommits.mockImplementation(
+        (_owner: string, _repo: string, params: any) => ({
+          items: [
+            { sha: `sha-${params.page}`, message: `commit ${params.page}` },
+          ],
+          hasMore: true,
+        }),
+      );
 
       await service.orchestrateSync(validPayload);
       expect(mockPersistence.updateRepositoryIndexedAt).not.toHaveBeenCalled();
@@ -604,13 +723,27 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
       expect(isRetryableIngestionError(new GitHubAuthError())).toBe(false);
       expect(isRetryableIngestionError(new GitHubForbiddenError())).toBe(false);
       expect(isRetryableIngestionError(new GitHubNotFoundError())).toBe(false);
-      expect(isRetryableIngestionError(new GitHubValidationError("bad input"))).toBe(false);
-      expect(isRetryableIngestionError(new IngestionNormalizationError("bad field"))).toBe(false);
-      expect(isRetryableIngestionError(new IngestionNonRetryableError("record missing"))).toBe(false);
+      expect(
+        isRetryableIngestionError(new GitHubValidationError("bad input")),
+      ).toBe(false);
+      expect(
+        isRetryableIngestionError(new IngestionNormalizationError("bad field")),
+      ).toBe(false);
+      expect(
+        isRetryableIngestionError(
+          new IngestionNonRetryableError("record missing"),
+        ),
+      ).toBe(false);
 
-      expect(isRetryableIngestionError(new GitHubRateLimitError("rate limited"))).toBe(true);
-      expect(isRetryableIngestionError(new GitHubTransientError("503 server error"))).toBe(true);
-      expect(isRetryableIngestionError(new Error("Generic network error"))).toBe(true);
+      expect(
+        isRetryableIngestionError(new GitHubRateLimitError("rate limited")),
+      ).toBe(true);
+      expect(
+        isRetryableIngestionError(new GitHubTransientError("503 server error")),
+      ).toBe(true);
+      expect(
+        isRetryableIngestionError(new Error("Generic network error")),
+      ).toBe(true);
     });
   });
 });

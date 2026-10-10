@@ -34,7 +34,10 @@ describe("GitHubWebhookController (Sprint 3 Part 7)", () => {
   });
 
   it("should pass headers, rawBody, and payload to webhookService and return result", async () => {
-    const rawBuffer = Buffer.from(JSON.stringify({ ref: "refs/heads/main" }), "utf8");
+    const rawBuffer = Buffer.from(
+      JSON.stringify({ ref: "refs/heads/main" }),
+      "utf8",
+    );
     const mockRequest = {
       rawBody: rawBuffer,
     } as any;
@@ -75,7 +78,13 @@ describe("GitHubWebhookController (Sprint 3 Part 7)", () => {
     const mockRequest = { rawBody: Buffer.from("{}") } as any;
 
     await expect(
-      controller.handleWebhook(mockRequest, "sha256=invalid", "push", "deliv-1", {}),
+      controller.handleWebhook(
+        mockRequest,
+        "sha256=invalid",
+        "push",
+        "deliv-1",
+        {},
+      ),
     ).rejects.toThrow(UnauthorizedException);
   });
 });

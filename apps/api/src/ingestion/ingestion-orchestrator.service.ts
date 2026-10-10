@@ -176,9 +176,10 @@ export class IngestionOrchestratorService {
 
     try {
       // Re-verify installation existence immediately prior to external fetch to prevent race with installation.deleted
-      const activeInstallation = await this.prisma.gitHubInstallation.findUnique({
-        where: { installationId: payload.installationId },
-      });
+      const activeInstallation =
+        await this.prisma.gitHubInstallation.findUnique({
+          where: { installationId: payload.installationId },
+        });
       if (
         !activeInstallation ||
         activeInstallation.workspaceId !== syncJob.repository.workspaceId
@@ -249,7 +250,9 @@ export class IngestionOrchestratorService {
       // If commits were NOT truncated, advance indexedAt to new Date().
       // If commits WERE truncated, preserve indexedAt at its previous value so subsequent syncs do not permanently skip omitted historical commits.
       if (!commitsResult.isTruncated) {
-        await this.persistenceService.updateRepositoryIndexedAt(syncJob.repositoryId);
+        await this.persistenceService.updateRepositoryIndexedAt(
+          syncJob.repositoryId,
+        );
       } else {
         this.logger.warn(
           `Commits ingestion for ${owner}/${repo} was truncated; repository.indexedAt checkpoint retained at previous value to protect historical records.`,
@@ -437,13 +440,12 @@ export class IngestionOrchestratorService {
 
         // Fetch comments and reviews for this PR
         try {
-          const commentsRes =
-            await this.githubAdapter.getPullRequestComments(
-              owner,
-              repo,
-              prSummary.number,
-              { page: 1, perPage: DEFAULT_PAGE_SIZE },
-            );
+          const commentsRes = await this.githubAdapter.getPullRequestComments(
+            owner,
+            repo,
+            prSummary.number,
+            { page: 1, perPage: DEFAULT_PAGE_SIZE },
+          );
           if (commentsRes.items && commentsRes.items.length > 0) {
             commentsMap.set(prSummary.number, commentsRes.items);
           }
@@ -568,16 +570,24 @@ export class IngestionOrchestratorService {
       throw new IngestionNonRetryableError("Ingestion job payload is missing");
     }
     if (!payload.repositoryId || typeof payload.repositoryId !== "string") {
-      throw new IngestionNonRetryableError("Ingestion payload missing valid repositoryId UUID");
+      throw new IngestionNonRetryableError(
+        "Ingestion payload missing valid repositoryId UUID",
+      );
     }
     if (!payload.syncJobId || typeof payload.syncJobId !== "string") {
-      throw new IngestionNonRetryableError("Ingestion payload missing valid syncJobId UUID");
+      throw new IngestionNonRetryableError(
+        "Ingestion payload missing valid syncJobId UUID",
+      );
     }
     if (!payload.installationId || typeof payload.installationId !== "number") {
-      throw new IngestionNonRetryableError("Ingestion payload missing valid numeric installationId");
+      throw new IngestionNonRetryableError(
+        "Ingestion payload missing valid numeric installationId",
+      );
     }
     if (!payload.fullName || typeof payload.fullName !== "string") {
-      throw new IngestionNonRetryableError("Ingestion payload missing valid fullName (owner/repo)");
+      throw new IngestionNonRetryableError(
+        "Ingestion payload missing valid fullName (owner/repo)",
+      );
     }
   }
 }

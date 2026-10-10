@@ -124,8 +124,12 @@ describe("Ingestion Normalizer (Sprint 3 Part 4)", () => {
       expect(normalized.message).toBe("feat: add table memoization");
       expect(normalized.authorName).toBe("Alex Maintainer");
       expect(normalized.authorEmail).toBe("alex@company.com");
-      expect(normalized.committedAt.toISOString()).toBe("2025-04-12T10:00:00.000Z");
-      expect(normalized.parentShas).toEqual(["f0e1d2c3b4a5f6e7d8c9b0a1f2e3d4c5b6a7f8e9"]);
+      expect(normalized.committedAt.toISOString()).toBe(
+        "2025-04-12T10:00:00.000Z",
+      );
+      expect(normalized.parentShas).toEqual([
+        "f0e1d2c3b4a5f6e7d8c9b0a1f2e3d4c5b6a7f8e9",
+      ]);
       expect(normalized.diffs).toHaveLength(2);
 
       expect(normalized.diffs[0]).toEqual({
@@ -166,7 +170,9 @@ describe("Ingestion Normalizer (Sprint 3 Part 4)", () => {
       const normalized = normalizeCommit(rawCommit);
       expect(normalized.authorName).toBe("CI Bot");
       expect(normalized.authorEmail).toBe("bot@company.com");
-      expect(normalized.committedAt.toISOString()).toBe("2025-05-01T12:00:00.000Z");
+      expect(normalized.committedAt.toISOString()).toBe(
+        "2025-05-01T12:00:00.000Z",
+      );
     });
 
     it("should throw IngestionNormalizationError on invalid commit SHA or date", () => {
@@ -268,7 +274,9 @@ describe("Ingestion Normalizer (Sprint 3 Part 4)", () => {
       const normalized = normalizePullRequest(rawPr);
       expect(normalized.state).toBe("merged");
       expect(normalized.isMerged).toBe(true);
-      expect(normalized.mergedAt?.toISOString()).toBe("2025-02-05T12:00:00.000Z");
+      expect(normalized.mergedAt?.toISOString()).toBe(
+        "2025-02-05T12:00:00.000Z",
+      );
       expect(normalized.body).toBeNull();
     });
 
@@ -351,7 +359,9 @@ describe("Ingestion Normalizer (Sprint 3 Part 4)", () => {
 
       const normalized = normalizeIssue(rawIssue);
       expect(normalized.state).toBe("closed");
-      expect(normalized.closedAt?.toISOString()).toBe("2025-03-05T08:00:00.000Z");
+      expect(normalized.closedAt?.toISOString()).toBe(
+        "2025-03-05T08:00:00.000Z",
+      );
 
       const comment = normalizeIssueComment({
         id: "99887766",
@@ -397,12 +407,16 @@ describe("Ingestion Normalizer (Sprint 3 Part 4)", () => {
       expect(comment).not.toBeNull();
       expect(comment?.githubCommentId).toBe("review_777123");
       expect(comment?.author).toBe("lead-reviewer");
-      expect(comment?.body).toBe("[Review: APPROVED] Approved with minor suggestions on types.");
+      expect(comment?.body).toBe(
+        "[Review: APPROVED] Approved with minor suggestions on types.",
+      );
       expect(comment?.createdAt.toISOString()).toBe("2025-03-03T10:00:00.000Z");
     });
 
     it("should return null for empty review with no body and no state", () => {
-      expect(normalizeReviewToComment({ id: 0, user: "", state: "" })).toBeNull();
+      expect(
+        normalizeReviewToComment({ id: 0, user: "", state: "" }),
+      ).toBeNull();
     });
   });
 });

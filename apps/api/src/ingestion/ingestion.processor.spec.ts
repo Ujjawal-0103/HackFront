@@ -63,7 +63,10 @@ describe("IngestionProcessor (Sprint 3 Part 5)", () => {
     const result = await processor.process(mockJob);
 
     expect(mockOrchestrator.orchestrateSync).toHaveBeenCalledTimes(1);
-    expect(mockOrchestrator.orchestrateSync).toHaveBeenCalledWith(validPayload, mockJob);
+    expect(mockOrchestrator.orchestrateSync).toHaveBeenCalledWith(
+      validPayload,
+      mockJob,
+    );
     expect(result).toEqual(expectedResult);
   });
 

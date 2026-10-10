@@ -1,6 +1,9 @@
 import { Injectable, Logger, Optional, Inject } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { IGitHubIngestionAdapter, GITHUB_BASE_URL_TOKEN } from "./github-adapter.interface";
+import {
+  IGitHubIngestionAdapter,
+  GITHUB_BASE_URL_TOKEN,
+} from "./github-adapter.interface";
 import {
   GitHubRepoDetails,
   GitHubCommitSummary,
@@ -96,13 +99,17 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
     if (options?.since) params.append("since", options.since);
     if (options?.until) params.append("until", options.until);
 
-    const { data, headers, rateLimit } = await this.executeRequestWithHeaders<any[]>(
+    const { data, headers, rateLimit } = await this.executeRequestWithHeaders<
+      any[]
+    >(
       `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits?${params.toString()}`,
       options,
     );
 
     if (!Array.isArray(data)) {
-      throw new GitHubInvalidResponseError("Expected commit array from GitHub API");
+      throw new GitHubInvalidResponseError(
+        "Expected commit array from GitHub API",
+      );
     }
 
     const items: GitHubCommitSummary[] = data.map((item) => ({
@@ -120,12 +127,18 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
         date: item.commit?.committer?.date || new Date().toISOString(),
         login: item.committer?.login,
       },
-      url: item.html_url || `https://github.com/${owner}/${repo}/commit/${item.sha}`,
-      parentShas: Array.isArray(item.parents) ? item.parents.map((p: any) => p.sha) : [],
+      url:
+        item.html_url ||
+        `https://github.com/${owner}/${repo}/commit/${item.sha}`,
+      parentShas: Array.isArray(item.parents)
+        ? item.parents.map((p: any) => p.sha)
+        : [],
     }));
 
     const nextUrl = this.extractNextUrl(headers);
-    const hasMore = nextUrl !== undefined || this.checkHasMore(items.length, perPage, headers);
+    const hasMore =
+      nextUrl !== undefined ||
+      this.checkHasMore(items.length, perPage, headers);
 
     return { items, page, perPage, hasMore, nextUrl, rateLimit };
   }
@@ -142,13 +155,14 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
     const parsed = new URL(continuationUrl);
     const endpointWithQuery = `${parsed.pathname}${parsed.search}`;
 
-    const { data, headers, rateLimit } = await this.executeRequestWithHeaders<any[]>(
-      endpointWithQuery,
-      options,
-    );
+    const { data, headers, rateLimit } = await this.executeRequestWithHeaders<
+      any[]
+    >(endpointWithQuery, options);
 
     if (!Array.isArray(data)) {
-      throw new GitHubInvalidResponseError("Expected commit array from GitHub API");
+      throw new GitHubInvalidResponseError(
+        "Expected commit array from GitHub API",
+      );
     }
 
     const items: GitHubCommitSummary[] = data.map((item) => ({
@@ -166,8 +180,12 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
         date: item.commit?.committer?.date || new Date().toISOString(),
         login: item.committer?.login,
       },
-      url: item.html_url || `https://github.com/${owner}/${repo}/commit/${item.sha}`,
-      parentShas: Array.isArray(item.parents) ? item.parents.map((p: any) => p.sha) : [],
+      url:
+        item.html_url ||
+        `https://github.com/${owner}/${repo}/commit/${item.sha}`,
+      parentShas: Array.isArray(item.parents)
+        ? item.parents.map((p: any) => p.sha)
+        : [],
     }));
 
     const nextUrl = this.extractNextUrl(headers);
@@ -177,7 +195,9 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
     const page = parsed.searchParams.get("page")
       ? parseInt(parsed.searchParams.get("page")!, 10)
       : 1;
-    const hasMore = nextUrl !== undefined || this.checkHasMore(items.length, perPage, headers);
+    const hasMore =
+      nextUrl !== undefined ||
+      this.checkHasMore(items.length, perPage, headers);
 
     return { items, page, perPage, hasMore, nextUrl, rateLimit };
   }
@@ -211,8 +231,12 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
         date: data.commit?.committer?.date || new Date().toISOString(),
         login: data.committer?.login,
       },
-      url: data.html_url || `https://github.com/${owner}/${repo}/commit/${data.sha}`,
-      parentShas: Array.isArray(data.parents) ? data.parents.map((p: any) => p.sha) : [],
+      url:
+        data.html_url ||
+        `https://github.com/${owner}/${repo}/commit/${data.sha}`,
+      parentShas: Array.isArray(data.parents)
+        ? data.parents.map((p: any) => p.sha)
+        : [],
       stats: {
         additions: data.stats?.additions || 0,
         deletions: data.stats?.deletions || 0,
@@ -247,13 +271,17 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
       state: options?.state || "all",
     });
 
-    const { data, headers, rateLimit } = await this.executeRequestWithHeaders<any[]>(
+    const { data, headers, rateLimit } = await this.executeRequestWithHeaders<
+      any[]
+    >(
       `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls?${params.toString()}`,
       options,
     );
 
     if (!Array.isArray(data)) {
-      throw new GitHubInvalidResponseError("Expected pull request array from GitHub API");
+      throw new GitHubInvalidResponseError(
+        "Expected pull request array from GitHub API",
+      );
     }
 
     const items: GitHubPullRequestSummary[] = data.map((pr) => ({
@@ -268,11 +296,14 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
       closedAt: pr.closed_at || undefined,
       mergedAt: pr.merged_at || undefined,
       mergeCommitSha: pr.merge_commit_sha || undefined,
-      url: pr.html_url || `https://github.com/${owner}/${repo}/pull/${pr.number}`,
+      url:
+        pr.html_url || `https://github.com/${owner}/${repo}/pull/${pr.number}`,
     }));
 
     const nextUrl = this.extractNextUrl(headers);
-    const hasMore = nextUrl !== undefined || this.checkHasMore(items.length, perPage, headers);
+    const hasMore =
+      nextUrl !== undefined ||
+      this.checkHasMore(items.length, perPage, headers);
     return { items, page, perPage, hasMore, nextUrl, rateLimit };
   }
 
@@ -300,7 +331,9 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
       closedAt: data.closed_at || undefined,
       mergedAt: data.merged_at || undefined,
       mergeCommitSha: data.merge_commit_sha || undefined,
-      url: data.html_url || `https://github.com/${owner}/${repo}/pull/${data.number}`,
+      url:
+        data.html_url ||
+        `https://github.com/${owner}/${repo}/pull/${data.number}`,
       additions: data.additions || 0,
       deletions: data.deletions || 0,
       changedFiles: data.changed_files || 0,
@@ -320,13 +353,17 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
     const page = Math.max(1, options?.page || 1);
     const perPage = Math.min(MAX_PER_PAGE, Math.max(1, options?.perPage || 30));
 
-    const { data, headers, rateLimit } = await this.executeRequestWithHeaders<any[]>(
+    const { data, headers, rateLimit } = await this.executeRequestWithHeaders<
+      any[]
+    >(
       `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${pullNumber}/reviews?page=${page}&per_page=${perPage}`,
       options,
     );
 
     if (!Array.isArray(data)) {
-      throw new GitHubInvalidResponseError("Expected reviews array from GitHub API");
+      throw new GitHubInvalidResponseError(
+        "Expected reviews array from GitHub API",
+      );
     }
 
     const items: GitHubReview[] = data.map((rev) => ({
@@ -338,7 +375,9 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
     }));
 
     const nextUrl = this.extractNextUrl(headers);
-    const hasMore = nextUrl !== undefined || this.checkHasMore(items.length, perPage, headers);
+    const hasMore =
+      nextUrl !== undefined ||
+      this.checkHasMore(items.length, perPage, headers);
     return { items, page, perPage, hasMore, nextUrl, rateLimit };
   }
 
@@ -352,13 +391,17 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
     const page = Math.max(1, options?.page || 1);
     const perPage = Math.min(MAX_PER_PAGE, Math.max(1, options?.perPage || 30));
 
-    const { data, headers, rateLimit } = await this.executeRequestWithHeaders<any[]>(
+    const { data, headers, rateLimit } = await this.executeRequestWithHeaders<
+      any[]
+    >(
       `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${pullNumber}/comments?page=${page}&per_page=${perPage}`,
       options,
     );
 
     if (!Array.isArray(data)) {
-      throw new GitHubInvalidResponseError("Expected PR review comments array from GitHub API");
+      throw new GitHubInvalidResponseError(
+        "Expected PR review comments array from GitHub API",
+      );
     }
 
     const items: GitHubComment[] = data.map((c) => ({
@@ -371,7 +414,9 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
     }));
 
     const nextUrl = this.extractNextUrl(headers);
-    const hasMore = nextUrl !== undefined || this.checkHasMore(items.length, perPage, headers);
+    const hasMore =
+      nextUrl !== undefined ||
+      this.checkHasMore(items.length, perPage, headers);
     return { items, page, perPage, hasMore, nextUrl, rateLimit };
   }
 
@@ -391,13 +436,17 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
       state: options?.state || "all",
     });
 
-    const { data, headers, rateLimit } = await this.executeRequestWithHeaders<any[]>(
+    const { data, headers, rateLimit } = await this.executeRequestWithHeaders<
+      any[]
+    >(
       `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues?${params.toString()}`,
       options,
     );
 
     if (!Array.isArray(data)) {
-      throw new GitHubInvalidResponseError("Expected issue array from GitHub API");
+      throw new GitHubInvalidResponseError(
+        "Expected issue array from GitHub API",
+      );
     }
 
     const items: GitHubIssueSummary[] = data.map((iss) => ({
@@ -411,11 +460,15 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
       createdAt: iss.created_at,
       updatedAt: iss.updated_at,
       closedAt: iss.closed_at || undefined,
-      url: iss.html_url || `https://github.com/${owner}/${repo}/issues/${iss.number}`,
+      url:
+        iss.html_url ||
+        `https://github.com/${owner}/${repo}/issues/${iss.number}`,
     }));
 
     const nextUrl = this.extractNextUrl(headers);
-    const hasMore = nextUrl !== undefined || this.checkHasMore(items.length, perPage, headers);
+    const hasMore =
+      nextUrl !== undefined ||
+      this.checkHasMore(items.length, perPage, headers);
     return { items, page, perPage, hasMore, nextUrl, rateLimit };
   }
 
@@ -429,13 +482,17 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
     const page = Math.max(1, options?.page || 1);
     const perPage = Math.min(MAX_PER_PAGE, Math.max(1, options?.perPage || 30));
 
-    const { data, headers, rateLimit } = await this.executeRequestWithHeaders<any[]>(
+    const { data, headers, rateLimit } = await this.executeRequestWithHeaders<
+      any[]
+    >(
       `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}/comments?page=${page}&per_page=${perPage}`,
       options,
     );
 
     if (!Array.isArray(data)) {
-      throw new GitHubInvalidResponseError("Expected issue comments array from GitHub API");
+      throw new GitHubInvalidResponseError(
+        "Expected issue comments array from GitHub API",
+      );
     }
 
     const items: GitHubComment[] = data.map((c) => ({
@@ -448,7 +505,9 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
     }));
 
     const nextUrl = this.extractNextUrl(headers);
-    const hasMore = nextUrl !== undefined || this.checkHasMore(items.length, perPage, headers);
+    const hasMore =
+      nextUrl !== undefined ||
+      this.checkHasMore(items.length, perPage, headers);
     return { items, page, perPage, hasMore, nextUrl, rateLimit };
   }
 
@@ -500,7 +559,9 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
     );
 
     if (data.type !== "file") {
-      throw new GitHubNotFoundError(`Path "${path}" is a directory or symlink, not a file`);
+      throw new GitHubNotFoundError(
+        `Path "${path}" is a directory or symlink, not a file`,
+      );
     }
 
     const maxBytes = options?.maxSizeBytes || MAX_FILE_SIZE_BYTES;
@@ -559,20 +620,27 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
   }
 
   // --- 6. Rate Limit Status ---
-  async getRateLimit(options?: GitHubRequestOptions): Promise<GitHubRateLimitInfo> {
+  async getRateLimit(
+    options?: GitHubRequestOptions,
+  ): Promise<GitHubRateLimitInfo> {
     const data = await this.executeRequest<any>("/rate_limit", options);
     const core = data?.resources?.core || data?.rate;
 
     return {
       limit: core?.limit || 60,
       remaining: core?.remaining || 0,
-      resetAt: new Date((core?.reset || Math.floor(Date.now() / 1000) + 3600) * 1000),
+      resetAt: new Date(
+        (core?.reset || Math.floor(Date.now() / 1000) + 3600) * 1000,
+      ),
       used: core?.used || 0,
     };
   }
 
   // --- HTTP Execution Engine with Bounded Retries & Error Mapping ---
-  private async executeRequest<T>(endpoint: string, options?: GitHubRequestOptions): Promise<T> {
+  private async executeRequest<T>(
+    endpoint: string,
+    options?: GitHubRequestOptions,
+  ): Promise<T> {
     const { data } = await this.executeRequestWithHeaders<T>(endpoint, options);
     return data;
   }
@@ -593,7 +661,9 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
 
       // Combine caller's signal if present
       if (options?.signal) {
-        options.signal.addEventListener("abort", () => controller.abort(), { once: true });
+        options.signal.addEventListener("abort", () => controller.abort(), {
+          once: true,
+        });
       }
 
       try {
@@ -638,35 +708,52 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
         } catch {
           // Response body was not JSON
         }
-        const message = responseBody?.message || response.statusText || `HTTP ${status}`;
+        const message =
+          responseBody?.message || response.statusText || `HTTP ${status}`;
 
         // Rate Limit Detection (403 or 429 with depleted quota or Retry-After)
         const retryAfterHeader = response.headers.get("retry-after");
-        const retryAfterSeconds = retryAfterHeader ? parseInt(retryAfterHeader, 10) : undefined;
+        const retryAfterSeconds = retryAfterHeader
+          ? parseInt(retryAfterHeader, 10)
+          : undefined;
         const isRateLimit =
           status === 429 ||
-          (status === 430) ||
-          (status === 403 && (rateLimit?.remaining === 0 || /rate limit|secondary rate/i.test(message)));
+          status === 430 ||
+          (status === 403 &&
+            (rateLimit?.remaining === 0 ||
+              /rate limit|secondary rate/i.test(message)));
 
         if (isRateLimit) {
-          throw new GitHubRateLimitError(`GitHub rate limit exceeded: ${message}`, {
-            limit: rateLimit?.limit,
-            remaining: rateLimit?.remaining,
-            resetAt: rateLimit?.resetAt,
-            retryAfterSeconds,
-            endpoint,
-          });
+          throw new GitHubRateLimitError(
+            `GitHub rate limit exceeded: ${message}`,
+            {
+              limit: rateLimit?.limit,
+              remaining: rateLimit?.remaining,
+              resetAt: rateLimit?.resetAt,
+              retryAfterSeconds,
+              endpoint,
+            },
+          );
         }
 
         // Authentication & Permissions (Non-retryable)
         if (status === 401) {
-          throw new GitHubAuthError(`GitHub authentication error: ${message}`, endpoint);
+          throw new GitHubAuthError(
+            `GitHub authentication error: ${message}`,
+            endpoint,
+          );
         }
         if (status === 403) {
-          throw new GitHubForbiddenError(`GitHub access forbidden: ${message}`, endpoint);
+          throw new GitHubForbiddenError(
+            `GitHub access forbidden: ${message}`,
+            endpoint,
+          );
         }
         if (status === 404) {
-          throw new GitHubNotFoundError(`GitHub resource not found at ${endpoint}: ${message}`, endpoint);
+          throw new GitHubNotFoundError(
+            `GitHub resource not found at ${endpoint}: ${message}`,
+            endpoint,
+          );
         }
 
         // Transient Server Errors (500, 502, 503, 504) -> Retry with exponential backoff
@@ -688,7 +775,11 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
         }
 
         // Other client errors (400, 422, etc.)
-        throw new GitHubApiError(`GitHub API error HTTP ${status}: ${message}`, status, endpoint);
+        throw new GitHubApiError(
+          `GitHub API error HTTP ${status}: ${message}`,
+          status,
+          endpoint,
+        );
       } catch (err: any) {
         clearTimeout(timeoutId);
 
@@ -696,7 +787,12 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
         if (err.name === "AbortError") {
           const isCallerAborted = Boolean(options?.signal?.aborted);
           if (isCallerAborted) {
-            throw new GitHubTransientError("GitHub request cancelled by caller", undefined, true, endpoint);
+            throw new GitHubTransientError(
+              "GitHub request cancelled by caller",
+              undefined,
+              true,
+              endpoint,
+            );
           }
           if (attempt <= maxRetries) {
             const backoffMs = Math.min(150 * Math.pow(2, attempt), 2000);
@@ -732,11 +828,15 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
       }
     }
 
-    throw new GitHubTransientError(`GitHub request exhausted ${maxRetries} retries on ${endpoint}`);
+    throw new GitHubTransientError(
+      `GitHub request exhausted ${maxRetries} retries on ${endpoint}`,
+    );
   }
 
   // --- Helper Methods ---
-  private parseRateLimitHeaders(headers: Headers): GitHubRateLimitInfo | undefined {
+  private parseRateLimitHeaders(
+    headers: Headers,
+  ): GitHubRateLimitInfo | undefined {
     const limit = headers.get("x-ratelimit-limit");
     const remaining = headers.get("x-ratelimit-remaining");
     const reset = headers.get("x-ratelimit-reset");
@@ -747,7 +847,9 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
         limit: parseInt(limit, 10),
         remaining: parseInt(remaining, 10),
         resetAt: new Date(parseInt(reset, 10) * 1000),
-        used: used ? parseInt(used, 10) : parseInt(limit, 10) - parseInt(remaining, 10),
+        used: used
+          ? parseInt(used, 10)
+          : parseInt(limit, 10) - parseInt(remaining, 10),
       };
     }
     return undefined;
@@ -773,18 +875,24 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
     expectedEndpoint = "commits",
   ): string {
     if (!urlStr || typeof urlStr !== "string") {
-      throw new GitHubValidationError("Continuation URL must be a non-empty string");
+      throw new GitHubValidationError(
+        "Continuation URL must be a non-empty string",
+      );
     }
 
     let parsed: URL;
     try {
       parsed = new URL(urlStr);
     } catch {
-      throw new GitHubValidationError(`Invalid continuation URL: malformed URL string "${urlStr}"`);
+      throw new GitHubValidationError(
+        `Invalid continuation URL: malformed URL string "${urlStr}"`,
+      );
     }
 
     if (parsed.protocol !== "https:") {
-      throw new GitHubValidationError(`Invalid continuation URL: protocol must be https, got "${parsed.protocol}"`);
+      throw new GitHubValidationError(
+        `Invalid continuation URL: protocol must be https, got "${parsed.protocol}"`,
+      );
     }
 
     let allowedHost: string;
@@ -794,7 +902,10 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
       allowedHost = "api.github.com";
     }
 
-    if (parsed.hostname.toLowerCase() !== allowedHost && parsed.hostname.toLowerCase() !== "api.github.com") {
+    if (
+      parsed.hostname.toLowerCase() !== allowedHost &&
+      parsed.hostname.toLowerCase() !== "api.github.com"
+    ) {
       throw new GitHubValidationError(
         `Invalid continuation URL: hostname "${parsed.hostname}" does not match allowed host "${allowedHost}"`,
       );
@@ -802,8 +913,12 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
 
     const expectedPrefix = `/repos/${expectedOwner.toLowerCase()}/${expectedRepo.toLowerCase()}/${expectedEndpoint.toLowerCase()}`;
     const actualPath = parsed.pathname.toLowerCase();
-    const isOwnerRepoPrefix = actualPath === expectedPrefix || actualPath.startsWith(expectedPrefix + "/");
-    const isRepoIdPrefix = new RegExp(`^/repositories/\\d+/${expectedEndpoint.toLowerCase()}(/|$)`).test(actualPath);
+    const isOwnerRepoPrefix =
+      actualPath === expectedPrefix ||
+      actualPath.startsWith(expectedPrefix + "/");
+    const isRepoIdPrefix = new RegExp(
+      `^/repositories/\\d+/${expectedEndpoint.toLowerCase()}(/|$)`,
+    ).test(actualPath);
 
     if (!isOwnerRepoPrefix && !isRepoIdPrefix) {
       throw new GitHubValidationError(
@@ -814,7 +929,11 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
     return urlStr;
   }
 
-  private checkHasMore(itemCount: number, perPage: number, headers: Headers): boolean {
+  private checkHasMore(
+    itemCount: number,
+    perPage: number,
+    headers: Headers,
+  ): boolean {
     if (itemCount < perPage) {
       return false;
     }
@@ -827,23 +946,31 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
 
   private validateOwnerRepo(owner: string, repo: string): void {
     if (!owner || !repo) {
-      throw new GitHubValidationError("Repository owner and repo must be non-empty strings");
+      throw new GitHubValidationError(
+        "Repository owner and repo must be non-empty strings",
+      );
     }
     const validIdentifier = /^[a-zA-Z0-9_.-]+$/;
     if (!validIdentifier.test(owner) || !validIdentifier.test(repo)) {
-      throw new GitHubValidationError(`Invalid owner or repository name identifier: "${owner}/${repo}"`);
+      throw new GitHubValidationError(
+        `Invalid owner or repository name identifier: "${owner}/${repo}"`,
+      );
     }
   }
 
   private validateSha(sha: string): void {
     if (!sha || !/^[a-zA-Z0-9._-]+$/.test(sha)) {
-      throw new GitHubValidationError(`Invalid commit/tree SHA reference: "${sha}"`);
+      throw new GitHubValidationError(
+        `Invalid commit/tree SHA reference: "${sha}"`,
+      );
     }
   }
 
   private validatePath(path: string): void {
     if (!path || path.includes("..")) {
-      throw new GitHubValidationError(`Invalid repository file path: "${path}"`);
+      throw new GitHubValidationError(
+        `Invalid repository file path: "${path}"`,
+      );
     }
   }
 

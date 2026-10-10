@@ -22,8 +22,8 @@ export const configuration = (): { app: AppConfig } => {
   const isProduction = nodeEnv === "production";
   const rawWebhookSecret = process.env.GITHUB_WEBHOOK_SECRET?.trim();
   const githubWebhookSecret = isProduction
-    ? (rawWebhookSecret || undefined)
-    : (rawWebhookSecret || "development-webhook-secret");
+    ? rawWebhookSecret || undefined
+    : rawWebhookSecret || "development-webhook-secret";
 
   return {
     app: {

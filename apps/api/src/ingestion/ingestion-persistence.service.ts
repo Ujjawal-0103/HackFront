@@ -241,7 +241,12 @@ export class IngestionPersistenceService {
     for (const rawPr of rawPrs) {
       const comments = commentsMap?.get(rawPr.number) || [];
       const reviews = reviewsMap?.get(rawPr.number) || [];
-      const { commentsCount } = await this.persistPullRequest(repositoryId, rawPr, comments, reviews);
+      const { commentsCount } = await this.persistPullRequest(
+        repositoryId,
+        rawPr,
+        comments,
+        reviews,
+      );
       totalComments += commentsCount;
     }
     return { prsCount: rawPrs.length, commentsCount: totalComments };

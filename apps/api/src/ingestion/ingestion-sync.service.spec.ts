@@ -95,7 +95,9 @@ describe("IngestionSyncService (Sprint 3 Part 6)", () => {
         userId: mockUserId,
         role: "MEMBER",
       });
-      mockPrisma.gitHubInstallation.findFirst.mockResolvedValue(mockInstallation);
+      mockPrisma.gitHubInstallation.findFirst.mockResolvedValue(
+        mockInstallation,
+      );
       mockPrisma.repositorySyncJob.create.mockResolvedValue(mockCreatedJob);
       mockQueue.add.mockResolvedValue({ id: "bullmq-job-1" });
 
@@ -146,9 +148,9 @@ describe("IngestionSyncService (Sprint 3 Part 6)", () => {
     });
 
     it("should throw BadRequestException if repositoryId is empty or whitespace", async () => {
-      await expect(
-        service.triggerManualSync("", mockUserId),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.triggerManualSync("", mockUserId)).rejects.toThrow(
+        BadRequestException,
+      );
 
       await expect(
         service.triggerManualSync("   ", mockUserId),
@@ -167,7 +169,11 @@ describe("IngestionSyncService (Sprint 3 Part 6)", () => {
       mockPrisma.repository.findUnique.mockResolvedValue(mockRepository);
 
       await expect(
-        service.triggerManualSync(mockRepositoryId, mockUserId, "different-workspace"),
+        service.triggerManualSync(
+          mockRepositoryId,
+          mockUserId,
+          "different-workspace",
+        ),
       ).rejects.toThrow(ForbiddenException);
     });
 
@@ -176,7 +182,11 @@ describe("IngestionSyncService (Sprint 3 Part 6)", () => {
       mockWorkspacesService.getMembership.mockResolvedValue(null);
 
       await expect(
-        service.triggerManualSync(mockRepositoryId, mockUserId, mockWorkspaceId),
+        service.triggerManualSync(
+          mockRepositoryId,
+          mockUserId,
+          mockWorkspaceId,
+        ),
       ).rejects.toThrow(ForbiddenException);
     });
 
@@ -190,7 +200,11 @@ describe("IngestionSyncService (Sprint 3 Part 6)", () => {
       mockPrisma.gitHubInstallation.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.triggerManualSync(mockRepositoryId, mockUserId, mockWorkspaceId),
+        service.triggerManualSync(
+          mockRepositoryId,
+          mockUserId,
+          mockWorkspaceId,
+        ),
       ).rejects.toThrow(BadRequestException);
 
       // Verify no job record or queue entry was created
@@ -212,7 +226,11 @@ describe("IngestionSyncService (Sprint 3 Part 6)", () => {
       });
 
       await expect(
-        service.triggerManualSync(mockRepositoryId, mockUserId, mockWorkspaceId),
+        service.triggerManualSync(
+          mockRepositoryId,
+          mockUserId,
+          mockWorkspaceId,
+        ),
       ).rejects.toThrow(BadRequestException);
 
       // Verify no job record or queue entry was created
@@ -227,12 +245,20 @@ describe("IngestionSyncService (Sprint 3 Part 6)", () => {
         userId: mockUserId,
         role: "MEMBER",
       });
-      mockPrisma.gitHubInstallation.findFirst.mockResolvedValue(mockInstallation);
+      mockPrisma.gitHubInstallation.findFirst.mockResolvedValue(
+        mockInstallation,
+      );
       mockPrisma.repositorySyncJob.create.mockResolvedValue(mockCreatedJob);
-      mockQueue.add.mockRejectedValue(new Error("Redis connection refused on 6379"));
+      mockQueue.add.mockRejectedValue(
+        new Error("Redis connection refused on 6379"),
+      );
 
       await expect(
-        service.triggerManualSync(mockRepositoryId, mockUserId, mockWorkspaceId),
+        service.triggerManualSync(
+          mockRepositoryId,
+          mockUserId,
+          mockWorkspaceId,
+        ),
       ).rejects.toThrow(ServiceUnavailableException);
 
       // Verify job was transitioned to FAILED so it does not remain pending
@@ -341,7 +367,11 @@ describe("IngestionSyncService (Sprint 3 Part 6)", () => {
         role: "MEMBER",
       });
 
-      const details = await service.getSyncJobDetails("job-101", mockUserId, mockWorkspaceId);
+      const details = await service.getSyncJobDetails(
+        "job-101",
+        mockUserId,
+        mockWorkspaceId,
+      );
 
       expect(details.id).toBe("job-101");
       expect(details.status).toBe("COMPLETED");

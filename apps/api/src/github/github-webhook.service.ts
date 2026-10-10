@@ -93,7 +93,14 @@ export class GitHubWebhookService {
     rawBody: Buffer | string | undefined,
     payload: any,
   ): Promise<{
-    status: "ok" | "enqueued" | "ignored" | "duplicate" | "revoked" | "unsupported_revocation_state" | "handled";
+    status:
+      | "ok"
+      | "enqueued"
+      | "ignored"
+      | "duplicate"
+      | "revoked"
+      | "unsupported_revocation_state"
+      | "handled";
     message?: string;
     jobId?: string;
     repositoryId?: string;
@@ -111,12 +118,16 @@ export class GitHubWebhookService {
 
     const deliveryId = headers.deliveryId;
     if (!deliveryId || typeof deliveryId !== "string" || !deliveryId.trim()) {
-      throw new BadRequestException("Missing or invalid X-GitHub-Delivery header");
+      throw new BadRequestException(
+        "Missing or invalid X-GitHub-Delivery header",
+      );
     }
 
     // 2. Delivery ID Deduplication (in-memory LRU cache + BullMQ queue check)
     if (this.recentDeliveries.has(deliveryId)) {
-      this.logger.log(`Ignoring duplicate delivery ID (in-memory): ${deliveryId}`);
+      this.logger.log(
+        `Ignoring duplicate delivery ID (in-memory): ${deliveryId}`,
+      );
       return {
         status: "duplicate",
         message: `Delivery ${deliveryId} already processed`,
@@ -125,7 +136,9 @@ export class GitHubWebhookService {
     }
 
     try {
-      const existingJob = await this.ingestionQueue.getJob(`delivery_${deliveryId}`);
+      const existingJob = await this.ingestionQueue.getJob(
+        `delivery_${deliveryId}`,
+      );
       if (existingJob) {
         this.logger.log(
           `Ignoring duplicate delivery ID from active queue state: ${deliveryId}`,
@@ -145,7 +158,9 @@ export class GitHubWebhookService {
 
     // 3. Handle Ping Event
     if (event === "ping") {
-      this.logger.log(`Received GitHub webhook ping (hookId: ${payload?.hook_id})`);
+      this.logger.log(
+        `Received GitHub webhook ping (hookId: ${payload?.hook_id})`,
+      );
       return { status: "ok", message: "pong" };
     }
 
@@ -185,18 +200,23 @@ export class GitHubWebhookService {
       this.configService.get<string>("app.githubWebhookSecret") ||
       (isProduction
         ? process.env.GITHUB_WEBHOOK_SECRET?.trim()
-        : process.env.GITHUB_WEBHOOK_SECRET?.trim() || "development-webhook-secret") ||
+        : process.env.GITHUB_WEBHOOK_SECRET?.trim() ||
+          "development-webhook-secret") ||
       "";
 
     if (isProduction && (!secret || secret === "development-webhook-secret")) {
       this.logger.error(
         "GitHub webhook verification rejected: GITHUB_WEBHOOK_SECRET is unconfigured or insecure in production environment",
       );
-      throw new UnauthorizedException("GitHub webhook secret is unconfigured in production");
+      throw new UnauthorizedException(
+        "GitHub webhook secret is unconfigured in production",
+      );
     }
 
     if (!secret) {
-      this.logger.warn("GitHub webhook secret is not configured in environment");
+      this.logger.warn(
+        "GitHub webhook secret is not configured in environment",
+      );
       throw new UnauthorizedException("GitHub webhook secret is unconfigured");
     }
 
@@ -204,9 +224,15 @@ export class GitHubWebhookService {
       throw new UnauthorizedException("Missing X-Hub-Signature-256 header");
     }
 
-    const isValid = verifyGitHubWebhookSignature(rawBody, signatureHeader, secret);
+    const isValid = verifyGitHubWebhookSignature(
+      rawBody,
+      signatureHeader,
+      secret,
+    );
     if (!isValid) {
-      throw new UnauthorizedException("Invalid X-Hub-Signature-256 webhook signature");
+      throw new UnauthorizedException(
+        "Invalid X-Hub-Signature-256 webhook signature",
+      );
     }
   }
 
@@ -304,7 +330,9 @@ export class GitHubWebhookService {
 
     // Validate installation identification strictly from webhook payload (no dummy 1001 fallback)
     const rawInstallationId = payload?.installation?.id;
-    const installationId = rawInstallationId ? Number(rawInstallationId) : undefined;
+    const installationId = rawInstallationId
+      ? Number(rawInstallationId)
+      : undefined;
 
     if (!installationId || isNaN(installationId)) {
       this.logger.warn(

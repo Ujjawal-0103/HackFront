@@ -25,7 +25,8 @@ export class MockGitHubIngestionAdapter implements IGitHubIngestionAdapter {
     name: "HackFront",
     fullName: "Ujjawal-0103/HackFront",
     owner: "Ujjawal-0103",
-    description: "Human-supervised verification system for AI-generated code explanations",
+    description:
+      "Human-supervised verification system for AI-generated code explanations",
     defaultBranch: "main",
     isPrivate: false,
     isFork: false,
@@ -37,7 +38,8 @@ export class MockGitHubIngestionAdapter implements IGitHubIngestionAdapter {
   private commits: GitHubCommitDetail[] = [
     {
       sha: "7a8b9c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b",
-      message: "feat: add table memoization to prevent re-renders when rows > 500",
+      message:
+        "feat: add table memoization to prevent re-renders when rows > 500",
       author: {
         name: "Alex Maintainer",
         email: "alex@company.com",
@@ -60,7 +62,8 @@ export class MockGitHubIngestionAdapter implements IGitHubIngestionAdapter {
           additions: 15,
           deletions: 2,
           changes: 17,
-          patch: "@@ -10,2 +10,15 @@\n+ const memoizedRows = useMemo(() => {\n+   return compute(data);\n+ }, [data]);",
+          patch:
+            "@@ -10,2 +10,15 @@\n+ const memoizedRows = useMemo(() => {\n+   return compute(data);\n+ }, [data]);",
         },
       ],
     },
@@ -106,10 +109,20 @@ export class MockGitHubIngestionAdapter implements IGitHubIngestionAdapter {
   ];
 
   async getRepository(owner: string, repo: string): Promise<GitHubRepoDetails> {
-    if (owner.toLowerCase() !== "ujjawal-0103" && owner.toLowerCase() !== "acme-corp") {
-      throw new GitHubNotFoundError(`Repository ${owner}/${repo} not found in mock store`);
+    if (
+      owner.toLowerCase() !== "ujjawal-0103" &&
+      owner.toLowerCase() !== "acme-corp"
+    ) {
+      throw new GitHubNotFoundError(
+        `Repository ${owner}/${repo} not found in mock store`,
+      );
     }
-    return { ...this.repoDetails, owner, name: repo, fullName: `${owner}/${repo}` };
+    return {
+      ...this.repoDetails,
+      owner,
+      name: repo,
+      fullName: `${owner}/${repo}`,
+    };
   }
 
   async getCommits(
@@ -119,7 +132,9 @@ export class MockGitHubIngestionAdapter implements IGitHubIngestionAdapter {
   ): Promise<PaginatedResult<GitHubCommitSummary>> {
     const page = options?.page || 1;
     const perPage = options?.perPage || 30;
-    const items = this.commits.map(({ stats: _s, files: _f, ...summary }) => summary);
+    const items = this.commits.map(
+      ({ stats: _s, files: _f, ...summary }) => summary,
+    );
     return {
       items,
       page,
@@ -147,8 +162,14 @@ export class MockGitHubIngestionAdapter implements IGitHubIngestionAdapter {
     return urlStr;
   }
 
-  async getCommit(_owner: string, _repo: string, sha: string): Promise<GitHubCommitDetail> {
-    const matched = this.commits.find((c) => c.sha.startsWith(sha) || sha.startsWith(c.sha));
+  async getCommit(
+    _owner: string,
+    _repo: string,
+    sha: string,
+  ): Promise<GitHubCommitDetail> {
+    const matched = this.commits.find(
+      (c) => c.sha.startsWith(sha) || sha.startsWith(c.sha),
+    );
     if (!matched) {
       throw new GitHubNotFoundError(`Commit ${sha} not found`);
     }
@@ -162,7 +183,9 @@ export class MockGitHubIngestionAdapter implements IGitHubIngestionAdapter {
   ): Promise<PaginatedResult<GitHubPullRequestSummary>> {
     const page = options?.page || 1;
     const perPage = options?.perPage || 30;
-    const items = this.pullRequests.map(({ additions: _a, deletions: _d, changedFiles: _cf, ...s }) => s);
+    const items = this.pullRequests.map(
+      ({ additions: _a, deletions: _d, changedFiles: _cf, ...s }) => s,
+    );
     return {
       items,
       page,
@@ -172,7 +195,11 @@ export class MockGitHubIngestionAdapter implements IGitHubIngestionAdapter {
     };
   }
 
-  async getPullRequest(_owner: string, _repo: string, pullNumber: number): Promise<GitHubPullRequestDetail> {
+  async getPullRequest(
+    _owner: string,
+    _repo: string,
+    pullNumber: number,
+  ): Promise<GitHubPullRequestDetail> {
     const matched = this.pullRequests.find((pr) => pr.number === pullNumber);
     if (!matched) {
       throw new GitHubNotFoundError(`Pull request #${pullNumber} not found`);
@@ -248,14 +275,30 @@ export class MockGitHubIngestionAdapter implements IGitHubIngestionAdapter {
       sha: "tree-sha-head",
       truncated: false,
       tree: [
-        { path: "README.md", mode: "100644", type: "blob", sha: "blob-sha-1", size: 1200 },
+        {
+          path: "README.md",
+          mode: "100644",
+          type: "blob",
+          sha: "blob-sha-1",
+          size: 1200,
+        },
         { path: "src", mode: "040000", type: "tree", sha: "tree-sha-src" },
-        { path: "src/index.ts", mode: "100644", type: "blob", sha: "blob-sha-2", size: 2400 },
+        {
+          path: "src/index.ts",
+          mode: "100644",
+          type: "blob",
+          sha: "blob-sha-2",
+          size: 2400,
+        },
       ],
     };
   }
 
-  async getFileContent(_owner: string, _repo: string, path: string): Promise<GitHubFileContent> {
+  async getFileContent(
+    _owner: string,
+    _repo: string,
+    path: string,
+  ): Promise<GitHubFileContent> {
     return {
       path,
       sha: "blob-sha-test",

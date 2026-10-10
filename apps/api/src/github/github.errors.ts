@@ -6,7 +6,10 @@
 export function sanitizeErrorMessage(message: string): string {
   if (!message) return "";
   return message
-    .replace(/(?:gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]+)/g, "[REDACTED_GITHUB_TOKEN]")
+    .replace(
+      /(?:gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]+)/g,
+      "[REDACTED_GITHUB_TOKEN]",
+    )
     .replace(/Bearer\s+[A-Za-z0-9_\-.]+/gi, "Bearer [REDACTED_TOKEN]")
     .replace(/token\s+[A-Za-z0-9_\-.]+/gi, "token [REDACTED_TOKEN]");
 }
@@ -28,7 +31,10 @@ export abstract class GitHubAdapterError extends Error {
  * HTTP 401: Authentication failure (invalid, revoked, or expired token)
  */
 export class GitHubAuthError extends GitHubAdapterError {
-  constructor(message = "GitHub authentication failed: invalid or expired token", endpoint?: string) {
+  constructor(
+    message = "GitHub authentication failed: invalid or expired token",
+    endpoint?: string,
+  ) {
     super(message, 401, endpoint);
   }
 }
@@ -38,7 +44,10 @@ export class GitHubAuthError extends GitHubAdapterError {
  * Distinct from rate-limit exhaustion.
  */
 export class GitHubForbiddenError extends GitHubAdapterError {
-  constructor(message = "GitHub access denied: insufficient permissions or scopes", endpoint?: string) {
+  constructor(
+    message = "GitHub access denied: insufficient permissions or scopes",
+    endpoint?: string,
+  ) {
     super(message, 403, endpoint);
   }
 }
@@ -85,7 +94,12 @@ export class GitHubRateLimitError extends GitHubAdapterError {
 export class GitHubTransientError extends GitHubAdapterError {
   public readonly isTimeout: boolean;
 
-  constructor(message: string, statusCode?: number, isTimeout = false, endpoint?: string) {
+  constructor(
+    message: string,
+    statusCode?: number,
+    isTimeout = false,
+    endpoint?: string,
+  ) {
     super(message, statusCode, endpoint);
     this.isTimeout = isTimeout;
   }
@@ -95,7 +109,10 @@ export class GitHubTransientError extends GitHubAdapterError {
  * Malformed JSON, non-JSON response where JSON expected, or invalid API contract
  */
 export class GitHubInvalidResponseError extends GitHubAdapterError {
-  constructor(message = "Invalid or malformed response received from GitHub API", endpoint?: string) {
+  constructor(
+    message = "Invalid or malformed response received from GitHub API",
+    endpoint?: string,
+  ) {
     super(message, undefined, endpoint);
   }
 }
@@ -135,4 +152,3 @@ export class GitHubApiError extends GitHubAdapterError {
     super(message, statusCode, endpoint);
   }
 }
-

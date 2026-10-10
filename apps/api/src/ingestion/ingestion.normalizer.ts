@@ -100,13 +100,20 @@ export interface NormalizedIssue {
 /**
  * Safely parses an ISO date string, throwing IngestionNormalizationError if invalid.
  */
-function parseRequiredDate(dateStr: string | undefined | null, fieldName: string): Date {
+function parseRequiredDate(
+  dateStr: string | undefined | null,
+  fieldName: string,
+): Date {
   if (!dateStr) {
-    throw new IngestionNormalizationError(`Missing required date for ${fieldName}`);
+    throw new IngestionNormalizationError(
+      `Missing required date for ${fieldName}`,
+    );
   }
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) {
-    throw new IngestionNormalizationError(`Invalid date format for ${fieldName}: "${dateStr}"`);
+    throw new IngestionNormalizationError(
+      `Invalid date format for ${fieldName}: "${dateStr}"`,
+    );
   }
   return date;
 }
@@ -123,14 +130,22 @@ function parseOptionalDate(dateStr: string | undefined | null): Date | null {
 /**
  * Normalizes repository metadata payload.
  */
-export function normalizeRepositoryMetadata(raw: GitHubRepoDetails): NormalizedRepoMetadata {
+export function normalizeRepositoryMetadata(
+  raw: GitHubRepoDetails,
+): NormalizedRepoMetadata {
   if (!raw || typeof raw.id !== "number") {
-    throw new IngestionNormalizationError("Invalid repository metadata: missing numeric repository ID");
+    throw new IngestionNormalizationError(
+      "Invalid repository metadata: missing numeric repository ID",
+    );
   }
 
-  const fullName = (raw.fullName || `${raw.owner || ""}/${raw.name || ""}`).trim();
+  const fullName = (
+    raw.fullName || `${raw.owner || ""}/${raw.name || ""}`
+  ).trim();
   if (!fullName || fullName === "/") {
-    throw new IngestionNormalizationError("Invalid repository metadata: missing repository full name");
+    throw new IngestionNormalizationError(
+      "Invalid repository metadata: missing repository full name",
+    );
   }
 
   return {
@@ -146,14 +161,20 @@ export function normalizeRepositoryMetadata(raw: GitHubRepoDetails): NormalizedR
 /**
  * Normalizes a single commit file change into a CommitDiff record.
  */
-export function normalizeCommitDiff(rawFile: GitHubCommitFile): NormalizedCommitDiff {
+export function normalizeCommitDiff(
+  rawFile: GitHubCommitFile,
+): NormalizedCommitDiff {
   if (!rawFile || !rawFile.filename || typeof rawFile.filename !== "string") {
-    throw new IngestionNormalizationError("Commit file change missing filename");
+    throw new IngestionNormalizationError(
+      "Commit file change missing filename",
+    );
   }
 
   const filename = rawFile.filename.trim();
   if (!filename) {
-    throw new IngestionNormalizationError("Commit file change has empty filename");
+    throw new IngestionNormalizationError(
+      "Commit file change has empty filename",
+    );
   }
 
   const validStatuses = ["added", "modified", "removed", "renamed"];
@@ -168,8 +189,14 @@ export function normalizeCommitDiff(rawFile: GitHubCommitFile): NormalizedCommit
   return {
     filePath: filename,
     status: normalizedStatus,
-    additions: typeof rawFile.additions === "number" && rawFile.additions >= 0 ? rawFile.additions : 0,
-    deletions: typeof rawFile.deletions === "number" && rawFile.deletions >= 0 ? rawFile.deletions : 0,
+    additions:
+      typeof rawFile.additions === "number" && rawFile.additions >= 0
+        ? rawFile.additions
+        : 0,
+    deletions:
+      typeof rawFile.deletions === "number" && rawFile.deletions >= 0
+        ? rawFile.deletions
+        : 0,
     diffHunk: rawFile.patch ? rawFile.patch.trim() : null,
     isBinary,
   };
@@ -185,17 +212,28 @@ export function normalizeCommit(raw: GitHubCommitDetail): NormalizedCommit {
 
   const sha = raw.sha.trim().toLowerCase();
   if (!/^[a-f0-9]{40}$/i.test(sha)) {
-    throw new IngestionNormalizationError(`Invalid commit SHA format: "${raw.sha}"`);
+    throw new IngestionNormalizationError(
+      `Invalid commit SHA format: "${raw.sha}"`,
+    );
   }
 
-  const authorName = (raw.author?.name || raw.committer?.name || "Unknown").trim();
-  const authorEmail = (raw.author?.email || raw.committer?.email || null)?.trim() || null;
+  const authorName = (
+    raw.author?.name ||
+    raw.committer?.name ||
+    "Unknown"
+  ).trim();
+  const authorEmail =
+    (raw.author?.email || raw.committer?.email || null)?.trim() || null;
   const dateStr = raw.committer?.date || raw.author?.date;
   const committedAt = parseRequiredDate(dateStr, `commit ${sha}`);
 
-  const diffs = Array.isArray(raw.files) ? raw.files.map(normalizeCommitDiff) : [];
+  const diffs = Array.isArray(raw.files)
+    ? raw.files.map(normalizeCommitDiff)
+    : [];
   const parentShas = Array.isArray(raw.parentShas)
-    ? raw.parentShas.filter((p) => typeof p === "string" && p.trim().length > 0).map((p) => p.trim().toLowerCase())
+    ? raw.parentShas
+        .filter((p) => typeof p === "string" && p.trim().length > 0)
+        .map((p) => p.trim().toLowerCase())
     : [];
 
   return {
@@ -216,8 +254,15 @@ export function normalizeCommit(raw: GitHubCommitDetail): NormalizedCommit {
 export function normalizePullRequest(
   raw: GitHubPullRequestDetail | GitHubPullRequestSummary,
 ): NormalizedPullRequest {
-  if (!raw || typeof raw.number !== "number" || raw.number <= 0 || !Number.isInteger(raw.number)) {
-    throw new IngestionNormalizationError("Pull request missing valid positive integer number");
+  if (
+    !raw ||
+    typeof raw.number !== "number" ||
+    raw.number <= 0 ||
+    !Number.isInteger(raw.number)
+  ) {
+    throw new IngestionNormalizationError(
+      "Pull request missing valid positive integer number",
+    );
   }
 
   const title = (raw.title || "Untitled Pull Request").trim();
@@ -249,7 +294,9 @@ export function normalizePullRequest(
 /**
  * Normalizes a pull request comment.
  */
-export function normalizePullRequestComment(raw: GitHubComment): NormalizedComment {
+export function normalizePullRequestComment(
+  raw: GitHubComment,
+): NormalizedComment {
   if (!raw || !raw.id) {
     throw new IngestionNormalizationError("Pull request comment missing ID");
   }
@@ -259,7 +306,10 @@ export function normalizePullRequestComment(raw: GitHubComment): NormalizedComme
     throw new IngestionNormalizationError("Pull request comment has empty ID");
   }
 
-  const createdAt = parseRequiredDate(raw.createdAt, `pull request comment ${githubCommentId}`);
+  const createdAt = parseRequiredDate(
+    raw.createdAt,
+    `pull request comment ${githubCommentId}`,
+  );
 
   return {
     githubCommentId,
@@ -273,8 +323,15 @@ export function normalizePullRequestComment(raw: GitHubComment): NormalizedComme
  * Normalizes an issue payload into an Issue record.
  */
 export function normalizeIssue(raw: GitHubIssueSummary): NormalizedIssue {
-  if (!raw || typeof raw.number !== "number" || raw.number <= 0 || !Number.isInteger(raw.number)) {
-    throw new IngestionNormalizationError("Issue missing valid positive integer number");
+  if (
+    !raw ||
+    typeof raw.number !== "number" ||
+    raw.number <= 0 ||
+    !Number.isInteger(raw.number)
+  ) {
+    throw new IngestionNormalizationError(
+      "Issue missing valid positive integer number",
+    );
   }
 
   const title = (raw.title || "Untitled Issue").trim();
@@ -306,7 +363,10 @@ export function normalizeIssueComment(raw: GitHubComment): NormalizedComment {
     throw new IngestionNormalizationError("Issue comment has empty ID");
   }
 
-  const createdAt = parseRequiredDate(raw.createdAt, `issue comment ${githubCommentId}`);
+  const createdAt = parseRequiredDate(
+    raw.createdAt,
+    `issue comment ${githubCommentId}`,
+  );
 
   return {
     githubCommentId,
@@ -320,7 +380,9 @@ export function normalizeIssueComment(raw: GitHubComment): NormalizedComment {
  * Converts a GitHub pull request review into a NormalizedComment for PullRequestComment persistence
  * where review comments/body are supported by the existing schema.
  */
-export function normalizeReviewToComment(rawReview: GitHubReview): NormalizedComment | null {
+export function normalizeReviewToComment(
+  rawReview: GitHubReview,
+): NormalizedComment | null {
   if (!rawReview || !rawReview.id) return null;
 
   // Only persist reviews that contain commentary or review summary
@@ -331,7 +393,9 @@ export function normalizeReviewToComment(rawReview: GitHubReview): NormalizedCom
   }
 
   const githubCommentId = `review_${rawReview.id}`;
-  const createdAt = rawReview.submittedAt ? parseOptionalDate(rawReview.submittedAt) || new Date() : new Date();
+  const createdAt = rawReview.submittedAt
+    ? parseOptionalDate(rawReview.submittedAt) || new Date()
+    : new Date();
 
   return {
     githubCommentId,

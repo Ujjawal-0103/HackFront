@@ -5,6 +5,7 @@ import { HealthModule } from "./health/health.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { WorkspacesModule } from "./workspaces/workspaces.module";
 import { GitHubModule } from "./github/github.module";
+import { IngestionQueueModule } from "./ingestion/ingestion-queue.module";
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { GitHubModule } from "./github/github.module";
     HealthModule,
     WorkspacesModule,
     GitHubModule,
+    IngestionQueueModule,
   ],
 })
 export class AppModule {}

@@ -5,6 +5,8 @@ export interface AppConfig {
   databaseUrl: string;
   redisHost: string;
   redisPort: number;
+  redisPassword?: string;
+  githubWebhookSecret?: string;
 }
 
 export const configuration = (): { app: AppConfig } => {
@@ -16,6 +18,12 @@ export const configuration = (): { app: AppConfig } => {
     "postgresql://postgres:postgrespassword@localhost:5434/traceback_dev?schema=public";
   const redisHost = process.env.REDIS_HOST || "localhost";
   const redisPort = parseInt(process.env.REDIS_PORT || "6379", 10);
+  const redisPassword = process.env.REDIS_PASSWORD || undefined;
+  const isProduction = nodeEnv === "production";
+  const rawWebhookSecret = process.env.GITHUB_WEBHOOK_SECRET?.trim();
+  const githubWebhookSecret = isProduction
+    ? (rawWebhookSecret || undefined)
+    : (rawWebhookSecret || "development-webhook-secret");
 
   return {
     app: {
@@ -25,6 +33,8 @@ export const configuration = (): { app: AppConfig } => {
       databaseUrl,
       redisHost,
       redisPort,
+      redisPassword,
+      githubWebhookSecret,
     },
   };
 };

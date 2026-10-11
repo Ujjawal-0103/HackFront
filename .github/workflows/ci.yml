@@ -15,6 +15,24 @@ jobs:
     name: Lint, Test & Build
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgrespassword
+          POSTGRES_DB: traceback_dev
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: "postgresql://postgres:postgrespassword@localhost:5434/traceback_dev?schema=public"
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -37,8 +55,14 @@ jobs:
       - name: Generate Prisma Client
         run: pnpm --filter @traceback/api prisma:generate
 
+      - name: Apply Database Migrations
+        run: pnpm prisma:migrate:deploy
+
       - name: Check Formatting
         run: pnpm format:check
+
+      - name: Lint Workspaces
+        run: pnpm lint
 
       - name: Typecheck Workspaces
         run: pnpm typecheck

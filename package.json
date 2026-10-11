@@ -14,6 +14,7 @@
     "prisma:generate": "pnpm --filter @traceback/api prisma:generate",
     "prisma:validate": "pnpm --filter @traceback/api prisma:validate",
     "prisma:migrate:dev": "pnpm --filter @traceback/api prisma:migrate:dev",
+    "prisma:migrate:deploy": "pnpm --filter @traceback/api prisma:migrate:deploy",
     "prisma:migrate:status": "pnpm --filter @traceback/api prisma:migrate:status"
   },
   "devDependencies": {

@@ -9,6 +9,11 @@
       "dependsOn": ["^build"],
       "outputs": []
     },
+    "@traceback/api#test": {
+      "dependsOn": ["^build"],
+      "env": ["DATABASE_URL"],
+      "outputs": []
+    },
     "lint": {
       "outputs": []
     },

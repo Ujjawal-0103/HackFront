@@ -37,38 +37,32 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9.15.9
-          run_install: false
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+          cache: 'npm'
 
       - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Generate Prisma Client
-        run: pnpm --filter @traceback/api prisma:generate
+        run: npm run prisma:generate
 
       - name: Apply Database Migrations
-        run: pnpm prisma:migrate:deploy
+        run: npm run prisma:migrate:deploy
 
       - name: Check Formatting
-        run: pnpm format:check
+        run: npm run format:check
 
       - name: Lint Workspaces
-        run: pnpm lint
+        run: npm run lint
 
       - name: Typecheck Workspaces
-        run: pnpm typecheck
+        run: npm run typecheck
 
       - name: Execute Automated Test Suites
-        run: pnpm test
+        run: npm test
 
       - name: Build Monorepo Workspaces
-        run: pnpm build
+        run: npm run build

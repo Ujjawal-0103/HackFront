@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "description": "Human-supervised verification system for AI-generated code explanations",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -11,11 +15,11 @@
     "test": "turbo run test",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
-    "prisma:generate": "pnpm --filter @traceback/api prisma:generate",
-    "prisma:validate": "pnpm --filter @traceback/api prisma:validate",
-    "prisma:migrate:dev": "pnpm --filter @traceback/api prisma:migrate:dev",
-    "prisma:migrate:deploy": "pnpm --filter @traceback/api prisma:migrate:deploy",
-    "prisma:migrate:status": "pnpm --filter @traceback/api prisma:migrate:status"
+    "prisma:generate": "npm run prisma:generate --workspace=@traceback/api",
+    "prisma:validate": "npm run prisma:validate --workspace=@traceback/api",
+    "prisma:migrate:dev": "npm run prisma:migrate:dev --workspace=@traceback/api",
+    "prisma:migrate:deploy": "npm run prisma:migrate:deploy --workspace=@traceback/api",
+    "prisma:migrate:status": "npm run prisma:migrate:status --workspace=@traceback/api"
   },
   "devDependencies": {
     "prettier": "^3.5.0",
@@ -24,7 +28,7 @@
   },
   "engines": {
     "node": ">=20.0.0",
-    "pnpm": ">=9.0.0"
+    "npm": ">=10.0.0"
   },
-  "packageManager": "pnpm@9.15.9"
+  "packageManager": "npm@10.9.2"
 }

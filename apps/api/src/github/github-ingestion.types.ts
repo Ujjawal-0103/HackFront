@@ -11,6 +11,7 @@ export interface GitHubRateLimitInfo {
 
 export interface GitHubRequestOptions {
   token?: string;
+  installationId?: number;
   signal?: AbortSignal;
   timeoutMs?: number;
   headers?: Record<string, string>;

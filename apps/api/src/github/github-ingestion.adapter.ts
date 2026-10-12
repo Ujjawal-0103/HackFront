@@ -4,6 +4,7 @@ import {
   IGitHubIngestionAdapter,
   GITHUB_BASE_URL_TOKEN,
 } from "./github-adapter.interface";
+import { GitHubAppAuthService } from "./github-app-auth.service";
 import {
   GitHubRepoDetails,
   GitHubCommitSummary,
@@ -37,21 +38,28 @@ const DEFAULT_BASE_URL = "https://api.github.com";
 const DEFAULT_TIMEOUT_MS = 10000;
 const MAX_PER_PAGE = 100;
 const MAX_FILE_SIZE_BYTES = 1024 * 1024; // 1MB default bound
+export const RATE_LIMIT_LOW_QUOTA_THRESHOLD = 100;
 
 @Injectable()
 export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
   private readonly logger = new Logger(GitHubIngestionAdapter.name);
   private readonly baseUrl: string;
+  private lastKnownRateLimit?: GitHubRateLimitInfo;
 
   constructor(
     @Optional() private readonly configService?: ConfigService,
     @Optional() @Inject(GITHUB_BASE_URL_TOKEN) customBaseUrl?: string,
+    @Optional() private readonly authService?: GitHubAppAuthService,
   ) {
     this.baseUrl =
       customBaseUrl ||
       this.configService?.get<string>("GITHUB_API_BASE_URL") ||
       this.configService?.get<string>("github.baseUrl") ||
       DEFAULT_BASE_URL;
+  }
+
+  clearRateLimitState(): void {
+    this.lastKnownRateLimit = undefined;
   }
 
   // --- 1. Repository Metadata ---
@@ -649,6 +657,37 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
     endpoint: string,
     options?: GitHubRequestOptions,
   ): Promise<{ data: T; headers: Headers; rateLimit?: GitHubRateLimitInfo }> {
+    // Proactively defer subsequent requests if last known quota is below threshold and reset time is in the future
+    if (
+      !endpoint.startsWith("/rate_limit") &&
+      this.lastKnownRateLimit &&
+      this.lastKnownRateLimit.remaining > 0 &&
+      this.lastKnownRateLimit.remaining < RATE_LIMIT_LOW_QUOTA_THRESHOLD &&
+      Date.now() < this.lastKnownRateLimit.resetAt.getTime()
+    ) {
+      const nowMs = Date.now();
+      const resetMs = this.lastKnownRateLimit.resetAt.getTime();
+      const retryAfterSeconds = Math.max(
+        1,
+        Math.min(Math.ceil((resetMs - nowMs) / 1000), 3600),
+      );
+
+      this.logger.warn(
+        `GitHub API remaining rate limit quota (${this.lastKnownRateLimit.remaining}) is below safety threshold (${RATE_LIMIT_LOW_QUOTA_THRESHOLD}). Deferring subsequent requests until reset at ${this.lastKnownRateLimit.resetAt.toISOString()} (~${retryAfterSeconds}s).`,
+      );
+
+      throw new GitHubRateLimitError(
+        `GitHub rate limit low quota safety threshold active: ${this.lastKnownRateLimit.remaining} remaining (< ${RATE_LIMIT_LOW_QUOTA_THRESHOLD}) until ${this.lastKnownRateLimit.resetAt.toISOString()}`,
+        {
+          limit: this.lastKnownRateLimit.limit,
+          remaining: this.lastKnownRateLimit.remaining,
+          resetAt: this.lastKnownRateLimit.resetAt,
+          retryAfterSeconds,
+          endpoint,
+        },
+      );
+    }
+
     const url = `${this.baseUrl}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
     const maxRetries = 3;
     let attempt = 0;
@@ -673,8 +712,15 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
           ...options?.headers,
         };
 
-        if (options?.token) {
-          headers.Authorization = `Bearer ${options.token}`;
+        let authToken = options?.token;
+        if (!authToken && options?.installationId && this.authService) {
+          authToken = await this.authService.getInstallationAccessToken(
+            options.installationId,
+          );
+        }
+
+        if (authToken) {
+          headers.Authorization = `Bearer ${authToken}`;
         }
 
         const response = await fetch(url, {
@@ -686,6 +732,39 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
         clearTimeout(timeoutId);
 
         const rateLimit = this.parseRateLimitHeaders(response.headers);
+        if (rateLimit) {
+          this.lastKnownRateLimit = rateLimit;
+        }
+
+        // Proactive Low-Quota Threshold check (< 100 remaining)
+        if (
+          !endpoint.startsWith("/rate_limit") &&
+          rateLimit &&
+          rateLimit.remaining > 0 &&
+          rateLimit.remaining < RATE_LIMIT_LOW_QUOTA_THRESHOLD
+        ) {
+          const nowMs = Date.now();
+          const resetMs = rateLimit.resetAt.getTime();
+          const retryAfterSeconds = Math.max(
+            1,
+            Math.min(Math.ceil((resetMs - nowMs) / 1000), 3600),
+          );
+
+          this.logger.warn(
+            `GitHub API remaining rate limit quota (${rateLimit.remaining}) fell below safety threshold (${RATE_LIMIT_LOW_QUOTA_THRESHOLD}). Deferring subsequent requests until reset at ${rateLimit.resetAt.toISOString()} (~${retryAfterSeconds}s).`,
+          );
+
+          throw new GitHubRateLimitError(
+            `GitHub rate limit low quota safety threshold reached: ${rateLimit.remaining} remaining (< ${RATE_LIMIT_LOW_QUOTA_THRESHOLD})`,
+            {
+              limit: rateLimit.limit,
+              remaining: rateLimit.remaining,
+              resetAt: rateLimit.resetAt,
+              retryAfterSeconds,
+              endpoint,
+            },
+          );
+        }
 
         // 1. Success (200 - 299)
         if (response.ok) {
@@ -837,22 +916,48 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
   private parseRateLimitHeaders(
     headers: Headers,
   ): GitHubRateLimitInfo | undefined {
-    const limit = headers.get("x-ratelimit-limit");
-    const remaining = headers.get("x-ratelimit-remaining");
-    const reset = headers.get("x-ratelimit-reset");
-    const used = headers.get("x-ratelimit-used");
+    const limitHeader = headers.get("x-ratelimit-limit");
+    const remainingHeader = headers.get("x-ratelimit-remaining");
+    const resetHeader = headers.get("x-ratelimit-reset");
+    const usedHeader = headers.get("x-ratelimit-used");
 
-    if (limit && remaining && reset) {
-      return {
-        limit: parseInt(limit, 10),
-        remaining: parseInt(remaining, 10),
-        resetAt: new Date(parseInt(reset, 10) * 1000),
-        used: used
-          ? parseInt(used, 10)
-          : parseInt(limit, 10) - parseInt(remaining, 10),
-      };
+    if (!remainingHeader) {
+      return undefined;
     }
-    return undefined;
+
+    const remaining = parseInt(remainingHeader, 10);
+    if (isNaN(remaining)) {
+      return undefined;
+    }
+
+    const limit = limitHeader ? parseInt(limitHeader, 10) : 60;
+    const parsedLimit = isNaN(limit) ? 60 : limit;
+
+    let resetAt: Date;
+    const resetSec = resetHeader ? parseInt(resetHeader, 10) : NaN;
+    const nowSec = Math.floor(Date.now() / 1000);
+
+    // Validate reset timestamp: must be positive integer resulting in a valid Date
+    if (!isNaN(resetSec) && resetSec > 0) {
+      resetAt = new Date(resetSec * 1000);
+      if (isNaN(resetAt.getTime())) {
+        resetAt = new Date((nowSec + 3600) * 1000);
+      }
+    } else {
+      // Safe fallback: 1 hour from now if reset is missing or invalid
+      resetAt = new Date((nowSec + 3600) * 1000);
+    }
+
+    const used = usedHeader
+      ? parseInt(usedHeader, 10)
+      : parsedLimit - remaining;
+
+    return {
+      limit: parsedLimit,
+      remaining,
+      resetAt,
+      used: isNaN(used) ? 0 : used,
+    };
   }
 
   extractNextUrl(headers: Headers): string | undefined {

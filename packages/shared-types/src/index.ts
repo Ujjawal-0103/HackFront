@@ -144,6 +144,19 @@ export interface RepositorySyncSummary {
   createdAt: string;
 }
 
+export interface SyncProgress {
+  jobId: string;
+  repositoryId: string;
+  status: SyncStatus;
+  commitsCount: number;
+  pullRequestsCount: number;
+  issuesCount: number;
+  errorMessage?: string;
+  startedAt?: string;
+  completedAt?: string;
+  updatedAt?: string;
+}
+
 export interface TriggerSyncRequest {
   trigger?: SyncTrigger;
 }

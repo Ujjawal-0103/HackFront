@@ -511,6 +511,177 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
       }
     });
 
+    it("should proactively trigger rate limit deferral when remaining quota is 99 (< 100)", async () => {
+      const resetUnix = Math.floor(Date.now() / 1000) + 300;
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers({
+          "x-ratelimit-limit": "5000",
+          "x-ratelimit-remaining": "99",
+          "x-ratelimit-reset": String(resetUnix),
+        }),
+        json: async () => ({ id: 1, name: "repo", full_name: "org/repo" }),
+      } as Response);
+
+      try {
+        await adapter.getRepository("Ujjawal-0103", "HackFront");
+        fail("Should have thrown GitHubRateLimitError for remaining quota 99");
+      } catch (err: any) {
+        expect(err).toBeInstanceOf(GitHubRateLimitError);
+        expect(err.remaining).toBe(99);
+        expect(err.resetAt).toBeDefined();
+        expect(err.message).toContain("low quota safety threshold");
+      }
+
+      // Subsequent request before resetAt is deferred immediately without calling fetch
+      await expect(
+        adapter.getRepository("Ujjawal-0103", "HackFront"),
+      ).rejects.toThrow(GitHubRateLimitError);
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("should not trigger low-quota threshold when remaining quota is 100", async () => {
+      const resetUnix = Math.floor(Date.now() / 1000) + 300;
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers({
+          "x-ratelimit-limit": "5000",
+          "x-ratelimit-remaining": "100",
+          "x-ratelimit-reset": String(resetUnix),
+        }),
+        json: async () => ({ id: 1, name: "repo", full_name: "org/repo" }),
+      } as Response);
+
+      const result = await adapter.getRepository("Ujjawal-0103", "HackFront");
+      expect(result.id).toBe(1);
+      expect(result.fullName).toBe("org/repo");
+    });
+
+    it("should handle depleted quota (remaining 0) and HTTP 429 secondary rate limit", async () => {
+      // Depleted quota with HTTP 403
+      global.fetch = jest.fn().mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        statusText: "Forbidden",
+        headers: new Headers({
+          "x-ratelimit-limit": "5000",
+          "x-ratelimit-remaining": "0",
+          "x-ratelimit-reset": String(Math.floor(Date.now() / 1000) + 60),
+        }),
+        json: async () => ({ message: "API rate limit exceeded" }),
+      } as Response);
+
+      await expect(
+        adapter.getRepository("Ujjawal-0103", "HackFront"),
+      ).rejects.toThrow(GitHubRateLimitError);
+
+      adapter.clearRateLimitState();
+
+      // HTTP 429 with retry-after
+      global.fetch = jest.fn().mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        statusText: "Too Many Requests",
+        headers: new Headers({
+          "retry-after": "60",
+        }),
+        json: async () => ({
+          message: "You have exceeded a secondary rate limit",
+        }),
+      } as Response);
+
+      try {
+        await adapter.getRepository("Ujjawal-0103", "HackFront");
+        fail("Should have thrown GitHubRateLimitError on HTTP 429");
+      } catch (err: any) {
+        expect(err).toBeInstanceOf(GitHubRateLimitError);
+        expect(err.retryAfterSeconds).toBe(60);
+      }
+    });
+
+    it("should handle missing or invalid reset timestamps safely without invalid Date or unbounded delay", async () => {
+      // Missing x-ratelimit-reset header with low quota
+      global.fetch = jest.fn().mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: new Headers({
+          "x-ratelimit-limit": "5000",
+          "x-ratelimit-remaining": "50",
+          // x-ratelimit-reset omitted
+        }),
+        json: async () => ({ id: 1, name: "repo", full_name: "org/repo" }),
+      } as Response);
+
+      try {
+        await adapter.getRepository("Ujjawal-0103", "HackFront");
+        fail("Should have thrown");
+      } catch (err: any) {
+        expect(err).toBeInstanceOf(GitHubRateLimitError);
+        expect(err.resetAt).toBeInstanceOf(Date);
+        expect(isNaN(err.resetAt.getTime())).toBe(false);
+        expect(err.retryAfterSeconds).toBeLessThanOrEqual(3600);
+      }
+
+      adapter.clearRateLimitState();
+
+      // Malformed x-ratelimit-reset: "invalid_timestamp"
+      global.fetch = jest.fn().mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: new Headers({
+          "x-ratelimit-limit": "5000",
+          "x-ratelimit-remaining": "50",
+          "x-ratelimit-reset": "invalid_timestamp",
+        }),
+        json: async () => ({ id: 1, name: "repo", full_name: "org/repo" }),
+      } as Response);
+
+      try {
+        await adapter.getRepository("Ujjawal-0103", "HackFront");
+        fail("Should have thrown");
+      } catch (err: any) {
+        expect(err).toBeInstanceOf(GitHubRateLimitError);
+        expect(err.resetAt).toBeInstanceOf(Date);
+        expect(isNaN(err.resetAt.getTime())).toBe(false);
+        expect(err.retryAfterSeconds).toBeLessThanOrEqual(3600);
+      }
+    });
+
+    it("should enforce retry limits on transient errors without retrying rate limit errors", async () => {
+      const fetchSpy = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 503,
+        statusText: "Service Unavailable",
+        headers: new Headers(),
+        json: async () => ({ message: "Service Unavailable" }),
+      } as Response);
+      global.fetch = fetchSpy;
+
+      await expect(
+        adapter.getRepository("Ujjawal-0103", "HackFront"),
+      ).rejects.toThrow(GitHubTransientError);
+
+      // Exactly 1 initial + 3 retries = 4 attempts total
+      expect(fetchSpy).toHaveBeenCalledTimes(4);
+
+      // Rate limit errors are never retried by the HTTP engine
+      fetchSpy.mockClear();
+      fetchSpy.mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        headers: new Headers({ "retry-after": "30" }),
+        json: async () => ({ message: "Rate limit" }),
+      } as Response);
+
+      await expect(
+        adapter.getRepository("Ujjawal-0103", "HackFront"),
+      ).rejects.toThrow(GitHubRateLimitError);
+
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
     it("should map malformed JSON response to GitHubInvalidResponseError", async () => {
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
@@ -577,6 +748,42 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
       }
     });
 
+    it("should resolve token via authService when installationId is provided without explicit token", async () => {
+      const mockAuthService = {
+        getInstallationAccessToken: jest
+          .fn()
+          .mockResolvedValue("ghs_resolvedToken999888"),
+      };
+      const adapterWithAuth = new GitHubIngestionAdapter(
+        undefined,
+        mockBaseUrl,
+        mockAuthService as any,
+      );
+
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers(),
+        json: async () => ({ id: 1, name: "repo", full_name: "org/repo" }),
+      } as Response);
+
+      await adapterWithAuth.getRepository("org", "repo", {
+        installationId: 4321,
+      });
+
+      expect(mockAuthService.getInstallationAccessToken).toHaveBeenCalledWith(
+        4321,
+      );
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/repos/org/repo"),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: "Bearer ghs_resolvedToken999888",
+          }),
+        }),
+      );
+    });
+
     it("should redact bare fine-grained PATs, classic tokens, and bearer credentials", () => {
       const bareFineGrained =
         "github_pat_11ABCD_mockSecretFineGrainedToken9876543210";
@@ -608,6 +815,11 @@ describe("GitHubIngestionAdapter (Sprint 3 Part 3)", () => {
       );
       expect(sanitizeErrorMessage(`Auth: ${tokenHeader}`)).toBe(
         "Auth: token [REDACTED_TOKEN]",
+      );
+      const privateKeyBlock =
+        "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA0\n-----END RSA PRIVATE KEY-----";
+      expect(sanitizeErrorMessage(`Key: ${privateKeyBlock}`)).toBe(
+        "Key: [REDACTED_PRIVATE_KEY]",
       );
 
       // 3. GitHubAdapterError hierarchy sanitizes message and endpoint for bare fine-grained PAT

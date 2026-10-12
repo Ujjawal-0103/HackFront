@@ -35,3 +35,13 @@ export const DEFAULT_INGESTION_JOB_OPTIONS: JobsOptions = {
     count: 5000,
   },
 };
+
+/**
+ * Rate limit delay boundaries:
+ * - Minimum delay: 5 seconds (prevents tight retry loops)
+ * - Maximum delay: 1 hour (prevents indefinite stalling)
+ * - Default fallback delay: 60 seconds (used when resetAt and retryAfter are missing/invalid)
+ */
+export const MIN_RATE_LIMIT_DELAY_MS = 5_000;
+export const MAX_RATE_LIMIT_DELAY_MS = 3_600_000;
+export const DEFAULT_RATE_LIMIT_FALLBACK_DELAY_MS = 60_000;

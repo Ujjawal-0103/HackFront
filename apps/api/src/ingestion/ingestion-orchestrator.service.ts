@@ -287,7 +287,9 @@ export class IngestionOrchestratorService {
       const sanitizedError = sanitizeErrorMessage(err.message || String(err));
       const attemptsMade = job ? job.attemptsMade : 1;
       const maxAttempts = job?.opts?.attempts || 3;
-      const isFinalAttempt = !isRetryable || attemptsMade >= maxAttempts;
+      const isRateLimit = err instanceof GitHubRateLimitError;
+      const isFinalAttempt =
+        !isRetryable || (!isRateLimit && attemptsMade >= maxAttempts);
 
       this.logger.error(
         `Ingestion error on ${owner}/${repo} (attempt ${attemptsMade}/${maxAttempts}, retryable=${isRetryable}): ${sanitizedError}`,

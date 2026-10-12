@@ -1,7 +1,15 @@
-import { Injectable, Logger, ForbiddenException } from "@nestjs/common";
+import {
+  Injectable,
+  Logger,
+  ForbiddenException,
+  Optional,
+} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { IGitHubClient } from "./github-client.interface";
 import { MockGitHubClient } from "./mock-github.client";
+import { GitHubAppClient } from "./github-app.client";
+import { GitHubAppAuthService } from "./github-app-auth.service";
+import { GitHubAuthError } from "./github.errors";
 import {
   GitHubRepositoryMetadata,
   RepositoryAccessPermission,
@@ -13,15 +21,23 @@ export class GitHubService {
   private client: IGitHubClient;
   private isLiveConfigured = false;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    @Optional() private authService?: GitHubAppAuthService,
+  ) {
     const appId = this.configService.get<string>("GITHUB_APP_ID");
     const privateKey = this.configService.get<string>("GITHUB_APP_PRIVATE_KEY");
 
     if (appId && privateKey) {
       this.isLiveConfigured = true;
-      // In live production, client would be instantiated via @octokit/auth-app
-      // For Sprint 2 foundation, we use the client abstraction
-      this.client = new MockGitHubClient();
+      if (!this.authService) {
+        this.authService = new GitHubAppAuthService(this.configService);
+      }
+      const baseUrl =
+        this.configService.get<string>("GITHUB_API_BASE_URL") ||
+        this.configService.get<string>("github.baseUrl") ||
+        "https://api.github.com";
+      this.client = new GitHubAppClient(this.authService, baseUrl);
       this.logger.log("GitHub App configuration detected and loaded");
     } else {
       this.isLiveConfigured = false;
@@ -34,6 +50,18 @@ export class GitHubService {
 
   isConfigured(): boolean {
     return this.isLiveConfigured;
+  }
+
+  async getInstallationAccessToken(installationId: number): Promise<string> {
+    if (this.authService && this.isLiveConfigured) {
+      return this.authService.getInstallationAccessToken(installationId);
+    }
+    if (this.client.getInstallationAccessToken) {
+      return this.client.getInstallationAccessToken(installationId);
+    }
+    throw new GitHubAuthError(
+      "GitHub client does not support installation access token generation",
+    );
   }
 
   async verifyRepositoryAccess(
@@ -66,5 +94,9 @@ export class GitHubService {
   // Exposed for testing
   setClient(customClient: IGitHubClient) {
     this.client = customClient;
+  }
+
+  getAuthService(): GitHubAppAuthService | undefined {
+    return this.authService;
   }
 }

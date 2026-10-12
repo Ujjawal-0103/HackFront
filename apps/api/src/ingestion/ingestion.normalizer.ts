@@ -8,6 +8,7 @@ import {
   GitHubIssueSummary,
   GitHubComment,
 } from "../github/github-ingestion.types";
+import { sanitizeDiff } from "./diff-sanitizer";
 
 /**
  * Custom error thrown when a GitHub ingestion payload fails structural normalization.
@@ -181,10 +182,12 @@ export function normalizeCommitDiff(
   const status = (rawFile.status || "modified").toLowerCase();
   const normalizedStatus = validStatuses.includes(status) ? status : "modified";
 
+  const sanitized = sanitizeDiff(filename, rawFile.patch);
   const isBinary =
-    !rawFile.patch &&
-    (normalizedStatus === "added" || normalizedStatus === "modified") &&
-    (rawFile.changes === 0 || (!rawFile.additions && !rawFile.deletions));
+    sanitized.isBinary ||
+    (!rawFile.patch &&
+      (normalizedStatus === "added" || normalizedStatus === "modified") &&
+      (rawFile.changes === 0 || (!rawFile.additions && !rawFile.deletions)));
 
   return {
     filePath: filename,
@@ -197,7 +200,7 @@ export function normalizeCommitDiff(
       typeof rawFile.deletions === "number" && rawFile.deletions >= 0
         ? rawFile.deletions
         : 0,
-    diffHunk: rawFile.patch ? rawFile.patch.trim() : null,
+    diffHunk: sanitized.diffHunk,
     isBinary,
   };
 }

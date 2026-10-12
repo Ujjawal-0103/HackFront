@@ -7,6 +7,10 @@ export function sanitizeErrorMessage(message: string): string {
   if (!message) return "";
   return message
     .replace(
+      /-----BEGIN (?:[A-Z0-9_-]+ )?PRIVATE KEY-----[\s\S]*?-----END (?:[A-Z0-9_-]+ )?PRIVATE KEY-----/g,
+      "[REDACTED_PRIVATE_KEY]",
+    )
+    .replace(
       /(?:gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]+)/g,
       "[REDACTED_GITHUB_TOKEN]",
     )

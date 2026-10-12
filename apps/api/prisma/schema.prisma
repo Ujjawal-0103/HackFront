@@ -85,6 +85,10 @@ model Repository {
 
   workspace      Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   sessions       VerificationSession[]
+  syncJobs       RepositorySyncJob[]
+  commits        GitCommit[]
+  pullRequests   PullRequest[]
+  issues         Issue[]
 
   @@unique([workspaceId, fullName])
   @@map("repositories")
@@ -173,4 +177,149 @@ model EvidenceRecord {
   claim        Claim              @relation(fields: [claimId], references: [id], onDelete: Cascade)
 
   @@map("evidence_records")
+}
+
+// 4. Ingestion & Historical Provenance Boundaries
+enum SyncStatus {
+  PENDING
+  SYNCING
+  COMPLETED
+  FAILED
+}
+
+enum SyncTrigger {
+  MANUAL
+  WEBHOOK
+}
+
+model RepositorySyncJob {
+  id                String       @id @default(uuid())
+  repositoryId      String
+  status            SyncStatus   @default(PENDING)
+  trigger           SyncTrigger  @default(MANUAL)
+  commitsCount      Int          @default(0)
+  pullRequestsCount Int          @default(0)
+  issuesCount       Int          @default(0)
+  errorMessage      String?      @db.Text
+  startedAt         DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  repository        Repository   @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  @@index([repositoryId, status])
+  @@index([repositoryId, createdAt])
+  @@map("repository_sync_jobs")
+}
+
+model GitCommit {
+  id           String        @id @default(uuid())
+  repositoryId String
+  sha          String        // 40-character Git commit hash
+  message      String        @db.Text
+  authorName   String
+  authorEmail  String?
+  committedAt  DateTime
+  url          String        // Clickable GitHub commit URL
+  diffs        CommitDiff[]
+  createdAt    DateTime      @default(now())
+
+  repository   Repository    @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  @@unique([repositoryId, sha])
+  @@index([repositoryId, committedAt])
+  @@map("git_commits")
+}
+
+model CommitDiff {
+  id         String     @id @default(uuid())
+  commitId   String
+  filePath   String
+  status     String     // "added", "modified", "removed", "renamed"
+  additions  Int        @default(0)
+  deletions  Int        @default(0)
+  diffHunk   String?    @db.Text // Sanitized unified diff patch
+  isBinary   Boolean    @default(false)
+  createdAt  DateTime   @default(now())
+
+  commit     GitCommit  @relation(fields: [commitId], references: [id], onDelete: Cascade)
+
+  @@unique([commitId, filePath])
+  @@index([commitId])
+  @@map("commit_diffs")
+}
+
+model PullRequest {
+  id           String               @id @default(uuid())
+  repositoryId String
+  number       Int                  // GitHub PR # (e.g. 42)
+  title        String
+  body         String?              @db.Text
+  author       String
+  state        String               // "open", "closed", "merged"
+  isMerged     Boolean              @default(false)
+  mergedAt     DateTime?
+  closedAt     DateTime?
+  url          String               // Clickable GitHub PR URL
+  comments     PullRequestComment[]
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  repository   Repository           @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  @@unique([repositoryId, number])
+  @@index([repositoryId, createdAt])
+  @@map("pull_requests")
+}
+
+model PullRequestComment {
+  id              String      @id @default(uuid())
+  pullRequestId   String
+  githubCommentId String      // External GitHub comment ID as string to avoid 32-bit overflow
+  author          String
+  body            String      @db.Text
+  createdAt       DateTime
+
+  pullRequest     PullRequest @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
+
+  @@unique([pullRequestId, githubCommentId])
+  @@index([pullRequestId])
+  @@map("pull_request_comments")
+}
+
+model Issue {
+  id           String         @id @default(uuid())
+  repositoryId String
+  number       Int            // GitHub Issue #
+  title        String
+  body         String?        @db.Text
+  author       String
+  state        String         // "open", "closed"
+  closedAt     DateTime?
+  url          String         // Clickable GitHub Issue URL
+  comments     IssueComment[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  repository   Repository     @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  @@unique([repositoryId, number])
+  @@index([repositoryId, createdAt])
+  @@map("issues")
+}
+
+model IssueComment {
+  id              String   @id @default(uuid())
+  issueId         String
+  githubCommentId String   // External GitHub comment ID as string to avoid 32-bit overflow
+  author          String
+  body            String   @db.Text
+  createdAt       DateTime
+
+  issue           Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@unique([issueId, githubCommentId])
+  @@index([issueId])
+  @@map("issue_comments")
 }

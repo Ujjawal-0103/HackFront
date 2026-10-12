@@ -45,6 +45,10 @@ export class MockGitHubClient implements IGitHubClient {
     return true; // Mock client is operational
   }
 
+  async getInstallationAccessToken(installationId: number): Promise<string> {
+    return `mock-installation-token-${installationId}`;
+  }
+
   async verifyRepositoryAccess(
     installationId: number,
     owner: string,

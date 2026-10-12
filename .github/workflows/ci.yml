@@ -21,7 +21,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgrespassword
-          POSTGRES_DB: traceback_dev
+          POSTGRES_DB: traceback_test
         ports:
           - 5434:5432
         options: >-
@@ -31,7 +31,7 @@ jobs:
           --health-retries 5
 
     env:
-      DATABASE_URL: "postgresql://postgres:postgrespassword@localhost:5434/traceback_dev?schema=public"
+      DATABASE_URL: "postgresql://postgres:postgrespassword@localhost:5434/traceback_test?schema=public"
 
     steps:
       - name: Checkout Code

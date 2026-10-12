@@ -121,3 +121,56 @@ export interface RepositorySummary {
   isPrivate: boolean;
   indexedAt?: string;
 }
+
+// 5. Ingestion & Repository Sync Contracts
+export type SyncStatus = "PENDING" | "SYNCING" | "COMPLETED" | "FAILED";
+export type SyncTrigger = "MANUAL" | "WEBHOOK";
+
+export interface SyncProgressCounts {
+  commits: number;
+  pullRequests: number;
+  issues: number;
+}
+
+export interface RepositorySyncSummary {
+  id: string;
+  repositoryId: string;
+  status: SyncStatus;
+  trigger: SyncTrigger;
+  counts: SyncProgressCounts;
+  errorMessage?: string;
+  startedAt?: string;
+  completedAt?: string;
+  createdAt: string;
+}
+
+export interface SyncProgress {
+  jobId: string;
+  repositoryId: string;
+  status: SyncStatus;
+  commitsCount: number;
+  pullRequestsCount: number;
+  issuesCount: number;
+  errorMessage?: string;
+  startedAt?: string;
+  completedAt?: string;
+  updatedAt?: string;
+}
+
+export interface TriggerSyncRequest {
+  trigger?: SyncTrigger;
+}
+
+export interface TriggerSyncResponse {
+  jobId: string;
+  repositoryId: string;
+  status: SyncStatus;
+  message: string;
+}
+
+export interface RepositorySyncStatusResponse {
+  repositoryId: string;
+  lastIndexedAt?: string;
+  activeJob?: RepositorySyncSummary;
+  recentJobs: RepositorySyncSummary[];
+}

@@ -165,9 +165,9 @@ describe("GitHubAppClient (Sprint 3 Part 4)", () => {
         json: async () => ({ message: "Forbidden" }),
       } as Response);
 
-      await expect(
-        client.listInstallationRepositories(1234),
-      ).rejects.toThrow(GitHubForbiddenError);
+      await expect(client.listInstallationRepositories(1234)).rejects.toThrow(
+        GitHubForbiddenError,
+      );
     });
   });
 

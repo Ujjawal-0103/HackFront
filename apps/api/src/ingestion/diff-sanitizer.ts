@@ -91,10 +91,7 @@ export interface DiffSanitizerResult {
 /**
  * Checks whether a given file path or patch content indicates a binary file.
  */
-export function isBinaryFile(
-  filePath: string,
-  patch?: string | null,
-): boolean {
+export function isBinaryFile(filePath: string, patch?: string | null): boolean {
   if (BINARY_EXTENSION_REGEX.test(filePath)) {
     return true;
   }

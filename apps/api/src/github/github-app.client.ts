@@ -99,9 +99,7 @@ export class GitHubAppClient implements IGitHubClient {
     repo: string,
   ): Promise<GitHubRepositoryMetadata> {
     if (!owner || !repo) {
-      throw new GitHubValidationError(
-        "Owner and repo parameters are required",
-      );
+      throw new GitHubValidationError("Owner and repo parameters are required");
     }
 
     const token =

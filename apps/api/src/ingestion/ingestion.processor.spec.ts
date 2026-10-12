@@ -152,7 +152,9 @@ describe("IngestionProcessor (Sprint 3 Part 4 - Rate Limit Rescheduling)", () =>
       expect(mockJob.moveToDelayed).toHaveBeenCalledTimes(1);
       const scheduledTimestamp = mockJob.moveToDelayed.mock.calls[0][0];
       const expectedTimestamp = before + DEFAULT_RATE_LIMIT_FALLBACK_DELAY_MS;
-      expect(scheduledTimestamp).toBeGreaterThanOrEqual(expectedTimestamp - 100);
+      expect(scheduledTimestamp).toBeGreaterThanOrEqual(
+        expectedTimestamp - 100,
+      );
       expect(scheduledTimestamp).toBeLessThanOrEqual(expectedTimestamp + 1000);
     });
 
@@ -168,7 +170,9 @@ describe("IngestionProcessor (Sprint 3 Part 4 - Rate Limit Rescheduling)", () =>
       expect(mockJob.moveToDelayed).toHaveBeenCalledTimes(1);
       const scheduledTimestamp = mockJob.moveToDelayed.mock.calls[0][0];
       const expectedTimestamp = before + 45_000;
-      expect(scheduledTimestamp).toBeGreaterThanOrEqual(expectedTimestamp - 100);
+      expect(scheduledTimestamp).toBeGreaterThanOrEqual(
+        expectedTimestamp - 100,
+      );
       expect(scheduledTimestamp).toBeLessThanOrEqual(expectedTimestamp + 1000);
     });
 

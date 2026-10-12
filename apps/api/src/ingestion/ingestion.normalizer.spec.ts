@@ -222,7 +222,8 @@ describe("Ingestion Normalizer (Sprint 3 Part 4)", () => {
         additions: 5,
         deletions: 1,
         changes: 6,
-        patch: "@@ -1,3 +1,7 @@\n+export function add(a: number, b: number) { return a + b; }",
+        patch:
+          "@@ -1,3 +1,7 @@\n+export function add(a: number, b: number) { return a + b; }",
       };
       const normalizedText = normalizeCommitDiff(textFile);
       expect(normalizedText.isBinary).toBe(false);

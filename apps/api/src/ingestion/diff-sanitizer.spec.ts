@@ -71,7 +71,8 @@ describe("Git Diff Sanitizer (Sprint 3 Part 3)", () => {
     });
 
     it("should exclude dependency lockfiles (package-lock.json, pnpm-lock.yaml)", () => {
-      const patch = "@@ -1,5 +1,5 @@\n-lockfileVersion: 5.4\n+lockfileVersion: 6.0";
+      const patch =
+        "@@ -1,5 +1,5 @@\n-lockfileVersion: 5.4\n+lockfileVersion: 6.0";
       expect(sanitizeDiff("package-lock.json", patch).isSkipped).toBe(true);
       expect(sanitizeDiff("pnpm-lock.yaml", patch).isSkipped).toBe(true);
       expect(sanitizeDiff("yarn.lock", patch).isSkipped).toBe(true);
@@ -82,8 +83,12 @@ describe("Git Diff Sanitizer (Sprint 3 Part 3)", () => {
       const patch = "@@ -1,1 +1,1 @@\n+export const generated = true;";
       expect(sanitizeDiff("dist/index.js", patch).isSkipped).toBe(true);
       expect(sanitizeDiff(".next/server/page.js", patch).isSkipped).toBe(true);
-      expect(sanitizeDiff("coverage/lcov-report/index.html", patch).isSkipped).toBe(true);
-      expect(sanitizeDiff("node_modules/pkg/index.js", patch).isSkipped).toBe(true);
+      expect(
+        sanitizeDiff("coverage/lcov-report/index.html", patch).isSkipped,
+      ).toBe(true);
+      expect(sanitizeDiff("node_modules/pkg/index.js", patch).isSkipped).toBe(
+        true,
+      );
     });
   });
 
@@ -97,9 +102,15 @@ describe("Git Diff Sanitizer (Sprint 3 Part 3)", () => {
       `;
 
       const sanitized = redactSecrets(patch);
-      expect(sanitized).not.toContain("ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
-      expect(sanitized).not.toContain("github_pat_11AAAAAAA0123456789_abcdefghijklmnopqrstuvwxyz");
-      expect(sanitized).not.toContain("gho_16characterstokenforgithuboauth012345");
+      expect(sanitized).not.toContain(
+        "ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+      );
+      expect(sanitized).not.toContain(
+        "github_pat_11AAAAAAA0123456789_abcdefghijklmnopqrstuvwxyz",
+      );
+      expect(sanitized).not.toContain(
+        "gho_16characterstokenforgithuboauth012345",
+      );
       expect(sanitized).toContain("[REDACTED_GITHUB_TOKEN]");
     });
 
@@ -129,9 +140,15 @@ describe("Git Diff Sanitizer (Sprint 3 Part 3)", () => {
       expect(sanitized).not.toContain("supersecretpass");
       expect(sanitized).not.toContain("p%40ssw0rd");
       expect(sanitized).not.toContain("redispassword123");
-      expect(sanitized).toContain("postgresql://[REDACTED_USER]:[REDACTED_PASSWORD]@localhost:5432/mydb?schema=public");
-      expect(sanitized).toContain("mongodb://[REDACTED_USER]:[REDACTED_PASSWORD]@mongo.internal:27017/prod");
-      expect(sanitized).toContain("redis://[REDACTED_USER]:[REDACTED_PASSWORD]@cache.internal:6379");
+      expect(sanitized).toContain(
+        "postgresql://[REDACTED_USER]:[REDACTED_PASSWORD]@localhost:5432/mydb?schema=public",
+      );
+      expect(sanitized).toContain(
+        "mongodb://[REDACTED_USER]:[REDACTED_PASSWORD]@mongo.internal:27017/prod",
+      );
+      expect(sanitized).toContain(
+        "redis://[REDACTED_USER]:[REDACTED_PASSWORD]@cache.internal:6379",
+      );
     });
 
     it("should redact API keys, client secrets, and passwords while preserving variable context", () => {
@@ -181,7 +198,8 @@ describe("Git Diff Sanitizer (Sprint 3 Part 3)", () => {
 
     it("should safely truncate diffs exceeding 50 KB and append the truncation marker", () => {
       // Create a patch that exceeds 50 KB (e.g. 70 KB)
-      const line = "+const line = 'this is a repeated line for large patch testing';\n";
+      const line =
+        "+const line = 'this is a repeated line for large patch testing';\n";
       const largePatch = line.repeat(1200); // ~75 KB
       expect(largePatch.length).toBeGreaterThan(MAX_DIFF_SIZE_BYTES);
 

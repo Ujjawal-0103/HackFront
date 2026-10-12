@@ -77,7 +77,8 @@ describe("GitHubAppAuthService (Sprint 3 Part 4)", () => {
     });
 
     it("should throw GitHubAuthError for corrupt or invalid private key without leaking key", () => {
-      const corruptKey = "-----BEGIN RSA PRIVATE KEY-----\ncorrupt_payload\n-----END RSA PRIVATE KEY-----";
+      const corruptKey =
+        "-----BEGIN RSA PRIVATE KEY-----\ncorrupt_payload\n-----END RSA PRIVATE KEY-----";
       try {
         normalizePrivateKey(corruptKey);
         fail("Should have thrown");
@@ -130,7 +131,9 @@ describe("GitHubAppAuthService (Sprint 3 Part 4)", () => {
 
   // --- 3. Installation Access Token Generation & Caching ---
   describe("getInstallationAccessToken", () => {
-    function createService(refreshBufferMs = 5 * 60 * 1000): GitHubAppAuthService {
+    function createService(
+      refreshBufferMs = 5 * 60 * 1000,
+    ): GitHubAppAuthService {
       const configService = {
         get: (key: string) => {
           if (key === "GITHUB_APP_ID") return "998877";

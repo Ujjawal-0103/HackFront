@@ -41,8 +41,8 @@ traceback/
 ├── .github/
 │   └── workflows/ci.yml        # Automated CI workflow (lint, test, typecheck, build)
 ├── docker-compose.yml          # Local PostgreSQL & Redis container definitions
-├── package.json                # Monorepo root scripts
-├── pnpm-workspace.yaml         # Workspace package configuration
+├── package.json                # Monorepo root scripts & npm workspaces definition
+├── package-lock.json           # Canonical npm dependency lockfile
 └── turbo.json                  # Turborepo task pipeline
 ```
 
@@ -53,43 +53,45 @@ traceback/
 ### Prerequisites
 
 - **Node.js:** $\ge 20.x$ (Tested on Node v22.17.0)
-- **pnpm:** $\ge 9.x$ (`npm install -g pnpm@9`)
+- **npm:** $\ge 10.x$ (Bundled with Node.js)
 - **Docker Desktop:** Required for running the local PostgreSQL 16 & Redis containers.
 
 ### Installation & Build
 
+`npm ci` requires the committed `package-lock.json` and performs a clean, reproducible lockfile-based installation across all npm workspaces.
+
 ```bash
-# 1. Install all dependencies across monorepo workspaces
-pnpm install
+# 1. Clean installation of dependencies using the committed package-lock.json
+npm ci
 
 # 2. Start local PostgreSQL 16 database (bound to host port 5434)
 docker compose up -d postgres
 
 # 3. Apply development database migrations & generate Prisma Client
-pnpm prisma:migrate:dev
+npm run prisma:migrate:dev
 
 # 4. Check migration status
-pnpm prisma:migrate:status
+npm run prisma:migrate:status
 
 # 5. Typecheck all workspaces
-pnpm typecheck
+npm run typecheck
 
-# 6. Run automated test suites (32 tests across web and api)
-pnpm test
+# 6. Run automated test suites (33 tests across web and api)
+npm test
 
 # 7. Build all packages and applications
-pnpm build
+npm run build
 ```
 
 ### Running Locally
 
 ```bash
 # Start all applications concurrently in development mode
-pnpm dev
+npm run dev
 
 # Or start individual applications:
-pnpm --filter @traceback/api dev    # NestJS API running on http://localhost:3001/api
-pnpm --filter @traceback/web dev    # Next.js Web running on http://localhost:3000
+npm run dev --workspace=@traceback/api    # NestJS API running on http://localhost:3001/api
+npm run dev --workspace=@traceback/web    # Next.js Web running on http://localhost:3000
 ```
 
 ### Local Database Services & Configuration
@@ -167,12 +169,12 @@ To connect a live GitHub repository rather than using the mock sandbox:
 
 ## 7. Troubleshooting Common Setup Issues
 
-| Symptom                                                                                     | Probable Cause                                           | Resolution                                                                                                                     |
-| :------------------------------------------------------------------------------------------ | :------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------- |
-| `bind: An attempt was made to access a socket in a way forbidden by its access permissions` | Host port conflict on 5432 or 5433                       | `docker-compose.yml` binds PostgreSQL to host port `5434`. Ensure `DATABASE_URL` uses port `5434`.                             |
-| `EPERM: operation not permitted, rename query_engine-windows.dll.node`                      | Active dev server locking the Prisma query engine binary | Stop any running background dev servers (`pnpm dev` or `nest start`) before running `prisma:generate` or `prisma:migrate:dev`. |
-| `service "postgres" is not running`                                                         | Docker Desktop engine stopped                            | Launch Docker Desktop on Windows and verify `docker compose ps` shows `traceback-postgres` as `Up (healthy)`.                  |
-| `None of the selected packages has a "prisma:migrate:dev" script`                           | Attempting to run unmapped scripts                       | Use root scripts: `pnpm prisma:migrate:dev` or `pnpm --filter @traceback/api prisma:migrate:dev`.                              |
+| Symptom                                                                                     | Probable Cause                                           | Resolution                                                                                                                                        |
+| :------------------------------------------------------------------------------------------ | :------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `bind: An attempt was made to access a socket in a way forbidden by its access permissions` | Host port conflict on 5432 or 5433                       | `docker-compose.yml` binds PostgreSQL to host port `5434`. Ensure `DATABASE_URL` uses port `5434`.                                                |
+| `EPERM: operation not permitted, rename query_engine-windows.dll.node`                      | Active dev server locking the Prisma query engine binary | Stop any running background dev servers (`npm run dev` or `nest start`) before running `npm run prisma:generate` or `npm run prisma:migrate:dev`. |
+| `service "postgres" is not running`                                                         | Docker Desktop engine stopped                            | Launch Docker Desktop on Windows and verify `docker compose ps` shows `traceback-postgres` as `Up (healthy)`.                                     |
+| `None of the selected packages has a "prisma:migrate:dev" script`                           | Attempting to run unmapped scripts                       | Use root scripts: `npm run prisma:migrate:dev` or `npm run prisma:migrate:dev --workspace=@traceback/api`.                                        |
 
 ---
 

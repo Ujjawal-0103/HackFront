@@ -336,3 +336,30 @@ export interface VerificationReportDto {
   jsonPayload: Record<string, unknown>;
   createdAt: string;
 }
+
+// 7. Authentication & Session Contracts (Sprint 2)
+export interface AuthenticatedUser {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl?: string;
+}
+
+export interface LoginRequest {
+  userId?: string;
+  email?: string;
+  name?: string;
+  password?: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  user: AuthenticatedUser;
+  workspaces: WorkspaceSummary[];
+}
+
+export interface AuthSessionResponse {
+  user: AuthenticatedUser;
+  workspaces: WorkspaceSummary[];
+  activeWorkspaceId: string;
+}

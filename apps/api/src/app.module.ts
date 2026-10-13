@@ -8,6 +8,7 @@ import { GitHubModule } from "./github/github.module";
 import { IngestionQueueModule } from "./ingestion/ingestion-queue.module";
 import { EvidenceModule } from "./evidence/evidence.module";
 import { RepositoriesModule } from "./repositories/repositories.module";
+import { AuthModule } from "./auth/auth.module";
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { RepositoriesModule } from "./repositories/repositories.module";
     }),
     PrismaModule,
     HealthModule,
+    AuthModule,
     WorkspacesModule,
     GitHubModule,
     IngestionQueueModule,

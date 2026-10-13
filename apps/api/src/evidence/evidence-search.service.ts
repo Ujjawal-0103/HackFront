@@ -221,7 +221,49 @@ export class EvidenceSearchService {
       };
     }
 
-    // Try full-text search with Prisma raw SQL if available, else Prisma structured findMany
+    // 1. Try PostgreSQL native full-text search with ts_rank_cd when available
+    if (typeof (this.prisma as any).$queryRawUnsafe === "function") {
+      try {
+        const sqlWhere: string[] = [`"repositoryId" = $1`];
+        const sqlParams: any[] = [repositoryId];
+
+        // PostgreSQL FTS: to_tsvector @@ plainto_tsquery or ILIKE fallback for exact substrings
+        sqlWhere.push(
+          `(to_tsvector('english', coalesce("title", '') || ' ' || coalesce("content", '')) @@ plainto_tsquery('english', $2) ` +
+            `OR "title" ILIKE $3 OR "content" ILIKE $3 OR "referenceKey" ILIKE $3)`,
+        );
+        sqlParams.push(query, `%${query}%`);
+
+        if (options.sourceTypes && options.sourceTypes.length > 0) {
+          const typeIndex = sqlParams.length + 1;
+          sqlWhere.push(`"sourceType"::text = ANY($${typeIndex}::text[])`);
+          sqlParams.push(options.sourceTypes);
+        }
+
+        const rawSql = `
+          SELECT id, "repositoryId", "sourceType", "externalId", "referenceKey",
+                 title, author, url, content, snippet, "filePath", "lineStart",
+                 "lineEnd", metadata, "recordedAt", "createdAt", "updatedAt",
+                 ts_rank_cd(to_tsvector('english', coalesce("title", '') || ' ' || coalesce("content", '')), plainto_tsquery('english', $2)) AS fts_rank
+          FROM source_records
+          WHERE ${sqlWhere.join(" AND ")}
+          ORDER BY fts_rank DESC, "recordedAt" DESC
+          LIMIT 100
+        `;
+
+        const rawRecords = await (this.prisma as any).$queryRawUnsafe(
+          rawSql,
+          ...sqlParams,
+        );
+        if (Array.isArray(rawRecords) && rawRecords.length > 0) {
+          return rawRecords;
+        }
+      } catch (_ftsError) {
+        // Fall back gracefully to Prisma findMany (e.g. SQLite, mock Prisma in unit tests, or syntax fallback)
+      }
+    }
+
+    // 2. Structured Prisma fallback execution
     try {
       // Build conditions for matching title or content or referenceKey
       const orConditions: any[] = [

@@ -202,6 +202,31 @@ describe("EvidenceSearchService", () => {
       }
     });
 
+    it("should use PostgreSQL native ts_rank_cd when $queryRawUnsafe is supported", async () => {
+      prisma.$queryRawUnsafe = jest.fn().mockResolvedValue([mockRecords[0]]);
+
+      const result = await service.search({
+        workspaceId: "ws-456",
+        repositoryId: "repo-123",
+        query: "memory leak socket",
+      });
+
+      expect(prisma.$queryRawUnsafe).toHaveBeenCalledWith(
+        expect.stringContaining("ts_rank_cd"),
+        "repo-123",
+        "memory leak socket",
+        "%memory leak socket%",
+      );
+      // Verify that the suspicious name to_tsrank_cd is never in the query
+      expect(prisma.$queryRawUnsafe).not.toHaveBeenCalledWith(
+        expect.stringContaining("to_tsrank_cd"),
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+      );
+      expect(result.items.length).toBeGreaterThan(0);
+    });
+
     it("should retrieve a single SourceRecord by ID within workspace scope", async () => {
       const record = await service.getSourceRecordById(
         "ws-456",

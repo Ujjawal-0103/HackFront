@@ -35,11 +35,23 @@ export class PrismaService
       await this.$queryRaw`SELECT 1`;
       return { healthy: true, message: "PostgreSQL database responsive" };
     } catch (err) {
+      const rawMessage =
+        err instanceof Error ? err.message : "Database ping query failed";
       return {
         healthy: false,
-        message:
-          err instanceof Error ? err.message : "Database ping query failed",
+        message: this.sanitizeHealthMessage(rawMessage),
       };
     }
+  }
+
+  private sanitizeHealthMessage(message: string): string {
+    if (!message) return "Database ping query failed";
+    return message
+      .replace(/postgresql:\/\/[^\s"'`]+/gi, "[REDACTED_URL]")
+      .replace(/postgrespassword/gi, "[REDACTED]")
+      .replace(/password[^\s,;)]*/gi, "[REDACTED]")
+      .replace(/\b5434\b/g, "[PORT]")
+      .replace(/:\d{2,5}\b/g, ":[PORT]")
+      .replace(/at\s+[`'"][^`'"]+[`'"]/gi, "at [REDACTED_ENDPOINT]");
   }
 }

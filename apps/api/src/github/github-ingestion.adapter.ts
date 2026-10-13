@@ -688,11 +688,29 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
       );
     }
 
+    if (options?.signal?.aborted) {
+      throw new GitHubTransientError(
+        "GitHub request cancelled by caller",
+        undefined,
+        true,
+        endpoint,
+      );
+    }
+
     const url = `${this.baseUrl}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
     const maxRetries = 3;
     let attempt = 0;
 
     while (attempt <= maxRetries) {
+      if (options?.signal?.aborted) {
+        throw new GitHubTransientError(
+          "GitHub request cancelled by caller",
+          undefined,
+          true,
+          endpoint,
+        );
+      }
+
       attempt++;
       const controller = new AbortController();
       const timeoutMs = options?.timeoutMs || DEFAULT_TIMEOUT_MS;
@@ -700,9 +718,13 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
 
       // Combine caller's signal if present
       if (options?.signal) {
-        options.signal.addEventListener("abort", () => controller.abort(), {
-          once: true,
-        });
+        if (options.signal.aborted) {
+          controller.abort();
+        } else {
+          options.signal.addEventListener("abort", () => controller.abort(), {
+            once: true,
+          });
+        }
       }
 
       try {
@@ -861,6 +883,15 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
         );
       } catch (err: any) {
         clearTimeout(timeoutId);
+
+        if (options?.signal?.aborted) {
+          throw new GitHubTransientError(
+            "GitHub request cancelled by caller",
+            undefined,
+            true,
+            endpoint,
+          );
+        }
 
         // Abort / Timeout handling
         if (err.name === "AbortError") {

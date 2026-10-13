@@ -132,3 +132,48 @@ Evaluated via `apps/api/src/evidence/retrieval-benchmark.spec.ts`:
 2. Graph expansion discovers connected neighbours for multi-hop cases (`ARCH-08`), but does not provide $\ge 15$ percentage points improvement over the strong baseline.
 3. Operating a mandatory Neo4j cluster introduces substantial memory overhead, multi-database synchronization risks, and container complexity without proportional retrieval quality gains.
 4. **Decision:** **DEFER Neo4j for V1 Production Baseline.** Retain the modular `Neo4jService` and `GraphProjectionService` as optional extensions.
+
+---
+
+## 7. Frontend Evidence Explorer Interface
+
+Route: `/evidence`
+
+- **Repository Selection:** Dropdown populated from registered workspace repositories with record counts.
+- **Query & Filters:**
+  - Natural language phrase / architectural term input with quick-query pills.
+  - Source type filters (`COMMIT`, `PULL_REQUEST`, `ISSUE`, `DOCUMENTATION`, `ADR`).
+  - File path proximity filter (`filePath`) matching stored changed files.
+  - Recency range filters (`since`, `until`).
+  - Graph expansion toggle reflecting ADR-005 deferred baseline status.
+- **Evidence Result Cards:**
+  - Header: source type badge, reference key, author, date, and external GitHub artifact link.
+  - Monospace code excerpt / snippet container.
+  - Provenance & relevance score badge with retrieval method indicator (`lexical` vs `graph_expansion`).
+  - Human-readable match explanation badges (e.g., `✓ Exact match on reference key`, `✓ Title matches keyword`).
+- **Inspect Record Drawer:**
+  - Modal viewing full stored content, file path, line numbers, and metadata JSON.
+- **Honest Retrieval States:**
+  - Initial instruction prompt with guided sample queries.
+  - Clean loading skeleton.
+  - Insufficient evidence banner explicitly noting that absence of evidence does not prove a claim is false.
+
+---
+
+## 8. Validation Commands & Monorepo Test Baseline
+
+```powershell
+npm run prisma:validate
+npm run prisma:migrate:status
+npm run format:check
+npm run lint
+.\node_modules\.bin\turbo.cmd run typecheck --force
+.\node_modules\.bin\turbo.cmd run build --force
+.\node_modules\.bin\turbo.cmd run test --force
+```
+
+- **API Test Suite:** 29 passed suites, 267/267 tests passed.
+- **Web Test Suite:** 4 passed suites, 17/17 tests passed.
+- **Total Test Baseline:** 284/284 tests passed across the workspace (up from the 224 baseline).
+- **TypeScript Typecheck:** 4/4 tasks passed without errors.
+- **Production Build:** 4/4 tasks passed, generating all 6 static/dynamic routes.

@@ -174,3 +174,86 @@ export interface RepositorySyncStatusResponse {
   activeJob?: RepositorySyncSummary;
   recentJobs: RepositorySyncSummary[];
 }
+
+// 6. Evidence Store & Retrieval Contracts (Sprint 4)
+export interface SourceRecordDto {
+  id: string;
+  repositoryId: string;
+  sourceType: EvidenceSourceType;
+  externalId: string;
+  referenceKey: string;
+  title: string;
+  author: string;
+  url: string;
+  snippet?: string;
+  filePath?: string;
+  lineStart?: number;
+  lineEnd?: number;
+  metadata?: Record<string, unknown>;
+  recordedAt: string;
+}
+
+export interface EvidenceSearchQuery {
+  query: string;
+  sourceTypes?: EvidenceSourceType[];
+  filePath?: string;
+  since?: string;
+  until?: string;
+  limit?: number;
+  offset?: number;
+  includeGraph?: boolean;
+}
+
+export type RetrievalMethod = "lexical" | "graph_expansion" | "hybrid";
+
+export interface GraphProximitySignal {
+  seedSourceId: string;
+  relationship: string;
+  depth: number;
+}
+
+export interface EvidenceSearchResultItem {
+  source: SourceRecordDto;
+  score: number;
+  retrievalMethod: RetrievalMethod;
+  matchReasons: string[];
+  graphProximity?: GraphProximitySignal;
+}
+
+export interface EvidenceSearchResponse {
+  query: string;
+  totalCount: number;
+  items: EvidenceSearchResultItem[];
+  graphAvailable: boolean;
+  executionTimeMs: number;
+  fallbackNotice?: string;
+}
+
+export interface ClaimAssessmentDto {
+  id: string;
+  claimId: string;
+  confidence: AIAssessmentConfidence;
+  rationale: string;
+  modelIdentifier: string;
+  evidenceRecordIds?: string[];
+  createdAt: string;
+}
+
+export interface HumanVerdictRecordDto {
+  id: string;
+  claimId: string;
+  verdict: HumanVerdict;
+  reviewerId?: string;
+  reviewNotes?: string;
+  decidedAt: string;
+}
+
+export interface VerificationReportDto {
+  id: string;
+  sessionId: string;
+  workspaceId: string;
+  summary: Record<string, unknown>;
+  markdownContent: string;
+  jsonPayload: Record<string, unknown>;
+  createdAt: string;
+}

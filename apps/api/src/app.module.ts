@@ -6,6 +6,7 @@ import { PrismaModule } from "./prisma/prisma.module";
 import { WorkspacesModule } from "./workspaces/workspaces.module";
 import { GitHubModule } from "./github/github.module";
 import { IngestionQueueModule } from "./ingestion/ingestion-queue.module";
+import { EvidenceModule } from "./evidence/evidence.module";
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { IngestionQueueModule } from "./ingestion/ingestion-queue.module";
     WorkspacesModule,
     GitHubModule,
     IngestionQueueModule,
+    EvidenceModule,
   ],
 })
 export class AppModule {}

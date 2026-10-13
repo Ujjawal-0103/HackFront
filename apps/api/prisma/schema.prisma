@@ -16,6 +16,7 @@ model User {
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
   memberships  WorkspaceMember[]
+  verdicts     HumanVerdictRecord[]
 
   @@map("users")
 }
@@ -37,6 +38,7 @@ model Workspace {
   repositories          Repository[]
   gitHubInstallations   GitHubInstallation[]
   verificationSessions  VerificationSession[]
+  reports               VerificationReport[]
 
   @@map("workspaces")
 }
@@ -89,6 +91,7 @@ model Repository {
   commits        GitCommit[]
   pullRequests   PullRequest[]
   issues         Issue[]
+  sourceRecords  SourceRecord[]
 
   @@unique([workspaceId, fullName])
   @@map("repositories")
@@ -135,9 +138,10 @@ model VerificationSession {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  workspace      Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  repository     Repository    @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  workspace      Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  repository     Repository            @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
   claims         Claim[]
+  reports        VerificationReport[]
 
   @@map("verification_sessions")
 }
@@ -155,28 +159,110 @@ model Claim {
 
   session               VerificationSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   evidence              EvidenceRecord[]
+  assessments           ClaimAssessment[]
+  humanVerdicts         HumanVerdictRecord[]
 
   @@map("claims")
 }
 
 model EvidenceRecord {
+  id             String             @id @default(uuid())
+  claimId        String
+  sourceType     EvidenceSourceType
+  referenceKey   String             // Commit SHA, PR #, Issue #
+  title          String
+  author         String
+  timestamp      DateTime
+  url            String             // Clickable GitHub URL
+  snippet        String?            @db.Text
+  filePath       String?
+  lineStart      Int?
+  lineEnd        Int?
+  sourceRecordId String?
+  createdAt      DateTime           @default(now())
+
+  claim          Claim              @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  sourceRecord   SourceRecord?      @relation(fields: [sourceRecordId], references: [id], onDelete: SetNull)
+
+  @@index([sourceRecordId])
+  @@map("evidence_records")
+}
+
+model SourceRecord {
   id           String             @id @default(uuid())
-  claimId      String
+  repositoryId String
   sourceType   EvidenceSourceType
-  referenceKey String             // Commit SHA, PR #, Issue #
+  externalId   String             // SHA, PR # as string, Issue # as string, or doc path
+  referenceKey String             // Display key: e.g. "7f8a9b", "#42", "docs/ADR-001.md"
   title        String
   author       String
-  timestamp    DateTime
-  url          String             // Clickable GitHub URL
+  url          String
+  content      String             @db.Text
   snippet      String?            @db.Text
   filePath     String?
   lineStart    Int?
   lineEnd      Int?
+  metadata     Json?
+  recordedAt   DateTime           // When the commit/event actually happened
   createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
 
-  claim        Claim              @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  repository      Repository       @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  evidenceRecords EvidenceRecord[]
 
-  @@map("evidence_records")
+  @@unique([repositoryId, sourceType, externalId])
+  @@index([repositoryId, sourceType])
+  @@index([repositoryId, recordedAt])
+  @@index([referenceKey])
+  @@map("source_records")
+}
+
+model ClaimAssessment {
+  id                String                 @id @default(uuid())
+  claimId           String
+  confidence        AIAssessmentConfidence
+  rationale         String                 @db.Text
+  modelIdentifier   String                 @default("heuristics-v1")
+  evidenceRecordIds Json?                  // string[] of referenced EvidenceRecord IDs
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  claim             Claim                  @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@index([claimId])
+  @@map("claim_assessments")
+}
+
+model HumanVerdictRecord {
+  id          String       @id @default(uuid())
+  claimId     String
+  verdict     HumanVerdict
+  reviewerId  String?
+  reviewNotes String?      @db.Text
+  decidedAt   DateTime     @default(now())
+
+  claim       Claim        @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  reviewer    User?        @relation(fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@index([claimId])
+  @@map("human_verdict_records")
+}
+
+model VerificationReport {
+  id              String              @id @default(uuid())
+  sessionId       String
+  workspaceId     String
+  summary         Json
+  markdownContent String              @db.Text
+  jsonPayload     Json
+  createdAt       DateTime            @default(now())
+
+  session         VerificationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  workspace       Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([workspaceId])
+  @@map("verification_reports")
 }
 
 // 4. Ingestion & Historical Provenance Boundaries

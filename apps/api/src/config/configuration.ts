@@ -7,6 +7,10 @@ export interface AppConfig {
   redisPort: number;
   redisPassword?: string;
   githubWebhookSecret?: string;
+  neo4jUri?: string;
+  neo4jUsername?: string;
+  neo4jPassword?: string;
+  neo4jDatabase?: string;
 }
 
 export const configuration = (): { app: AppConfig } => {
@@ -25,6 +29,11 @@ export const configuration = (): { app: AppConfig } => {
     ? rawWebhookSecret || undefined
     : rawWebhookSecret || "development-webhook-secret";
 
+  const neo4jUri = process.env.NEO4J_URI?.trim() || undefined;
+  const neo4jUsername = process.env.NEO4J_USERNAME?.trim() || undefined;
+  const neo4jPassword = process.env.NEO4J_PASSWORD?.trim() || undefined;
+  const neo4jDatabase = process.env.NEO4J_DATABASE?.trim() || "neo4j";
+
   return {
     app: {
       nodeEnv,
@@ -35,6 +44,10 @@ export const configuration = (): { app: AppConfig } => {
       redisPort,
       redisPassword,
       githubWebhookSecret,
+      neo4jUri,
+      neo4jUsername,
+      neo4jPassword,
+      neo4jDatabase,
     },
   };
 };

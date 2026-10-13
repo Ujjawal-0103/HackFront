@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ThemeToggle } from "../components/ThemeToggle";
+import Link from "next/link";
 import { HumanVerdict } from "@traceback/shared-types";
 
 export default function HomePage() {
@@ -16,59 +16,7 @@ export default function HomePage() {
     <div
       style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
     >
-      {/* Top Navigation */}
-      <header
-        style={{
-          borderBottom: "1px solid var(--color-border)",
-          backgroundColor: "var(--color-surface)",
-          padding: "1rem 2rem",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <div
-            style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "8px",
-              backgroundColor: "var(--color-primary)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#FFFFFF",
-              fontWeight: "bold",
-            }}
-          >
-            T
-          </div>
-          <div>
-            <h1
-              style={{
-                fontSize: "1.25rem",
-                fontWeight: 700,
-                color: "var(--color-text)",
-              }}
-            >
-              Traceback
-            </h1>
-            <p
-              style={{
-                fontSize: "0.75rem",
-                color: "var(--color-text-secondary)",
-              }}
-            >
-              Human-Supervised Code Rationale Verification (T1.1)
-            </p>
-          </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <ThemeToggle />
-        </div>
-      </header>
-
-      {/* Development Status Banner */}
+      {/* Sprints 3 & 4 Status Banner */}
       <div
         style={{
           backgroundColor: "var(--color-card-muted)",
@@ -79,29 +27,28 @@ export default function HomePage() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          flexWrap: "wrap",
+          gap: "0.5rem",
         }}
       >
         <span>
-          <strong>Sprint 2 Development Preview:</strong> Application
-          scaffolding, light-first theme, and API foundation active.
+          <strong>Sprint 3 &amp; 4 Active:</strong> Canonical evidence store,
+          PostgreSQL text search, and repository ingestion operational.
         </span>
-        <span
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.4rem",
-          }}
-        >
-          <span
-            style={{
-              width: "8px",
-              height: "8px",
-              borderRadius: "50%",
-              backgroundColor: "var(--color-success)",
-            }}
-          />
-          Backend API Ready
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <Link
+            href="/repositories"
+            style={{ fontWeight: 600, fontSize: "0.8125rem" }}
+          >
+            Manage Repositories →
+          </Link>
+          <Link
+            href="/evidence"
+            style={{ fontWeight: 600, fontSize: "0.8125rem" }}
+          >
+            Evidence Explorer →
+          </Link>
+        </div>
       </div>
 
       {/* Main Content Area */}

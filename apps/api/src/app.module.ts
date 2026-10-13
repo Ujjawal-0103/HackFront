@@ -6,6 +6,9 @@ import { PrismaModule } from "./prisma/prisma.module";
 import { WorkspacesModule } from "./workspaces/workspaces.module";
 import { GitHubModule } from "./github/github.module";
 import { IngestionQueueModule } from "./ingestion/ingestion-queue.module";
+import { EvidenceModule } from "./evidence/evidence.module";
+import { RepositoriesModule } from "./repositories/repositories.module";
+import { AuthModule } from "./auth/auth.module";
 
 @Module({
   imports: [
@@ -15,9 +18,12 @@ import { IngestionQueueModule } from "./ingestion/ingestion-queue.module";
     }),
     PrismaModule,
     HealthModule,
+    AuthModule,
     WorkspacesModule,
     GitHubModule,
     IngestionQueueModule,
+    EvidenceModule,
+    RepositoriesModule,
   ],
 })
 export class AppModule {}

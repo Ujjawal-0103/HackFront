@@ -122,6 +122,85 @@ export interface RepositorySummary {
   indexedAt?: string;
 }
 
+export interface RepositoryDetailsDto {
+  id: string;
+  workspaceId: string;
+  fullName: string;
+  defaultBranch: string;
+  isPrivate: boolean;
+  indexedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  counts: {
+    commits: number;
+    pullRequests: number;
+    issues: number;
+    sourceRecords: number;
+  };
+  latestSyncJob?: {
+    id: string;
+    status: string;
+    trigger: string;
+    commitsCount: number;
+    pullRequestsCount: number;
+    issuesCount: number;
+    errorMessage: string | null;
+    startedAt: string | null;
+    completedAt: string | null;
+    createdAt: string;
+  } | null;
+}
+
+export interface RepositoryActivityDto {
+  repositoryId: string;
+  fullName: string;
+  commits: Array<{
+    sha: string;
+    message: string;
+    authorName: string;
+    committedAt: string;
+    url: string;
+  }>;
+  pullRequests: Array<{
+    number: number;
+    title: string;
+    author: string;
+    state: string;
+    isMerged: boolean;
+    url: string;
+    createdAt: string;
+  }>;
+  issues: Array<{
+    number: number;
+    title: string;
+    author: string;
+    state: string;
+    url: string;
+    createdAt: string;
+  }>;
+}
+
+export interface CreateRepositoryDto {
+  fullName: string;
+  defaultBranch?: string;
+  isPrivate?: boolean;
+  installationId?: number;
+}
+
+export interface GitHubAuthorizedRepositoryDto {
+  id: number;
+  fullName: string;
+  owner: string;
+  repo: string;
+  defaultBranch: string;
+  isPrivate: boolean;
+  permissions: {
+    contents?: string;
+    issues?: string;
+    pullRequests?: string;
+  };
+}
+
 // 5. Ingestion & Repository Sync Contracts
 export type SyncStatus = "PENDING" | "SYNCING" | "COMPLETED" | "FAILED";
 export type SyncTrigger = "MANUAL" | "WEBHOOK";
@@ -173,4 +252,114 @@ export interface RepositorySyncStatusResponse {
   lastIndexedAt?: string;
   activeJob?: RepositorySyncSummary;
   recentJobs: RepositorySyncSummary[];
+}
+
+// 6. Evidence Store & Retrieval Contracts (Sprint 4)
+export interface SourceRecordDto {
+  id: string;
+  repositoryId: string;
+  sourceType: EvidenceSourceType;
+  externalId: string;
+  referenceKey: string;
+  title: string;
+  author: string;
+  url: string;
+  snippet?: string;
+  filePath?: string;
+  lineStart?: number;
+  lineEnd?: number;
+  metadata?: Record<string, unknown>;
+  recordedAt: string;
+}
+
+export interface EvidenceSearchQuery {
+  query: string;
+  sourceTypes?: EvidenceSourceType[];
+  filePath?: string;
+  since?: string;
+  until?: string;
+  limit?: number;
+  offset?: number;
+  includeGraph?: boolean;
+}
+
+export type RetrievalMethod = "lexical" | "graph_expansion" | "hybrid";
+
+export interface GraphProximitySignal {
+  seedSourceId: string;
+  relationship: string;
+  depth: number;
+}
+
+export interface EvidenceSearchResultItem {
+  source: SourceRecordDto;
+  score: number;
+  retrievalMethod: RetrievalMethod;
+  matchReasons: string[];
+  graphProximity?: GraphProximitySignal;
+}
+
+export interface EvidenceSearchResponse {
+  query: string;
+  totalCount: number;
+  items: EvidenceSearchResultItem[];
+  graphAvailable: boolean;
+  executionTimeMs: number;
+  fallbackNotice?: string;
+}
+
+export interface ClaimAssessmentDto {
+  id: string;
+  claimId: string;
+  confidence: AIAssessmentConfidence;
+  rationale: string;
+  modelIdentifier: string;
+  evidenceRecordIds?: string[];
+  createdAt: string;
+}
+
+export interface HumanVerdictRecordDto {
+  id: string;
+  claimId: string;
+  verdict: HumanVerdict;
+  reviewerId?: string;
+  reviewNotes?: string;
+  decidedAt: string;
+}
+
+export interface VerificationReportDto {
+  id: string;
+  sessionId: string;
+  workspaceId: string;
+  summary: Record<string, unknown>;
+  markdownContent: string;
+  jsonPayload: Record<string, unknown>;
+  createdAt: string;
+}
+
+// 7. Authentication & Session Contracts (Sprint 2)
+export interface AuthenticatedUser {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl?: string;
+}
+
+export interface LoginRequest {
+  userId?: string;
+  email?: string;
+  name?: string;
+  password?: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  user: AuthenticatedUser;
+  workspaces: WorkspaceSummary[];
+}
+
+export interface AuthSessionResponse {
+  user: AuthenticatedUser;
+  workspaces: WorkspaceSummary[];
+  activeWorkspaceId: string;
 }

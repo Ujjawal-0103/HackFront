@@ -20,9 +20,12 @@ export class WorkspaceGuard implements CanActivate {
       throw new UnauthorizedException("Authentication required");
     }
 
-    const rawWorkspaceId = request.params?.["workspaceId"];
+    const rawWorkspaceId =
+      request.params?.["workspaceId"] ||
+      (request.query?.["workspaceId"] as string) ||
+      (request.headers?.["x-workspace-id"] as string);
     if (!rawWorkspaceId) {
-      // If endpoint is not scoped to a specific workspace ID param, allow
+      // If endpoint is not scoped to a specific workspace ID param or header, allow
       return true;
     }
 

@@ -56,6 +56,63 @@ describe("WorkspaceGuard (Multi-Tenant Cross-Workspace Isolation)", () => {
     );
   });
 
+  it("should throw ForbiddenException when user attempts cross-workspace access via x-workspace-id header", async () => {
+    const mockRequest: any = {
+      user: { id: "user_1", email: "user1@example.com", name: "User 1" },
+      headers: { "x-workspace-id": "ws_beta" },
+      params: {},
+    };
+
+    const mockContext = {
+      switchToHttp: () => ({
+        getRequest: () => mockRequest,
+      }),
+    } as ExecutionContext;
+
+    await expect(guard.canActivate(mockContext)).rejects.toThrow(
+      ForbiddenException,
+    );
+    await expect(guard.canActivate(mockContext)).rejects.toThrow(
+      /Cross-workspace access denied: User user_1 does not have access to workspace ws_beta/,
+    );
+  });
+
+  it("should throw ForbiddenException when user attempts cross-workspace access via query param", async () => {
+    const mockRequest: any = {
+      user: { id: "user_1", email: "user1@example.com", name: "User 1" },
+      query: { workspaceId: "ws_beta" },
+      params: {},
+    };
+
+    const mockContext = {
+      switchToHttp: () => ({
+        getRequest: () => mockRequest,
+      }),
+    } as ExecutionContext;
+
+    await expect(guard.canActivate(mockContext)).rejects.toThrow(
+      ForbiddenException,
+    );
+  });
+
+  it("should allow access when valid workspace is supplied in x-workspace-id header", async () => {
+    const mockRequest: any = {
+      user: { id: "user_1", email: "user1@example.com", name: "User 1" },
+      headers: { "x-workspace-id": "ws_alpha" },
+      params: {},
+    };
+
+    const mockContext = {
+      switchToHttp: () => ({
+        getRequest: () => mockRequest,
+      }),
+    } as ExecutionContext;
+
+    const result = await guard.canActivate(mockContext);
+    expect(result).toBe(true);
+    expect(mockRequest.workspaceContext?.workspaceId).toBe("ws_alpha");
+  });
+
   it("should throw UnauthorizedException when request lacks user authentication context", async () => {
     const mockRequest: any = {
       params: { workspaceId: "ws_alpha" },

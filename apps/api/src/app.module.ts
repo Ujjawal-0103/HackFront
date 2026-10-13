@@ -7,6 +7,7 @@ import { WorkspacesModule } from "./workspaces/workspaces.module";
 import { GitHubModule } from "./github/github.module";
 import { IngestionQueueModule } from "./ingestion/ingestion-queue.module";
 import { EvidenceModule } from "./evidence/evidence.module";
+import { RepositoriesModule } from "./repositories/repositories.module";
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { EvidenceModule } from "./evidence/evidence.module";
     GitHubModule,
     IngestionQueueModule,
     EvidenceModule,
+    RepositoriesModule,
   ],
 })
 export class AppModule {}

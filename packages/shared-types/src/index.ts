@@ -122,6 +122,85 @@ export interface RepositorySummary {
   indexedAt?: string;
 }
 
+export interface RepositoryDetailsDto {
+  id: string;
+  workspaceId: string;
+  fullName: string;
+  defaultBranch: string;
+  isPrivate: boolean;
+  indexedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  counts: {
+    commits: number;
+    pullRequests: number;
+    issues: number;
+    sourceRecords: number;
+  };
+  latestSyncJob?: {
+    id: string;
+    status: string;
+    trigger: string;
+    commitsCount: number;
+    pullRequestsCount: number;
+    issuesCount: number;
+    errorMessage: string | null;
+    startedAt: string | null;
+    completedAt: string | null;
+    createdAt: string;
+  } | null;
+}
+
+export interface RepositoryActivityDto {
+  repositoryId: string;
+  fullName: string;
+  commits: Array<{
+    sha: string;
+    message: string;
+    authorName: string;
+    committedAt: string;
+    url: string;
+  }>;
+  pullRequests: Array<{
+    number: number;
+    title: string;
+    author: string;
+    state: string;
+    isMerged: boolean;
+    url: string;
+    createdAt: string;
+  }>;
+  issues: Array<{
+    number: number;
+    title: string;
+    author: string;
+    state: string;
+    url: string;
+    createdAt: string;
+  }>;
+}
+
+export interface CreateRepositoryDto {
+  fullName: string;
+  defaultBranch?: string;
+  isPrivate?: boolean;
+  installationId?: number;
+}
+
+export interface GitHubAuthorizedRepositoryDto {
+  id: number;
+  fullName: string;
+  owner: string;
+  repo: string;
+  defaultBranch: string;
+  isPrivate: boolean;
+  permissions: {
+    contents?: string;
+    issues?: string;
+    pullRequests?: string;
+  };
+}
+
 // 5. Ingestion & Repository Sync Contracts
 export type SyncStatus = "PENDING" | "SYNCING" | "COMPLETED" | "FAILED";
 export type SyncTrigger = "MANUAL" | "WEBHOOK";

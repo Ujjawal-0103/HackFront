@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { api, ApiError } from "../../lib/api";
+import { useAuth } from "../../context/AuthContext";
 import {
   RepositoryDetailsDto,
   EvidenceSearchResultItem,
@@ -15,6 +16,8 @@ import {
 function EvidenceExplorerContent() {
   const searchParams = useSearchParams();
   const initialRepoParam = searchParams.get("repo");
+  const { activeWorkspace } = useAuth();
+  const workspaceId = activeWorkspace?.id;
 
   const [repositories, setRepositories] = useState<RepositoryDetailsDto[]>([]);
   const [selectedRepoId, setSelectedRepoId] = useState<string>("");
@@ -40,11 +43,13 @@ function EvidenceExplorerContent() {
     useState<SourceRecordDto | null>(null);
   const [loadingInspect, setLoadingInspect] = useState(false);
 
-  // Load repositories on mount
+  // Load repositories on mount or workspace change
   useEffect(() => {
     async function loadRepos() {
+      if (!workspaceId) return;
       try {
-        const repos = await api.getRepositories();
+        setLoadingRepos(true);
+        const repos = await api.getRepositories(workspaceId);
         setRepositories(repos);
         if (repos.length > 0) {
           if (
@@ -55,6 +60,8 @@ function EvidenceExplorerContent() {
           } else {
             setSelectedRepoId(repos[0].id);
           }
+        } else {
+          setSelectedRepoId("");
         }
       } catch (err) {
         console.error("Failed to load repositories:", err);
@@ -63,7 +70,7 @@ function EvidenceExplorerContent() {
       }
     }
     loadRepos();
-  }, [initialRepoParam]);
+  }, [initialRepoParam, workspaceId]);
 
   const executeSearch = useCallback(
     async (searchQuery: string = query) => {

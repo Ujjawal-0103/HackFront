@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { api, ApiError } from "../../lib/api";
+import { useAuth } from "../../context/AuthContext";
 import {
   RepositoryDetailsDto,
   GitHubAuthorizedRepositoryDto,
@@ -11,6 +12,9 @@ import {
 } from "@traceback/shared-types";
 
 export default function RepositoriesPage() {
+  const { activeWorkspace } = useAuth();
+  const workspaceId = activeWorkspace?.id;
+
   const [repositories, setRepositories] = useState<RepositoryDetailsDto[]>([]);
   const [authorizedRepos, setAuthorizedRepos] = useState<
     GitHubAuthorizedRepositoryDto[]
@@ -39,9 +43,11 @@ export default function RepositoriesPage() {
   const [connectingRepo, setConnectingRepo] = useState(false);
 
   const fetchRepositories = useCallback(async () => {
+    if (!workspaceId) return;
     try {
+      setIsLoading(true);
       setError(null);
-      const repos = await api.getRepositories();
+      const repos = await api.getRepositories(workspaceId);
       setRepositories(repos);
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : String(err);
@@ -49,16 +55,17 @@ export default function RepositoriesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [workspaceId]);
 
   const fetchAuthorizedRepos = useCallback(async () => {
+    if (!workspaceId) return;
     try {
-      const list = await api.getAuthorizedGitHubRepositories();
+      const list = await api.getAuthorizedGitHubRepositories(workspaceId);
       setAuthorizedRepos(list);
     } catch {
       // Keep empty if unconfigured
     }
-  }, []);
+  }, [workspaceId]);
 
   useEffect(() => {
     fetchRepositories();

@@ -14,6 +14,20 @@ export class PrismaService
 {
   private readonly logger = new Logger(PrismaService.name);
 
+  constructor(options?: ConstructorParameters<typeof PrismaClient>[0]) {
+    super(
+      options || {
+        datasources: {
+          db: {
+            url:
+              process.env.DATABASE_URL ||
+              "postgresql://postgres:postgrespassword@localhost:5434/traceback_test?schema=public",
+          },
+        },
+      },
+    );
+  }
+
   async onModuleInit() {
     // Graceful initial connect attempt
     try {

@@ -10,10 +10,7 @@ import {
  * Strict separation of machine assessment from human verdicts.
  */
 export type VerificationAssessmentStatus =
-  | "SUPPORTED"
-  | "CONTRADICTED"
-  | "INSUFFICIENT_EVIDENCE"
-  | "MIXED";
+  "SUPPORTED" | "CONTRADICTED" | "INSUFFICIENT_EVIDENCE" | "MIXED";
 
 /**
  * Maps structured assessment status to Prisma AIAssessmentConfidence enum

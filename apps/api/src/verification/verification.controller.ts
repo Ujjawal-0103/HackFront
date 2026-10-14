@@ -18,9 +18,7 @@ import { VerificationSessionResult } from "./verification.types";
 @Controller("workspaces/:workspaceId/repositories/:repositoryId/verify")
 @UseGuards(AuthGuard, WorkspaceGuard)
 export class VerificationController {
-  constructor(
-    private readonly sessionService: VerificationSessionService,
-  ) {}
+  constructor(private readonly sessionService: VerificationSessionService) {}
 
   /**
    * Submits an external AI explanation to extract claims, retrieve historical evidence,
@@ -54,11 +52,7 @@ export class VerificationController {
     @Param("repositoryId") repositoryId: string,
     @Param("sessionId") sessionId: string,
   ): Promise<VerificationSessionResult> {
-    return this.sessionService.getSession(
-      workspaceId,
-      repositoryId,
-      sessionId,
-    );
+    return this.sessionService.getSession(workspaceId, repositoryId, sessionId);
   }
 
   /**

@@ -69,7 +69,10 @@ describe("ClaimAssessmentService (Sprint 5 - Grounding Assessment)", () => {
             },
             score: 4.5,
             retrievalMethod: "lexical",
-            matchReasons: ["Exact match on reference key", "direct match on target file"],
+            matchReasons: [
+              "Exact match on reference key",
+              "direct match on target file",
+            ],
           },
         ],
       }),
@@ -86,7 +89,8 @@ describe("ClaimAssessmentService (Sprint 5 - Grounding Assessment)", () => {
       text: "normalizeConfig normalizes legacy snake_case options to camelCase",
       targetSymbol: "normalizeConfig",
       order: 1,
-      rawSentence: "normalizeConfig normalizes legacy snake_case options to camelCase",
+      rawSentence:
+        "normalizeConfig normalizes legacy snake_case options to camelCase",
     };
 
     const result = await assessmentService.assessSingleClaim(
@@ -169,7 +173,9 @@ describe("ClaimAssessmentService (Sprint 5 - Grounding Assessment)", () => {
     expect(result.requiresHumanReview).toBe(true);
     expect(result.contradictingEvidence.length).toBe(1);
     expect(result.supportingEvidence.length).toBe(1);
-    expect(result.rationale).toContain("Conflicting historical records detected");
+    expect(result.rationale).toContain(
+      "Conflicting historical records detected",
+    );
   });
 
   it("should abstain with INSUFFICIENT_EVIDENCE on missing evidence and NEVER mark CONTRADICTED", async () => {
@@ -201,13 +207,17 @@ describe("ClaimAssessmentService (Sprint 5 - Grounding Assessment)", () => {
 
     expect(result.status).toBe("INSUFFICIENT_EVIDENCE");
     expect(result.status).not.toBe("CONTRADICTED");
-    expect(result.rationale).toContain("Absence of evidence does not prove that this claim is false");
+    expect(result.rationale).toContain(
+      "Absence of evidence does not prove that this claim is false",
+    );
     expect(result.requiresHumanReview).toBe(true);
   });
 
   it("should activate safe fallback when an internal search error occurs", async () => {
     mockSearchService = {
-      search: jest.fn().mockRejectedValue(new Error("Database connection timeout")),
+      search: jest
+        .fn()
+        .mockRejectedValue(new Error("Database connection timeout")),
     };
 
     assessmentService = new ClaimAssessmentService(
@@ -234,6 +244,8 @@ describe("ClaimAssessmentService (Sprint 5 - Grounding Assessment)", () => {
     expect(results.length).toBe(1);
     expect(results[0].status).toBe("INSUFFICIENT_EVIDENCE");
     expect(results[0].requiresHumanReview).toBe(true);
-    expect(results[0].rationale).toContain("Fallback to manual human review activated");
+    expect(results[0].rationale).toContain(
+      "Fallback to manual human review activated",
+    );
   });
 });

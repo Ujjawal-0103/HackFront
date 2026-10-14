@@ -11,8 +11,15 @@ describe("CitationValidatorService (Sprint 5 - Citation Verification)", () => {
     mockPrisma = {
       sourceRecord: {
         findFirst: jest.fn().mockImplementation((args: any) => {
-          if (args.where.id === "real-src-id" || args.where.externalId === "9a4f21d") {
-            return Promise.resolve({ id: "real-src-id", externalId: "9a4f21d", referenceKey: "9a4f21d" });
+          if (
+            args.where.id === "real-src-id" ||
+            args.where.externalId === "9a4f21d"
+          ) {
+            return Promise.resolve({
+              id: "real-src-id",
+              externalId: "9a4f21d",
+              referenceKey: "9a4f21d",
+            });
           }
           return Promise.resolve(null);
         }),
@@ -74,7 +81,9 @@ describe("CitationValidatorService (Sprint 5 - Citation Verification)", () => {
 
     expect(report.validCitationsCount).toBe(0);
     expect(report.invalidCitationsCount).toBe(1);
-    expect(report.invalidCitations[0].reason).toContain("Missing or non-HTTP URL");
+    expect(report.invalidCitations[0].reason).toContain(
+      "Missing or non-HTTP URL",
+    );
     expect(report.validityRate).toBe(0.0);
   });
 
@@ -102,7 +111,9 @@ describe("CitationValidatorService (Sprint 5 - Citation Verification)", () => {
 
     expect(report.validCitationsCount).toBe(0);
     expect(report.invalidCitationsCount).toBe(1);
-    expect(report.invalidCitations[0].reason).toContain("Invalid commit SHA format");
+    expect(report.invalidCitations[0].reason).toContain(
+      "Invalid commit SHA format",
+    );
   });
 
   it("should reject citations that do not exist in the database (SEC-09)", async () => {
@@ -129,7 +140,9 @@ describe("CitationValidatorService (Sprint 5 - Citation Verification)", () => {
 
     expect(report.validCitationsCount).toBe(0);
     expect(report.invalidCitationsCount).toBe(1);
-    expect(report.invalidCitations[0].reason).toContain("does not exist in repository");
+    expect(report.invalidCitations[0].reason).toContain(
+      "does not exist in repository",
+    );
   });
 
   it("should return 1.0 validity rate when candidate set is empty", async () => {
@@ -163,7 +176,9 @@ describe("CitationValidatorService (Sprint 5 - Citation Verification)", () => {
       claimedQuotes: ["normalizes legacy snake_case options to camelCase"],
     });
 
-    expect(report.verifiedQuotes).toContain("normalizes legacy snake_case options to camelCase");
+    expect(report.verifiedQuotes).toContain(
+      "normalizes legacy snake_case options to camelCase",
+    );
     expect(report.inventedQuotes?.length).toBe(0);
     expect(report.validatedEvidence[0].verifiedQuotes).toBeDefined();
   });
@@ -193,7 +208,9 @@ describe("CitationValidatorService (Sprint 5 - Citation Verification)", () => {
       claimedQuotes: ["invented quote about postgres performance optimization"],
     });
 
-    expect(report.inventedQuotes).toContain("invented quote about postgres performance optimization");
+    expect(report.inventedQuotes).toContain(
+      "invented quote about postgres performance optimization",
+    );
     expect(report.verifiedQuotes?.length).toBe(0);
 
     const directCheck = validator.validateQuotation(
@@ -201,6 +218,8 @@ describe("CitationValidatorService (Sprint 5 - Citation Verification)", () => {
       candidates[0].source,
     );
     expect(directCheck.isValid).toBe(false);
-    expect(directCheck.reason).toContain("does not exist in cited source content");
+    expect(directCheck.reason).toContain(
+      "does not exist in cited source content",
+    );
   });
 });

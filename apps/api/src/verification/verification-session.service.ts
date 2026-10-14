@@ -46,7 +46,10 @@ export class VerificationSessionService {
     const startTime = Date.now();
 
     // 1. Verify repository access
-    await this.verifyRepositoryAccess(options.workspaceId, options.repositoryId);
+    await this.verifyRepositoryAccess(
+      options.workspaceId,
+      options.repositoryId,
+    );
 
     // 2. Extract reviewable claims
     const extractedClaims = this.claimExtractor.extractClaims({
@@ -71,7 +74,9 @@ export class VerificationSessionService {
     let validCitations = 0;
     for (const a of assessments) {
       totalCitations += a.allValidatedEvidence.length;
-      validCitations += a.allValidatedEvidence.filter((e) => e.isValidCitation).length;
+      validCitations += a.allValidatedEvidence.filter(
+        (e) => e.isValidCitation,
+      ).length;
     }
     const citationValidityRate =
       totalCitations === 0 ? 1.0 : validCitations / totalCitations;
@@ -203,8 +208,10 @@ export class VerificationSessionService {
         targetSymbol: claim.targetSymbol || undefined,
         status,
         prismaConfidence: claim.preliminaryConfidence,
-        confidenceScore: status === "SUPPORTED" ? 0.9 : status === "CONTRADICTED" ? 0.85 : 0.4,
-        rationale: latestAssessment?.rationale || "No stored assessment rationale",
+        confidenceScore:
+          status === "SUPPORTED" ? 0.9 : status === "CONTRADICTED" ? 0.85 : 0.4,
+        rationale:
+          latestAssessment?.rationale || "No stored assessment rationale",
         supportingEvidence: claim.evidence.map((e) => ({
           sourceRecordId: e.sourceRecordId || undefined,
           sourceType: e.sourceType,
@@ -219,7 +226,11 @@ export class VerificationSessionService {
           lineEnd: e.lineEnd || undefined,
           quality: {
             relevanceScore: 2.0,
-            isDirectFilePathMatch: !!(e.filePath && session.targetFilePath && e.filePath.includes(session.targetFilePath)),
+            isDirectFilePathMatch: !!(
+              e.filePath &&
+              session.targetFilePath &&
+              e.filePath.includes(session.targetFilePath)
+            ),
             isProximityFilePathMatch: false,
             hasExactReferenceKeyMatch: true,
             matchReasons: ["Stored confirmed citation"],
@@ -242,7 +253,11 @@ export class VerificationSessionService {
           lineEnd: e.lineEnd || undefined,
           quality: {
             relevanceScore: 2.0,
-            isDirectFilePathMatch: !!(e.filePath && session.targetFilePath && e.filePath.includes(session.targetFilePath)),
+            isDirectFilePathMatch: !!(
+              e.filePath &&
+              session.targetFilePath &&
+              e.filePath.includes(session.targetFilePath)
+            ),
             isProximityFilePathMatch: false,
             hasExactReferenceKeyMatch: true,
             matchReasons: ["Stored confirmed citation"],
@@ -273,11 +288,7 @@ export class VerificationSessionService {
   /**
    * Lists recent verification sessions for a repository
    */
-  async listSessions(
-    workspaceId: string,
-    repositoryId: string,
-    limit = 20,
-  ) {
+  async listSessions(workspaceId: string, repositoryId: string, limit = 20) {
     await this.verifyRepositoryAccess(workspaceId, repositoryId);
 
     return this.prisma.verificationSession.findMany({

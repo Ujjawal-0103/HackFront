@@ -196,7 +196,8 @@ export class CitationValidatorService {
       return { isValid: true, normalizedQuote: cleanQuote };
     }
 
-    const sourceText = `${source.title || ""} ${source.snippet || ""} ${source.content || ""}`.toLowerCase();
+    const sourceText =
+      `${source.title || ""} ${source.snippet || ""} ${source.content || ""}`.toLowerCase();
     const normalizedSource = sourceText.replace(/\s+/g, " ");
     const normalizedQuote = cleanQuote.toLowerCase().replace(/\s+/g, " ");
 
@@ -235,7 +236,12 @@ export class CitationValidatorService {
       const isHex =
         /^[0-9a-fA-F]{7,40}$/.test(cleanRef) ||
         /^[0-9a-fA-F]{7,40}$/.test(cleanExt);
-      const isBenchmarkKey = ["jwt-1", "legacy-session", "batch-50", "legacy"].includes(cleanRef);
+      const isBenchmarkKey = [
+        "jwt-1",
+        "legacy-session",
+        "batch-50",
+        "legacy",
+      ].includes(cleanRef);
 
       if (!isHex && !isBenchmarkKey) {
         return `Invalid commit SHA format: "${src.referenceKey}"`;

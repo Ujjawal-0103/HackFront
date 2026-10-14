@@ -43,10 +43,7 @@ describe("AbstentionHandlerService (Sprint 5 - Calibrated Abstention)", () => {
   });
 
   it("should abstain when all candidates score below minimum relevance threshold (< 0.8)", () => {
-    const lowScoreEvidence = [
-      createEvidenceItem(0.4),
-      createEvidenceItem(0.7),
-    ];
+    const lowScoreEvidence = [createEvidenceItem(0.4), createEvidenceItem(0.7)];
 
     const evaluation = handler.evaluateAbstention(lowScoreEvidence);
 

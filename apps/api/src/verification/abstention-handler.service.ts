@@ -18,9 +18,7 @@ export class AbstentionHandlerService {
    * Evaluates whether the system must abstain from making a positive or negative claim assertion.
    * Core principle: Absence of evidence is not proof of falsehood (SEC-10, RF-08).
    */
-  evaluateAbstention(
-    evidence: ValidatedEvidenceItem[],
-  ): AbstentionEvaluation {
+  evaluateAbstention(evidence: ValidatedEvidenceItem[]): AbstentionEvaluation {
     // 1. Zero evidence candidates found
     if (!evidence || evidence.length === 0) {
       return {
@@ -34,7 +32,9 @@ export class AbstentionHandlerService {
 
     // 2. All candidates fall below the minimum relevance threshold
     const validScoredEvidence = evidence.filter(
-      (e) => e.quality.relevanceScore >= AbstentionHandlerService.MINIMUM_RELEVANCE_THRESHOLD,
+      (e) =>
+        e.quality.relevanceScore >=
+        AbstentionHandlerService.MINIMUM_RELEVANCE_THRESHOLD,
     );
 
     if (validScoredEvidence.length === 0) {
@@ -52,7 +52,8 @@ export class AbstentionHandlerService {
       (e) =>
         e.quality.hasExactReferenceKeyMatch ||
         e.quality.isDirectFilePathMatch ||
-        e.quality.relevanceScore >= AbstentionHandlerService.HIGH_CONFIDENCE_THRESHOLD,
+        e.quality.relevanceScore >=
+          AbstentionHandlerService.HIGH_CONFIDENCE_THRESHOLD,
     );
 
     if (!hasStrongSignals) {

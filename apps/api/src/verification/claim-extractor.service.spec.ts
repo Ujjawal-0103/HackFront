@@ -147,12 +147,17 @@ describe("ClaimExtractorService (Sprint 5 - Claim Processing)", () => {
     it("should safely fall back to deterministic extraction when LLM adapter errors", async () => {
       const mockFailingAdapter = {
         isAvailable: jest.fn().mockReturnValue(true),
-        extractClaims: jest.fn().mockRejectedValue(new Error("LLM provider timeout")),
+        extractClaims: jest
+          .fn()
+          .mockRejectedValue(new Error("LLM provider timeout")),
       };
 
-      const customExtractor = new ClaimExtractorService(mockFailingAdapter as any);
+      const customExtractor = new ClaimExtractorService(
+        mockFailingAdapter as any,
+      );
       const claims = await customExtractor.extractClaimsAsync({
-        explanation: "First atomic claim was configured for caching. Second atomic claim handles token invalidation.",
+        explanation:
+          "First atomic claim was configured for caching. Second atomic claim handles token invalidation.",
       });
 
       expect(mockFailingAdapter.extractClaims).toHaveBeenCalled();

@@ -1,5 +1,14 @@
-import { Injectable, Logger, BadRequestException, Optional, Inject } from "@nestjs/common";
-import { ExtractedClaim, LlmClaimExtractionAdapter } from "./verification.types";
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  Optional,
+  Inject,
+} from "@nestjs/common";
+import {
+  ExtractedClaim,
+  LlmClaimExtractionAdapter,
+} from "./verification.types";
 
 export interface ExtractClaimsOptions {
   explanation: string;
@@ -50,11 +59,17 @@ export class ClaimExtractorService {
    * Asynchronously decomposes explanation text into reviewable atomic claims.
    * If an LLM adapter is available, attempts LLM-assisted atomic extraction with safe fallback to deterministic rules.
    */
-  async extractClaimsAsync(options: ExtractClaimsOptions): Promise<ExtractedClaim[]> {
+  async extractClaimsAsync(
+    options: ExtractClaimsOptions,
+  ): Promise<ExtractedClaim[]> {
     if (this.llmAdapter && this.llmAdapter.isAvailable()) {
       try {
-        const sanitizedExplanation = this.sanitizeAndIsolateInput(options.explanation);
-        const wrappedSnippet = options.codeSnippet ? this.wrapInUntrustedDiff(options.codeSnippet) : undefined;
+        const sanitizedExplanation = this.sanitizeAndIsolateInput(
+          options.explanation,
+        );
+        const wrappedSnippet = options.codeSnippet
+          ? this.wrapInUntrustedDiff(options.codeSnippet)
+          : undefined;
         const llmClaims = await this.llmAdapter.extractClaims({
           explanation: sanitizedExplanation,
           codeSnippet: wrappedSnippet,
@@ -65,7 +80,9 @@ export class ClaimExtractorService {
         if (Array.isArray(llmClaims) && llmClaims.length > 0) {
           return llmClaims;
         }
-        this.logger.warn("LLM extraction returned empty results; falling back to deterministic extraction");
+        this.logger.warn(
+          "LLM extraction returned empty results; falling back to deterministic extraction",
+        );
       } catch (err) {
         this.logger.warn(
           `LLM claim extraction failed (${err instanceof Error ? err.message : String(err)}); falling back to deterministic extraction`,
@@ -82,7 +99,9 @@ export class ClaimExtractorService {
   extractClaims(options: ExtractClaimsOptions): ExtractedClaim[] {
     const rawExplanation = options.explanation?.trim();
     if (!rawExplanation) {
-      throw new BadRequestException("Explanation text is required and cannot be empty.");
+      throw new BadRequestException(
+        "Explanation text is required and cannot be empty.",
+      );
     }
 
     if (rawExplanation.length > ClaimExtractorService.MAX_EXPLANATION_LENGTH) {
@@ -107,19 +126,24 @@ export class ClaimExtractorService {
     const rawSegments = this.segmentExplanation(sanitizedExplanation);
 
     // 3. Filter fluff, extract symbols, and structure into atomic claims
-    const maxClaims = options.maxClaims || ClaimExtractorService.DEFAULT_MAX_CLAIMS;
+    const maxClaims =
+      options.maxClaims || ClaimExtractorService.DEFAULT_MAX_CLAIMS;
     const claims: ExtractedClaim[] = [];
 
     for (const segment of rawSegments) {
       if (claims.length >= maxClaims) break;
 
       const cleanedClaimText = this.cleanClaimText(segment);
-      if (!cleanedClaimText || this.isTrivialSyntaxRestatement(cleanedClaimText)) {
+      if (
+        !cleanedClaimText ||
+        this.isTrivialSyntaxRestatement(cleanedClaimText)
+      ) {
         continue;
       }
 
       const extractedSymbol =
-        options.targetSymbol || this.extractSymbol(cleanedClaimText, options.codeSnippet);
+        options.targetSymbol ||
+        this.extractSymbol(cleanedClaimText, options.codeSnippet);
 
       claims.push({
         id: `claim-${claims.length + 1}`,
@@ -161,7 +185,9 @@ export class ClaimExtractorService {
     // Neutralize injection patterns by stripping instruction overrides
     for (const pattern of this.INJECTION_PATTERNS) {
       if (pattern.test(sanitized)) {
-        this.logger.warn(`Adversarial or directive pattern detected and sanitized in input explanation`);
+        this.logger.warn(
+          `Adversarial or directive pattern detected and sanitized in input explanation`,
+        );
         sanitized = sanitized.replace(pattern, "[DATA_PAYLOAD_FILTERED]");
       }
     }
@@ -174,7 +200,10 @@ export class ClaimExtractorService {
    */
   private segmentExplanation(text: string): string[] {
     // Check if the explanation is a numbered or bulleted list
-    const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    const lines = text
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
     const listItems: string[] = [];
     const regularLines: string[] = [];
 
@@ -242,7 +271,10 @@ export class ClaimExtractorService {
   /**
    * Extracts referenced code symbols (backtick quoted tokens or common identifier patterns)
    */
-  private extractSymbol(text: string, codeSnippet?: string): string | undefined {
+  private extractSymbol(
+    text: string,
+    codeSnippet?: string,
+  ): string | undefined {
     // 1. Look for backticked symbol in text: `myFunction`
     const backtickMatch = text.match(/`([a-zA-Z0-9_$]+)`/);
     if (backtickMatch) {

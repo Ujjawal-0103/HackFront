@@ -11,12 +11,7 @@ import { VerificationSessionService } from "./verification-session.service";
 import { VerificationController } from "./verification.controller";
 
 @Module({
-  imports: [
-    PrismaModule,
-    EvidenceModule,
-    AuthModule,
-    WorkspacesModule,
-  ],
+  imports: [PrismaModule, EvidenceModule, AuthModule, WorkspacesModule],
   controllers: [VerificationController],
   providers: [
     ClaimExtractorService,

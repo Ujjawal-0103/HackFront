@@ -127,7 +127,10 @@ export class ClaimAssessmentService {
     for (const item of validEvidence) {
       if (this.isContradictoryEvidence(claim, item, targetFilePath)) {
         contradicting.push(item);
-      } else if (item.quality.relevanceScore >= AbstentionHandlerService.MINIMUM_RELEVANCE_THRESHOLD) {
+      } else if (
+        item.quality.relevanceScore >=
+        AbstentionHandlerService.MINIMUM_RELEVANCE_THRESHOLD
+      ) {
         supporting.push(item);
       }
     }
@@ -156,13 +159,19 @@ export class ClaimAssessmentService {
       // Strong or partial corroboration
       const topScore = supporting[0].quality.relevanceScore;
       const hasDirectCorroboration = supporting.some(
-        (s) => s.quality.hasExactReferenceKeyMatch || s.quality.isDirectFilePathMatch || topScore >= 3.0,
+        (s) =>
+          s.quality.hasExactReferenceKeyMatch ||
+          s.quality.isDirectFilePathMatch ||
+          topScore >= 3.0,
       );
 
       if (hasDirectCorroboration) {
         status = "SUPPORTED";
         confidenceScore = Math.min(0.95, 0.7 + topScore * 0.05);
-        const topRefs = supporting.slice(0, 3).map((s) => s.referenceKey).join(", ");
+        const topRefs = supporting
+          .slice(0, 3)
+          .map((s) => s.referenceKey)
+          .join(", ");
         rationale = `Historical records (${topRefs}) corroborate the asserted design rationale and target context.`;
       } else {
         status = "MIXED";
@@ -214,7 +223,8 @@ export class ClaimAssessmentService {
     item: ValidatedEvidenceItem,
     targetFilePath?: string,
   ): boolean {
-    const textToInspect = `${item.title} ${item.snippet || ""} ${item.referenceKey}`.toLowerCase();
+    const textToInspect =
+      `${item.title} ${item.snippet || ""} ${item.referenceKey}`.toLowerCase();
     const claimLower = claim.text.toLowerCase();
 
     // If target file is specified and candidate belongs to a different file path,
@@ -225,7 +235,8 @@ export class ClaimAssessmentService {
       targetFilePath.toLowerCase().trim() !== item.filePath.toLowerCase().trim()
     ) {
       const targetSymbolMatch =
-        claim.targetSymbol && textToInspect.includes(claim.targetSymbol.toLowerCase());
+        claim.targetSymbol &&
+        textToInspect.includes(claim.targetSymbol.toLowerCase());
       if (!targetSymbolMatch) {
         return false;
       }

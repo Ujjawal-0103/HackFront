@@ -10,10 +10,7 @@ export type AIAssessmentConfidence =
   "HIGH_SUPPORT" | "PARTIAL_SUPPORT" | "SPARSE_EVIDENCE" | "CONTRADICTED";
 
 export type VerificationAssessmentStatus =
-  | "SUPPORTED"
-  | "CONTRADICTED"
-  | "INSUFFICIENT_EVIDENCE"
-  | "MIXED";
+  "SUPPORTED" | "CONTRADICTED" | "INSUFFICIENT_EVIDENCE" | "MIXED";
 
 export type EvidenceSourceType =
   "COMMIT" | "PULL_REQUEST" | "ISSUE" | "DOCUMENTATION" | "ADR";

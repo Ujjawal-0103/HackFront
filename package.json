@@ -13,6 +13,8 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "test:unit": "turbo run test:unit",
+    "test:integration": "turbo run test:integration",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
     "prisma:generate": "npm run prisma:generate --workspace=@traceback/api",

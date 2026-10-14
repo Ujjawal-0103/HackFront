@@ -1,5 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["DATABASE_URL"],
   "tasks": {
     "prisma:generate": {
       "cache": false
@@ -17,6 +18,15 @@
       "outputs": []
     },
     "@traceback/api#test": {
+      "dependsOn": ["^build", "prisma:generate"],
+      "env": ["DATABASE_URL"],
+      "outputs": []
+    },
+    "test:unit": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "test:integration": {
       "dependsOn": ["^build", "prisma:generate"],
       "env": ["DATABASE_URL"],
       "outputs": []

@@ -9,6 +9,9 @@ export type HumanVerdict = "SUPPORTED" | "CONTRADICTED" | "UNVERIFIED";
 export type AIAssessmentConfidence =
   "HIGH_SUPPORT" | "PARTIAL_SUPPORT" | "SPARSE_EVIDENCE" | "CONTRADICTED";
 
+export type VerificationAssessmentStatus =
+  "SUPPORTED" | "CONTRADICTED" | "INSUFFICIENT_EVIDENCE" | "MIXED";
+
 export type EvidenceSourceType =
   "COMMIT" | "PULL_REQUEST" | "ISSUE" | "DOCUMENTATION" | "ADR";
 
@@ -34,9 +37,18 @@ export interface ClaimItem {
   text: string;
   targetSymbol?: string;
   preliminaryConfidence: AIAssessmentConfidence;
+  structuredStatus?: VerificationAssessmentStatus;
   humanVerdict?: HumanVerdict;
   reviewNotes?: string;
   evidence: EvidenceReference[];
+}
+
+export interface VerifyExplanationRequest {
+  explanation: string;
+  codeSnippet?: string;
+  targetFilePath?: string;
+  targetSymbol?: string;
+  maxClaims?: number;
 }
 
 export interface VerificationSession {

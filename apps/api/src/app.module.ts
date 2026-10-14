@@ -9,6 +9,7 @@ import { IngestionQueueModule } from "./ingestion/ingestion-queue.module";
 import { EvidenceModule } from "./evidence/evidence.module";
 import { RepositoriesModule } from "./repositories/repositories.module";
 import { AuthModule } from "./auth/auth.module";
+import { VerificationModule } from "./verification/verification.module";
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { AuthModule } from "./auth/auth.module";
     IngestionQueueModule,
     EvidenceModule,
     RepositoriesModule,
+    VerificationModule,
   ],
 })
 export class AppModule {}

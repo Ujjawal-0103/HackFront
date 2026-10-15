@@ -52,11 +52,22 @@ export class WorkspacesService {
         { id: "user_3", email: "jordan@betalabs.com", name: "Jordan Security" },
       ];
 
+      const defaultHash =
+        "a1b2c3d4e5f60718293a4b5c6d7e8f90:39db16b7a872a4ec181634e45877088ca1af88894e8ec3434b3fa8a056c6a737d7956e3ed13047e3525f909d4c79866f87a29f847b4e9d8ae915cddef1d7c9ee";
+
       for (const u of defaultUsers) {
         await this.prisma.user.upsert({
           where: { id: u.id },
-          create: { id: u.id, email: u.email, name: u.name },
-          update: { name: u.name },
+          create: {
+            id: u.id,
+            email: u.email,
+            name: u.name,
+            passwordHash: defaultHash,
+          },
+          update: {
+            name: u.name,
+            passwordHash: defaultHash,
+          },
         });
       }
 

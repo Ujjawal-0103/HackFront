@@ -21,7 +21,7 @@ export interface RequestWithUser extends Request {
 export class AuthGuard implements CanActivate {
   constructor(@Optional() private readonly authService?: AuthService) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<RequestWithUser>();
     const authHeader = request.headers["authorization"];
     const devUserId = request.headers["x-user-id"] as string;
@@ -36,7 +36,7 @@ export class AuthGuard implements CanActivate {
       }
 
       if (this.authService) {
-        const validated = this.authService.validateToken(token);
+        const validated = await this.authService.validateToken(token);
         if (!validated) {
           throw new UnauthorizedException(
             "Invalid or expired authentication token",

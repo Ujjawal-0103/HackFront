@@ -87,4 +87,51 @@ describe("AuthGuard (Identity Boundary)", () => {
       UnauthorizedException,
     );
   });
+
+  it("should reject token in production when authService is not injected", async () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = "production";
+    try {
+      const mockRequest: any = {
+        headers: {
+          authorization: "Bearer tb_token_user_123_test",
+        },
+      };
+      const mockContext = {
+        switchToHttp: () => ({ getRequest: () => mockRequest }),
+      } as ExecutionContext;
+
+      await expect(guard.canActivate(mockContext)).rejects.toThrow(
+        UnauthorizedException,
+      );
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+    }
+  });
+
+  it("should validate token with injected authService in production", async () => {
+    const mockAuthService: any = {
+      validateToken: jest.fn().mockResolvedValue({
+        id: "usr_prod_777",
+        email: "prod@company.com",
+        name: "Prod User",
+      }),
+    };
+    const injectedGuard = new AuthGuard(mockAuthService);
+
+    const mockRequest: any = {
+      headers: {
+        authorization: "Bearer valid-prod-token",
+      },
+    };
+    const mockContext = {
+      switchToHttp: () => ({ getRequest: () => mockRequest }),
+    } as ExecutionContext;
+
+    const result = await injectedGuard.canActivate(mockContext);
+    expect(result).toBe(true);
+    expect(mockRequest.user.id).toBe("usr_prod_777");
+    expect(mockAuthService.validateToken).toHaveBeenCalledWith("valid-prod-token");
+  });
 });
+

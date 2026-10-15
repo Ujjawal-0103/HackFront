@@ -7,7 +7,12 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { AuthenticatedUser, WorkspaceSummary } from "@traceback/shared-types";
+import {
+  AuthenticatedUser,
+  WorkspaceSummary,
+  LoginRequest,
+  RegisterRequest,
+} from "@traceback/shared-types";
 import { api, setApiAuthToken, setApiActiveWorkspaceId } from "../lib/api";
 
 interface AuthContextType {
@@ -17,7 +22,8 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   error: string | null;
-  login: (userId?: string) => Promise<void>;
+  login: (credentials: LoginRequest) => Promise<void>;
+  register: (payload: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   switchWorkspace: (workspaceId: string) => void;
   refreshSession: () => Promise<void>;
@@ -68,9 +74,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const matchedWs = newWorkspaces.find((w) => w.id === targetWsId) ||
         newWorkspaces[0] || {
           id: targetWsId,
-          name: "Alpha Corp Engineering",
-          slug: "alpha-corp",
-          role: "OWNER",
+          name: "Default Workspace",
+          slug: "default",
+          role: "OWNER" as const,
         };
 
       setActiveWorkspace(matchedWs);
@@ -84,15 +90,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const login = useCallback(
-    async (userId: string = "user_1") => {
+    async (credentials: LoginRequest) => {
       try {
         setIsLoading(true);
         setError(null);
-        const res = await api.login({ userId });
+        const res = await api.login(credentials);
         applySession(res.token, res.user, res.workspaces);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        setError(`Login failed: ${msg}`);
+        setError(msg);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [applySession],
+  );
+
+  const register = useCallback(
+    async (payload: RegisterRequest) => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const res = await api.register(payload);
+        applySession(res.token, res.user, res.workspaces);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(msg);
+        throw err;
       } finally {
         setIsLoading(false);
       }
@@ -118,13 +143,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session.workspaces,
         session.activeWorkspaceId,
       );
-    } catch {
-      // If session retrieval fails, bootstrap with default dev user
-      await login("user_1");
+    } catch (err) {
+      // Session expired or invalid
+      setToken(null);
+      setUser(null);
+      setWorkspaces([]);
+      setActiveWorkspace(null);
+      setApiAuthToken(null);
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(STORAGE_KEY_TOKEN);
+        localStorage.removeItem(STORAGE_KEY_USER);
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [token, applySession, login]);
+  }, [token, applySession]);
 
   const switchWorkspace = useCallback(
     (workspaceId: string) => {
@@ -168,10 +201,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         typeof window !== "undefined"
           ? localStorage.getItem(STORAGE_KEY_TOKEN)
           : null;
-      const storedUserId =
-        typeof window !== "undefined"
-          ? localStorage.getItem(STORAGE_KEY_USER)
-          : "user_1";
 
       if (storedToken) {
         setApiAuthToken(storedToken);
@@ -188,12 +217,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return;
           }
         } catch {
-          // Token expired or server restarted
+          // Token expired or invalid
+          if (typeof window !== "undefined") {
+            localStorage.removeItem(STORAGE_KEY_TOKEN);
+          }
         }
       }
 
       if (isMounted) {
-        await login(storedUserId || "user_1");
+        setIsLoading(false);
       }
     }
 
@@ -202,7 +234,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       isMounted = false;
     };
-  }, [applySession, login]);
+  }, [applySession]);
 
   return (
     <AuthContext.Provider
@@ -214,6 +246,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         error,
         login,
+        register,
         logout,
         switchWorkspace,
         refreshSession,
@@ -227,7 +260,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (!context) {
-    // Graceful fallback for standalone component unit tests
+    // Fallback for isolated unit tests without provider
     return {
       user: {
         id: "user_1",
@@ -252,6 +285,7 @@ export function useAuth(): AuthContextType {
       isLoading: false,
       error: null,
       login: async () => {},
+      register: async () => {},
       logout: async () => {},
       switchWorkspace: () => {},
       refreshSession: async () => {},

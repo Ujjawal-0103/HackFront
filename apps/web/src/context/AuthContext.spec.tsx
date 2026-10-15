@@ -17,6 +17,7 @@ jest.mock("../lib/api", () => {
     api: {
       ...original.api,
       login: jest.fn(),
+      register: jest.fn(),
       getSession: jest.fn(),
       logout: jest.fn(),
     },
@@ -34,7 +35,13 @@ function AuthConsumer() {
         {activeWorkspace?.id || "none"}
       </span>
       <span data-testid="workspace-count">{workspaces.length}</span>
-      <button onClick={() => login("user_1")}>Login User 1</button>
+      <button
+        onClick={() =>
+          login({ email: "alex@company.com", password: "Password123!" })
+        }
+      >
+        Login User 1
+      </button>
       <button onClick={() => switchWorkspace("ws_beta")}>Switch Beta</button>
       <button onClick={() => logout()}>Logout</button>
     </div>
@@ -47,7 +54,7 @@ describe("AuthContext (Session and Workspace Context Management)", () => {
     jest.clearAllMocks();
 
     (api.login as jest.Mock).mockResolvedValue({
-      token: "tb_token_user_1_abcdef1234567890",
+      token: "tb_live_user_1_abcdef1234567890",
       user: {
         id: "user_1",
         email: "alex@company.com",
@@ -69,6 +76,29 @@ describe("AuthContext (Session and Workspace Context Management)", () => {
       ],
     });
 
+    (api.getSession as jest.Mock).mockResolvedValue({
+      user: {
+        id: "user_1",
+        email: "alex@company.com",
+        name: "Alex Maintainer",
+      },
+      workspaces: [
+        {
+          id: "ws_alpha",
+          name: "Alpha Corp Engineering",
+          slug: "alpha-corp",
+          role: "OWNER",
+        },
+        {
+          id: "ws_beta",
+          name: "Beta Labs Security",
+          slug: "beta-labs",
+          role: "MEMBER",
+        },
+      ],
+      activeWorkspaceId: "ws_alpha",
+    });
+
     (api.logout as jest.Mock).mockResolvedValue({
       success: true,
       message: "Session revoked",
@@ -79,7 +109,12 @@ describe("AuthContext (Session and Workspace Context Management)", () => {
     localStorage.clear();
   });
 
-  it("bootstraps session on initial mount and establishes active workspace", async () => {
+  it("restores active session on initial mount when stored token is present", async () => {
+    localStorage.setItem(
+      "traceback_auth_token",
+      "tb_live_user_1_abcdef1234567890",
+    );
+
     render(
       <AuthProvider>
         <AuthConsumer />
@@ -93,11 +128,38 @@ describe("AuthContext (Session and Workspace Context Management)", () => {
     expect(screen.getByTestId("active-workspace").textContent).toBe("ws_alpha");
     expect(screen.getByTestId("workspace-count").textContent).toBe("2");
     expect(localStorage.getItem("traceback_auth_token")).toBe(
-      "tb_token_user_1_abcdef1234567890",
+      "tb_live_user_1_abcdef1234567890",
+    );
+  });
+
+  it("allows logging in with verified credentials and updates session state", async () => {
+    render(
+      <AuthProvider>
+        <AuthConsumer />
+      </AuthProvider>,
+    );
+
+    // Initial state is unauthenticated
+    expect(screen.getByTestId("user-id").textContent).toBe("anonymous");
+
+    const loginBtn = screen.getByText("Login User 1");
+    await act(async () => {
+      fireEvent.click(loginBtn);
+    });
+
+    expect(screen.getByTestId("user-id").textContent).toBe("user_1");
+    expect(screen.getByTestId("active-workspace").textContent).toBe("ws_alpha");
+    expect(localStorage.getItem("traceback_auth_token")).toBe(
+      "tb_live_user_1_abcdef1234567890",
     );
   });
 
   it("allows switching active workspace and persists choice to localStorage", async () => {
+    localStorage.setItem(
+      "traceback_auth_token",
+      "tb_live_user_1_abcdef1234567890",
+    );
+
     render(
       <AuthProvider>
         <AuthConsumer />
@@ -120,6 +182,11 @@ describe("AuthContext (Session and Workspace Context Management)", () => {
   });
 
   it("clears session and tokens on logout", async () => {
+    localStorage.setItem(
+      "traceback_auth_token",
+      "tb_live_user_1_abcdef1234567890",
+    );
+
     render(
       <AuthProvider>
         <AuthConsumer />

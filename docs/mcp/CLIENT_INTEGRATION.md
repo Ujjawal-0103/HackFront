@@ -46,7 +46,6 @@ Submits an external AI-generated explanation of code for evidence-grounded verif
   - `targetFilePath` (string, optional): Relevant file path in the repository.
   - `targetSymbol` (string, optional): Function or class name.
   - `maxClaims` (number, optional, 1–10, default 5): Maximum atomic claims to verify.
-  - `apiToken` (string, optional): Explicit session token (overrides environment variable).
 - **Output:** Bounded JSON containing `status` (`SUPPORTED`, `CONTRADICTED`, `INSUFFICIENT_EVIDENCE`, `MIXED`), confidence score, atomic claims with rationale, validated citations (`referenceKey`, `url`, `sourceType`), and abstention notices.
 
 ### 2. `find_historical_context`
@@ -63,6 +62,17 @@ Searches historical repository records (commits, PRs, issues, ADRs) without requ
 
 ### 3. `check_change_against_decisions`
 Evaluates a proposed code diff or change description against historical engineering constraints, recorded ADRs, and past bug fixes.
+- **Input Schema:**
+  - `workspaceId` (string, required): Authorized workspace ID.
+  - `repositoryId` (string, required): Repository ID within the workspace.
+  - `diff` (string, optional, max 20,000 chars): Proposed patch or unified diff.
+  - `changeDescription` (string, optional, max 5,000 chars): Summary of the change.
+  - `targetFilePaths` (string[], optional): Modified file paths.
+  - `pullRequestId` (string, optional): Pull request identifier.
+- **Output:** Advisory report with `advisoryStatus` (`NO_CONFLICT_DETECTED`, `POTENTIAL_RISK`, `CONFLICT_DETECTED`, `INSUFFICIENT_EVIDENCE`), identified conflicts with severity (`HIGH`, `MEDIUM`, `LOW`), supporting evidence citations, and recommended actions.
+- **SAFETY INVARIANT:** Advisory only. Traceback never modifies source code, commits changes, or blocks merges automatically.
+
+> **Security Rule (Sprint 8):** Tool input schemas do NOT accept bearer tokens or credentials. Models cannot supply or override API credentials through tool parameters. Credentials must be configured exclusively in the MCP server process environment (`TRACEBACK_API_TOKEN`).
 - **Input Schema:**
   - `workspaceId` (string, required): Authorized workspace ID.
   - `repositoryId` (string, required): Repository ID within the workspace.

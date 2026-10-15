@@ -24,10 +24,6 @@ export const checkChangeAgainstDecisionsSchema = {
     .max(100)
     .optional()
     .describe("Optional pull request number or ID if reviewing a pull request"),
-  apiToken: z
-    .string()
-    .optional()
-    .describe("Optional explicit API session token (overrides environment variable)"),
 };
 
 export async function handleCheckChangeAgainstDecisions(
@@ -62,14 +58,13 @@ export async function handleCheckChangeAgainstDecisions(
       changeDescription: args.changeDescription,
       targetFilePaths: args.targetFilePaths,
       pullRequestId: args.pullRequestId,
-      token: args.apiToken,
     });
 
     return {
       content: [
         {
           type: "text",
-          text: JSON.stringify(result, null, 2),
+          text: JSON.stringify(result || {}, null, 2),
         },
       ],
     };

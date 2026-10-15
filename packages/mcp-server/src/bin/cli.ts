@@ -19,7 +19,7 @@ async function main() {
   if (config.apiToken) {
     console.error("[traceback-mcp] Authentication token configured (present in environment).");
   } else {
-    console.error("[traceback-mcp] Warning: TRACEBACK_API_TOKEN is not set. Tools will require explicit apiToken argument.");
+    console.error("[traceback-mcp] Warning: TRACEBACK_API_TOKEN is not set. Tools requiring authentication will fail until configured in server environment.");
   }
 
   const server = createTracebackMcpServer({ config });

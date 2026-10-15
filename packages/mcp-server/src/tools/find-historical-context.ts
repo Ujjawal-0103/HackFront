@@ -3,7 +3,6 @@ import { TracebackApiClient } from "../client";
 import {
   HistoricalContextMcpResponse,
   HistoricalContextMcpItem,
-  EvidenceSourceType,
 } from "@traceback/shared-types";
 
 export const findHistoricalContextSchema = {
@@ -34,10 +33,6 @@ export const findHistoricalContextSchema = {
     .boolean()
     .optional()
     .describe("Whether to include graph expansion relationships (falls back to PostgreSQL if unavailable)"),
-  apiToken: z
-    .string()
-    .optional()
-    .describe("Optional explicit API session token (overrides environment variable)"),
 };
 
 export async function handleFindHistoricalContext(
@@ -53,7 +48,6 @@ export async function handleFindHistoricalContext(
       sourceTypes: args.sourceTypes,
       limit: args.limit ?? 5,
       includeGraph: args.includeGraph ?? true,
-      token: args.apiToken,
     });
 
     const sources: HistoricalContextMcpItem[] = (searchResponse.items || []).map((item) => {

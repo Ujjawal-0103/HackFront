@@ -12,7 +12,11 @@ export class McpClientError extends Error {
     public readonly statusCode?: number,
     public readonly code?: string,
   ) {
-    super(message);
+    // Sanitize any potential token from error message
+    const sanitizedMessage = message
+      .replace(/Bearer\s+[a-zA-Z0-9_\-\.]+/gi, "Bearer [REDACTED]")
+      .replace(/(?:tb_token_|traceback_token_)[a-zA-Z0-9_\-\.]+/gi, "[REDACTED_TOKEN]");
+    super(sanitizedMessage);
     this.name = "McpClientError";
   }
 }
@@ -28,12 +32,12 @@ export class TracebackApiClient {
     this.config.apiToken = token;
   }
 
-  private resolveToken(explicitToken?: string): string {
-    const token = explicitToken || this.config.apiToken;
+  private resolveToken(): string {
+    const token = this.config.apiToken;
     if (!token) {
       throw new McpClientError(
-        "Authentication required: TRACEBACK_API_TOKEN is not configured. " +
-          "Please provide a valid bearer token in your environment or client config.",
+        "Authentication required: TRACEBACK_API_TOKEN is not configured on the MCP server. " +
+          "Configure TRACEBACK_API_TOKEN in the server environment or client launcher configuration.",
         401,
         "UNAUTHENTICATED",
       );
@@ -46,11 +50,10 @@ export class TracebackApiClient {
     options: {
       method?: string;
       body?: unknown;
-      token?: string;
       workspaceId?: string;
     } = {},
   ): Promise<T> {
-    const token = this.resolveToken(options.token);
+    const token = this.resolveToken();
     const url = `${this.config.apiUrl.replace(/\/+$/, "")}/${endpoint.replace(/^\/+/, "")}`;
 
     const headers: Record<string, string> = {
@@ -81,6 +84,11 @@ export class TracebackApiClient {
         } catch {
           errorDetail = await response.text().catch(() => "");
         }
+
+        // Sanitize error detail to prevent any internal credential leakage
+        errorDetail = errorDetail
+          .replace(/Bearer\s+[a-zA-Z0-9_\-\.]+/gi, "Bearer [REDACTED]")
+          .replace(/(?:tb_token_|traceback_token_)[a-zA-Z0-9_\-\.]+/gi, "[REDACTED_TOKEN]");
 
         if (response.status === 401) {
           throw new McpClientError(
@@ -146,13 +154,11 @@ export class TracebackApiClient {
     targetFilePath?: string;
     targetSymbol?: string;
     maxClaims?: number;
-    token?: string;
   }): Promise<VerificationSessionResult> {
     return this.request<VerificationSessionResult>(
       `workspaces/${encodeURIComponent(params.workspaceId)}/repositories/${encodeURIComponent(params.repositoryId)}/verify`,
       {
         method: "POST",
-        token: params.token,
         workspaceId: params.workspaceId,
         body: {
           explanation: params.explanation,
@@ -177,13 +183,11 @@ export class TracebackApiClient {
     limit?: number;
     offset?: number;
     includeGraph?: boolean;
-    token?: string;
   }): Promise<EvidenceSearchResponse> {
     return this.request<EvidenceSearchResponse>(
       `workspaces/${encodeURIComponent(params.workspaceId)}/repositories/${encodeURIComponent(params.repositoryId)}/evidence/search`,
       {
         method: "POST",
-        token: params.token,
         workspaceId: params.workspaceId,
         body: {
           query: params.query,
@@ -207,7 +211,6 @@ export class TracebackApiClient {
     changeDescription?: string;
     targetFilePaths?: string[];
     pullRequestId?: string;
-    token?: string;
   }): Promise<CheckChangeAgainstDecisionsResponse> {
     const payload: CheckChangeAgainstDecisionsRequest = {
       workspaceId: params.workspaceId,
@@ -222,7 +225,6 @@ export class TracebackApiClient {
       `workspaces/${encodeURIComponent(params.workspaceId)}/repositories/${encodeURIComponent(params.repositoryId)}/advisory/check-change`,
       {
         method: "POST",
-        token: params.token,
         workspaceId: params.workspaceId,
         body: payload,
       },

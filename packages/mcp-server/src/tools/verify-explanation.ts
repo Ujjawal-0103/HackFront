@@ -36,10 +36,6 @@ export const verifyExplanationSchema = {
     .max(10)
     .optional()
     .describe("Maximum number of claims to extract and verify (default: 5, max: 10)"),
-  apiToken: z
-    .string()
-    .optional()
-    .describe("Optional explicit API session token (overrides environment variable)"),
 };
 
 export async function handleVerifyExplanation(
@@ -55,7 +51,6 @@ export async function handleVerifyExplanation(
       targetFilePath: args.targetFilePath,
       targetSymbol: args.targetSymbol,
       maxClaims: args.maxClaims ?? 5,
-      token: args.apiToken,
     });
 
     const mcpClaims: VerifyExplanationMcpClaim[] = (rawResult.assessments || []).map((assessment) => {

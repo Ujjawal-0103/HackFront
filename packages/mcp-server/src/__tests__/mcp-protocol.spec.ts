@@ -15,6 +15,102 @@ describe("Traceback MCP Protocol Integration", () => {
   let clientTransport: any;
   let serverTransport: any;
 
+  const validVerifyResult: VerificationSessionResult = {
+    sessionId: "sess_verify_123",
+    workspaceId: "ws_alpha",
+    repositoryId: "repo_core",
+    status: "COMPLETED",
+    explanation: "Mutex was introduced to guard against reentrancy in worker pool",
+    claimsCount: 1,
+    assessments: [
+      {
+        claimId: "clm_01",
+        claimText: "Mutex was introduced to prevent concurrent race condition",
+        status: "SUPPORTED",
+        confidenceScore: 0.95,
+        rationale: "PR #102 specifically added Mutex to resolve issue #99 race condition",
+        supportingEvidence: [],
+        contradictingEvidence: [],
+        allValidatedEvidence: [
+          {
+            sourceRecordId: "rec_commit_456",
+            sourceType: "COMMIT",
+            referenceKey: "7f8a9b1",
+            title: "fix(core): add mutex lock to worker dispatch",
+            url: "https://github.com/org/repo/commit/7f8a9b1",
+            quality: { relevanceScore: 0.95 },
+          },
+        ],
+        requiresHumanReview: false,
+      },
+    ],
+    citationValidityRate: 1.0,
+    executionTimeMs: 42,
+    estimatedTokensUsed: 150,
+  };
+
+  const validSearchResponse: EvidenceSearchResponse = {
+    query: "worker pool mutex",
+    totalCount: 1,
+    items: [
+      {
+        source: {
+          id: "src_commit_01",
+          repositoryId: "repo_core",
+          sourceType: "COMMIT",
+          externalId: "ext_01",
+          referenceKey: "9a8b7c",
+          title: "fix: prevent deadlock in worker pool",
+          author: "Jane Dev",
+          url: "https://github.com/org/repo/commit/9a8b7c",
+          snippet: "Replaced naive spinlock with std::mutex to prevent starvation",
+          filePath: "src/worker/pool.cpp",
+          recordedAt: "2024-03-01T12:00:00Z",
+        },
+        score: 0.92,
+        retrievalMethod: "hybrid",
+        matchReasons: ["lexical_match", "path_match"],
+      },
+    ],
+    graphAvailable: true,
+    executionTimeMs: 15,
+  };
+
+  const conflictResponse: CheckChangeAgainstDecisionsResponse = {
+    advisoryStatus: "POTENTIAL_RISK",
+    summary: "Proposed change removes worker mutex lock, violating ADR-002 and re-introducing defect #99",
+    conflicts: [
+      {
+        conflictId: "cnf_01",
+        historicalConstraint: "Worker thread operations must synchronize across shared queues via Mutex",
+        severity: "HIGH",
+        severityBasis: "Previous regression caused deadlock in production (Issue #99)",
+        explanation: "Diff removes mutex.lock() call around queue dispatch",
+        supportingEvidence: [
+          {
+            id: "rec_adr_002",
+            sourceType: "ADR",
+            referenceKey: "ADR-002",
+            title: "ADR-002: Concurrency Control Strategy",
+            author: "Architecture Team",
+            timestamp: "2023-11-15T10:00:00Z",
+            url: "https://github.com/org/repo/blob/main/docs/adr/002.md",
+            snippet: "All multi-threaded dispatchers must use explicit mutexes",
+          },
+        ],
+        recommendedFollowUp: "Retain concurrency synchronization or consult Architecture Team before removing lock",
+      },
+    ],
+    advisoryNotice: "ADVISORY ONLY: Traceback never modifies source code, commits changes, or blocks merges automatically.",
+    limitations: [
+      "Historical verification relies on recorded repository commits, PRs, and ADRs.",
+    ],
+    inspectedSourcesCount: 3,
+    evaluatedAt: new Date().toISOString(),
+    repositoryId: "repo_core",
+    targetFilePath: "src/worker/pool.cpp",
+  };
+
   beforeEach(async () => {
     mockApiClient = {
       verifyExplanation: jest.fn(),
@@ -47,7 +143,7 @@ describe("Traceback MCP Protocol Integration", () => {
   });
 
   // ==========================================================================
-  // Protocol Discovery
+  // Protocol Discovery & Schema Security
   // ==========================================================================
   describe("Tool Discovery", () => {
     it("should discover all three official Traceback MCP tools with input schemas", async () => {
@@ -69,6 +165,14 @@ describe("Traceback MCP Protocol Integration", () => {
 
       const checkTool = response.tools.find((t) => t.name === "check_change_against_decisions");
       expect(checkTool?.inputSchema.properties).toHaveProperty("diff");
+
+      // SEC-08: Public tool schemas must NEVER expose apiToken or authorization fields to LLMs
+      for (const tool of response.tools) {
+        expect(tool.inputSchema.properties).not.toHaveProperty("apiToken");
+        expect(tool.inputSchema.properties).not.toHaveProperty("token");
+        expect(tool.inputSchema.properties).not.toHaveProperty("authorization");
+        expect(tool.inputSchema.properties).not.toHaveProperty("apiKey");
+      }
     });
   });
 
@@ -76,40 +180,6 @@ describe("Traceback MCP Protocol Integration", () => {
   // Tool 1: verify_explanation
   // ==========================================================================
   describe("verify_explanation Tool", () => {
-    const validVerifyResult: VerificationSessionResult = {
-      sessionId: "sess_verify_123",
-      workspaceId: "ws_alpha",
-      repositoryId: "repo_core",
-      status: "COMPLETED",
-      explanation: "Mutex was introduced to guard against reentrancy in worker pool",
-      claimsCount: 1,
-      assessments: [
-        {
-          claimId: "clm_01",
-          claimText: "Mutex was introduced to prevent concurrent race condition",
-          status: "SUPPORTED",
-          confidenceScore: 0.95,
-          rationale: "PR #102 specifically added Mutex to resolve issue #99 race condition",
-          supportingEvidence: [],
-          contradictingEvidence: [],
-          allValidatedEvidence: [
-            {
-              sourceRecordId: "rec_commit_456",
-              sourceType: "COMMIT",
-              referenceKey: "7f8a9b1",
-              title: "fix(core): add mutex lock to worker dispatch",
-              url: "https://github.com/org/repo/commit/7f8a9b1",
-              quality: { relevanceScore: 0.95 },
-            },
-          ],
-          requiresHumanReview: false,
-        },
-      ],
-      citationValidityRate: 1.0,
-      executionTimeMs: 42,
-      estimatedTokensUsed: 150,
-    };
-
     it("should successfully verify explanation and return grounded citations", async () => {
       mockApiClient.verifyExplanation.mockResolvedValue(validVerifyResult);
 
@@ -221,33 +291,6 @@ describe("Traceback MCP Protocol Integration", () => {
   // Tool 2: find_historical_context
   // ==========================================================================
   describe("find_historical_context Tool", () => {
-    const validSearchResponse: EvidenceSearchResponse = {
-      query: "worker pool mutex",
-      totalCount: 1,
-      items: [
-        {
-          source: {
-            id: "src_commit_01",
-            repositoryId: "repo_core",
-            sourceType: "COMMIT",
-            externalId: "ext_01",
-            referenceKey: "9a8b7c",
-            title: "fix: prevent deadlock in worker pool",
-            author: "Jane Dev",
-            url: "https://github.com/org/repo/commit/9a8b7c",
-            snippet: "Replaced naive spinlock with std::mutex to prevent starvation",
-            filePath: "src/worker/pool.cpp",
-            recordedAt: "2024-03-01T12:00:00Z",
-          },
-          score: 0.92,
-          retrievalMethod: "hybrid",
-          matchReasons: ["lexical_match", "path_match"],
-        },
-      ],
-      graphAvailable: true,
-      executionTimeMs: 15,
-    };
-
     it("should retrieve historical sources with bounded excerpts and canonical URLs", async () => {
       mockApiClient.searchEvidence.mockResolvedValue(validSearchResponse);
 
@@ -313,41 +356,6 @@ describe("Traceback MCP Protocol Integration", () => {
   // Tool 3: check_change_against_decisions
   // ==========================================================================
   describe("check_change_against_decisions Tool", () => {
-    const conflictResponse: CheckChangeAgainstDecisionsResponse = {
-      advisoryStatus: "POTENTIAL_RISK",
-      summary: "Proposed change removes worker mutex lock, violating ADR-002 and re-introducing defect #99",
-      conflicts: [
-        {
-          conflictId: "cnf_01",
-          historicalConstraint: "Worker thread operations must synchronize across shared queues via Mutex",
-          severity: "HIGH",
-          severityBasis: "Previous regression caused deadlock in production (Issue #99)",
-          explanation: "Diff removes mutex.lock() call around queue dispatch",
-          supportingEvidence: [
-            {
-              id: "rec_adr_002",
-              sourceType: "ADR",
-              referenceKey: "ADR-002",
-              title: "ADR-002: Concurrency Control Strategy",
-              author: "Architecture Team",
-              timestamp: "2023-11-15T10:00:00Z",
-              url: "https://github.com/org/repo/blob/main/docs/adr/002.md",
-              snippet: "All multi-threaded dispatchers must use explicit mutexes",
-            },
-          ],
-          recommendedFollowUp: "Retain concurrency synchronization or consult Architecture Team before removing lock",
-        },
-      ],
-      advisoryNotice: "ADVISORY ONLY: Traceback never modifies source code, commits changes, or blocks merges automatically.",
-      limitations: [
-        "Historical verification relies on recorded repository commits, PRs, and ADRs.",
-      ],
-      inspectedSourcesCount: 3,
-      evaluatedAt: new Date().toISOString(),
-      repositoryId: "repo_core",
-      targetFilePath: "src/worker/pool.cpp",
-    };
-
     it("should identify conflicts with historical decisions and return advisory response", async () => {
       mockApiClient.checkChangeAgainstDecisions.mockResolvedValue(conflictResponse);
 
@@ -472,6 +480,89 @@ describe("Traceback MCP Protocol Integration", () => {
           diff: adversarialDiff,
         }),
       );
+    });
+
+    it("should never allow caller-provided credentials to be passed to verification service", async () => {
+      mockApiClient.verifyExplanation.mockResolvedValue(validVerifyResult);
+
+      const response: any = await mcpClient.callTool({
+        name: "verify_explanation",
+        arguments: {
+          workspaceId: "ws_alpha",
+          repositoryId: "repo_core",
+          explanation: "Valid explanation text",
+          apiToken: "attacker-injected-token-override",
+        },
+      });
+
+      expect(response.isError).toBeUndefined();
+      expect(mockApiClient.verifyExplanation).toHaveBeenCalledWith(
+        expect.not.objectContaining({
+          apiToken: expect.anything(),
+          token: expect.anything(),
+        }),
+      );
+    });
+
+    it("should never allow caller-provided credentials to be passed to evidence search", async () => {
+      mockApiClient.searchEvidence.mockResolvedValue(validSearchResponse);
+
+      const response: any = await mcpClient.callTool({
+        name: "find_historical_context",
+        arguments: {
+          workspaceId: "ws_alpha",
+          repositoryId: "repo_core",
+          query: "some search query",
+          token: "attacker-injected-token-override",
+        },
+      });
+
+      expect(response.isError).toBeUndefined();
+      expect(mockApiClient.searchEvidence).toHaveBeenCalledWith(
+        expect.not.objectContaining({
+          apiToken: expect.anything(),
+          token: expect.anything(),
+        }),
+      );
+    });
+
+    it("should never allow caller-provided credentials to be passed to advisory change check", async () => {
+      mockApiClient.checkChangeAgainstDecisions.mockResolvedValue(conflictResponse);
+
+      const response: any = await mcpClient.callTool({
+        name: "check_change_against_decisions",
+        arguments: {
+          workspaceId: "ws_alpha",
+          repositoryId: "repo_core",
+          diff: "+ safe code",
+          authorization: "Bearer stolen_token_123",
+        },
+      });
+
+      expect(response.isError).toBeUndefined();
+      expect(mockApiClient.checkChangeAgainstDecisions).toHaveBeenCalledWith(
+        expect.not.objectContaining({
+          apiToken: expect.anything(),
+          token: expect.anything(),
+          authorization: expect.anything(),
+        }),
+      );
+    });
+
+    it("should sanitize and redact sensitive tokens from error messages", () => {
+      const bearerError = new McpClientError(
+        "Failed with Bearer secret_session_token_xyz123 on endpoint",
+        401,
+      );
+      expect(bearerError.message).not.toContain("secret_session_token_xyz123");
+      expect(bearerError.message).toContain("Bearer [REDACTED]");
+
+      const rawTokenError = new McpClientError(
+        "Invalid token tb_token_usr_verified_99999 provided",
+        403,
+      );
+      expect(rawTokenError.message).not.toContain("tb_token_usr_verified_99999");
+      expect(rawTokenError.message).toContain("[REDACTED_TOKEN]");
     });
   });
 });

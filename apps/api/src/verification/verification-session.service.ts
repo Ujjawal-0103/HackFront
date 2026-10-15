@@ -214,8 +214,8 @@ export class VerificationSessionService {
       const latestAssessment = claim.assessments[0];
       const status = fromPrismaConfidence(claim.preliminaryConfidence);
 
-      const verdictHistory: HumanVerdictHistoryItem[] =
-        claim.humanVerdicts.map((v) => ({
+      const verdictHistory: HumanVerdictHistoryItem[] = claim.humanVerdicts.map(
+        (v) => ({
           id: v.id,
           claimId: v.claimId,
           verdict: v.verdict,
@@ -223,7 +223,8 @@ export class VerificationSessionService {
           reviewerName: v.reviewer ? v.reviewer.name : undefined,
           reviewNotes: v.reviewNotes,
           decidedAt: v.decidedAt.toISOString(),
-        }));
+        }),
+      );
 
       return {
         claimId: claim.id,
@@ -330,7 +331,10 @@ export class VerificationSessionService {
     reviewerId: string;
     decidedAt: string;
   }> {
-    await this.verifyRepositoryAccess(options.workspaceId, options.repositoryId);
+    await this.verifyRepositoryAccess(
+      options.workspaceId,
+      options.repositoryId,
+    );
 
     const claim = await this.prisma.claim.findFirst({
       where: {
@@ -454,7 +458,9 @@ export class VerificationSessionService {
     });
 
     if (!claim) {
-      throw new NotFoundException(`Claim "${claimId}" not found in session "${sessionId}"`);
+      throw new NotFoundException(
+        `Claim "${claimId}" not found in session "${sessionId}"`,
+      );
     }
 
     return this.prisma.claim.update({
@@ -571,7 +577,9 @@ export class VerificationSessionService {
     });
 
     if (!session) {
-      throw new NotFoundException(`Verification session "${sessionId}" not found`);
+      throw new NotFoundException(
+        `Verification session "${sessionId}" not found`,
+      );
     }
 
     let supportedCount = 0;
@@ -581,7 +589,9 @@ export class VerificationSessionService {
     let reviewedCount = 0;
 
     const claims = session.claims.map((claim) => {
-      const structuredStatus = fromPrismaConfidence(claim.preliminaryConfidence);
+      const structuredStatus = fromPrismaConfidence(
+        claim.preliminaryConfidence,
+      );
       if (structuredStatus === "SUPPORTED") supportedCount++;
       else if (structuredStatus === "CONTRADICTED") contradictedCount++;
       else if (structuredStatus === "MIXED") mixedCount++;

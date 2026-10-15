@@ -14,7 +14,10 @@ export function hashPassword(password: string): string {
  * Validates a plaintext candidate password against the stored salt:hash string
  * using constant-time comparison to prevent timing side-channels.
  */
-export function verifyPassword(password: string, storedHash?: string | null): boolean {
+export function verifyPassword(
+  password: string,
+  storedHash?: string | null,
+): boolean {
   if (!storedHash || !storedHash.includes(":")) {
     return false;
   }

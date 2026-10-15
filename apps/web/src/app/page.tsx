@@ -1,22 +1,49 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { HumanVerdict } from "@traceback/shared-types";
+import { useAuth } from "../context/AuthContext";
+import { api } from "../lib/api";
+import {
+  RepositoryDetailsDto,
+  VerificationHistoryItem,
+} from "@traceback/shared-types";
 
 export default function HomePage() {
-  const [explanation, setExplanation] = useState(
-    "This memoization hook was introduced to prevent re-rendering when the active dataset exceeds 500 records during real-time streaming updates.",
-  );
-  const [selectedVerdict, setSelectedVerdict] = useState<HumanVerdict | null>(
-    "SUPPORTED",
-  );
+  const { user, activeWorkspace } = useAuth();
+
+  const [repositories, setRepositories] = useState<RepositoryDetailsDto[]>([]);
+  const [recentVerifications, setRecentVerifications] = useState<
+    VerificationHistoryItem[]
+  >([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadDashboard() {
+      if (!activeWorkspace) return;
+      try {
+        setIsLoading(true);
+        const [repos, history] = await Promise.all([
+          api.getRepositories(activeWorkspace.id).catch(() => []),
+          api
+            .getWorkspaceHistory(activeWorkspace.id, 1, 5)
+            .catch(() => ({ items: [], total: 0 })),
+        ]);
+        setRepositories(repos);
+        setRecentVerifications(history.items || []);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadDashboard();
+  }, [activeWorkspace]);
 
   return (
     <div
       style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
     >
-      {/* Sprints 3 & 4 Status Banner */}
+      {/* Sprints 1 through 6 Operational Banner */}
       <div
         style={{
           backgroundColor: "var(--color-card-muted)",
@@ -32,348 +59,426 @@ export default function HomePage() {
         }}
       >
         <span>
-          <strong>Sprint 3 &amp; 4 Active:</strong> Canonical evidence store,
-          PostgreSQL text search, and repository ingestion operational.
+          <strong>Traceback V1 Operational:</strong> Grounded claim assessment,
+          persistent verification history, and human-supervised review active.
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <Link
-            href="/repositories"
-            style={{ fontWeight: 600, fontSize: "0.8125rem" }}
+            href="/verify"
+            style={{
+              fontWeight: 600,
+              fontSize: "0.8125rem",
+              color: "var(--color-primary)",
+            }}
           >
-            Manage Repositories →
-          </Link>
-          <Link
-            href="/evidence"
-            style={{ fontWeight: 600, fontSize: "0.8125rem" }}
-          >
-            Evidence Explorer →
+            Launch Verification Workspace →
           </Link>
         </div>
       </div>
 
-      {/* Main Content Area */}
+      {/* Main Dashboard */}
       <main
         style={{
           flex: 1,
-          maxWidth: "1200px",
+          maxWidth: "1160px",
           width: "100%",
           margin: "0 auto",
           padding: "2rem",
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
+          display: "flex",
+          flexDirection: "column",
           gap: "2rem",
         }}
       >
-        {/* Left Column: Input & Target Repo */}
-        <div
-          style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
+        {/* Welcome & Primary Actions Hero */}
+        <section
+          style={{
+            backgroundColor: "var(--color-surface)",
+            border: "1px solid var(--color-border)",
+            borderRadius: "12px",
+            padding: "2rem",
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.03)",
+          }}
         >
-          {/* Repository Selector Card */}
-          <section
+          <div style={{ maxWidth: "700px" }}>
+            <h1
+              style={{
+                fontSize: "1.75rem",
+                fontWeight: 700,
+                color: "var(--color-text)",
+                marginBottom: "0.5rem",
+              }}
+            >
+              Welcome back{user?.name ? `, ${user.name}` : ""}
+            </h1>
+            <p
+              style={{
+                fontSize: "0.95rem",
+                color: "var(--color-text-secondary)",
+                lineHeight: 1.5,
+                marginBottom: "1.5rem",
+              }}
+            >
+              Traceback bridges the trust gap between AI coding assistants and
+              repository history. Decompose explanations into technical claims,
+              cross-check against Git commits and PRs, and record authoritative
+              human verdicts.
+            </p>
+
+            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+              <Link
+                href="/verify"
+                style={{
+                  padding: "0.7rem 1.4rem",
+                  backgroundColor: "var(--color-primary)",
+                  color: "#FFFFFF",
+                  borderRadius: "6px",
+                  fontWeight: 600,
+                  fontSize: "0.95rem",
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                }}
+              >
+                <span>🔍</span>
+                <span>Verify AI Explanation</span>
+              </Link>
+
+              <Link
+                href="/history"
+                style={{
+                  padding: "0.7rem 1.4rem",
+                  backgroundColor: "var(--color-card-muted)",
+                  border: "1px solid var(--color-border)",
+                  color: "var(--color-text)",
+                  borderRadius: "6px",
+                  fontWeight: 600,
+                  fontSize: "0.95rem",
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                }}
+              >
+                <span>📜</span>
+                <span>View Verification History</span>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Quick Stats Grid */}
+        <section
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gap: "1.25rem",
+          }}
+        >
+          <div
             style={{
+              padding: "1.25rem",
               backgroundColor: "var(--color-surface)",
               border: "1px solid var(--color-border)",
               borderRadius: "8px",
-              padding: "1.5rem",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "0.8rem",
+                color: "var(--color-text-secondary)",
+                marginBottom: "0.25rem",
+              }}
+            >
+              Active Workspace
+            </div>
+            <div
+              style={{
+                fontSize: "1.25rem",
+                fontWeight: 700,
+                color: "var(--color-text)",
+              }}
+            >
+              {activeWorkspace?.name || "Loading..."}
+            </div>
+            <div
+              style={{
+                fontSize: "0.75rem",
+                color: "var(--color-text-secondary)",
+                marginTop: "0.25rem",
+              }}
+            >
+              Role: <code>{activeWorkspace?.role || "MEMBER"}</code>
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: "1.25rem",
+              backgroundColor: "var(--color-surface)",
+              border: "1px solid var(--color-border)",
+              borderRadius: "8px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "0.8rem",
+                color: "var(--color-text-secondary)",
+                marginBottom: "0.25rem",
+              }}
+            >
+              Connected Repositories
+            </div>
+            <div
+              style={{
+                fontSize: "1.25rem",
+                fontWeight: 700,
+                color: "var(--color-text)",
+              }}
+            >
+              {isLoading ? "..." : repositories.length}
+            </div>
+            <div
+              style={{
+                fontSize: "0.75rem",
+                color: "var(--color-primary)",
+                marginTop: "0.25rem",
+              }}
+            >
+              <Link
+                href="/repositories"
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
+                Manage repositories →
+              </Link>
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: "1.25rem",
+              backgroundColor: "var(--color-surface)",
+              border: "1px solid var(--color-border)",
+              borderRadius: "8px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "0.8rem",
+                color: "var(--color-text-secondary)",
+                marginBottom: "0.25rem",
+              }}
+            >
+              Past Verifications
+            </div>
+            <div
+              style={{
+                fontSize: "1.25rem",
+                fontWeight: 700,
+                color: "var(--color-text)",
+              }}
+            >
+              {isLoading ? "..." : recentVerifications.length}
+            </div>
+            <div
+              style={{
+                fontSize: "0.75rem",
+                color: "var(--color-primary)",
+                marginTop: "0.25rem",
+              }}
+            >
+              <Link
+                href="/history"
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
+                Browse full history →
+              </Link>
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: "1.25rem",
+              backgroundColor: "var(--color-surface)",
+              border: "1px solid var(--color-border)",
+              borderRadius: "8px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "0.8rem",
+                color: "var(--color-text-secondary)",
+                marginBottom: "0.25rem",
+              }}
+            >
+              System Trust Layer
+            </div>
+            <div
+              style={{
+                fontSize: "1.25rem",
+                fontWeight: 700,
+                color: "var(--color-success)",
+              }}
+            >
+              Verified (SEC-09)
+            </div>
+            <div
+              style={{
+                fontSize: "0.75rem",
+                color: "var(--color-text-secondary)",
+                marginTop: "0.25rem",
+              }}
+            >
+              Zero-tolerance citation check
+            </div>
+          </div>
+        </section>
+
+        {/* Recent Verifications Shelf */}
+        <section
+          style={{
+            backgroundColor: "var(--color-surface)",
+            border: "1px solid var(--color-border)",
+            borderRadius: "10px",
+            padding: "1.5rem",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "1rem",
             }}
           >
             <h2
               style={{
-                fontSize: "1rem",
-                fontWeight: 600,
-                marginBottom: "0.5rem",
-              }}
-            >
-              Target Repository
-            </h2>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "0.75rem 1rem",
-                backgroundColor: "var(--color-card-muted)",
-                borderRadius: "6px",
-                border: "1px solid var(--color-border)",
-                fontSize: "0.875rem",
-              }}
-            >
-              <span>📁 Ujjawal-0103/HackFront (Local Testbed)</span>
-              <span
-                style={{
-                  fontSize: "0.75rem",
-                  padding: "0.2rem 0.5rem",
-                  borderRadius: "4px",
-                  backgroundColor: "var(--color-success)",
-                  color: "#FFFFFF",
-                  fontWeight: 600,
-                }}
-              >
-                Read-Only
-              </span>
-            </div>
-            <p
-              style={{
-                fontSize: "0.75rem",
-                color: "var(--color-text-secondary)",
-                marginTop: "0.5rem",
-              }}
-            >
-              *Live GitHub App authorization boundary implemented. Automated
-              repository sync scheduled for Sprint 3.
-            </p>
-          </section>
-
-          {/* Explanation Input Form */}
-          <section
-            style={{
-              backgroundColor: "var(--color-surface)",
-              border: "1px solid var(--color-border)",
-              borderRadius: "8px",
-              padding: "1.5rem",
-              display: "flex",
-              flexDirection: "column",
-              gap: "1rem",
-            }}
-          >
-            <h2 style={{ fontSize: "1rem", fontWeight: 600 }}>
-              AI Explanation Under Investigation
-            </h2>
-            <p
-              style={{
-                fontSize: "0.8125rem",
-                color: "var(--color-text-secondary)",
-              }}
-            >
-              Paste an explanation generated by an AI assistant (Copilot,
-              Cursor, Claude Code) to extract claims and verify historical
-              provenance.
-            </p>
-            <textarea
-              id="explanation-input"
-              rows={5}
-              value={explanation}
-              onChange={(e) => setExplanation(e.target.value)}
-              placeholder="Paste explanation here..."
-              style={{
-                width: "100%",
-                padding: "0.75rem",
-                borderRadius: "6px",
-                border: "1px solid var(--color-border)",
-                backgroundColor: "var(--color-background)",
-                color: "var(--color-text)",
-                fontFamily: "inherit",
-                fontSize: "0.875rem",
-                resize: "vertical",
-              }}
-            />
-            <button
-              type="button"
-              id="investigate-btn"
-              style={{
-                padding: "0.6rem 1.2rem",
-                backgroundColor: "var(--color-primary)",
-                color: "#FFFFFF",
-                border: "none",
-                borderRadius: "6px",
-                fontWeight: 600,
-                cursor: "pointer",
-                alignSelf: "flex-start",
-                transition: "background-color 0.15s",
-              }}
-            >
-              Investigate Claims (Demo)
-            </button>
-          </section>
-        </div>
-
-        {/* Right Column: Claim & Evidence Adjudication Shelf */}
-        <div
-          style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
-        >
-          <section
-            style={{
-              backgroundColor: "var(--color-surface)",
-              border: "1px solid var(--color-border)",
-              borderRadius: "8px",
-              padding: "1.5rem",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "1rem",
-              }}
-            >
-              <h2 style={{ fontSize: "1rem", fontWeight: 600 }}>
-                Decomposed Claim #1
-              </h2>
-              <span
-                style={{
-                  fontSize: "0.75rem",
-                  padding: "0.2rem 0.5rem",
-                  borderRadius: "4px",
-                  backgroundColor: "var(--color-primary)",
-                  color: "#FFFFFF",
-                  fontWeight: 600,
-                }}
-              >
-                AI Grounding: High Match
-              </span>
-            </div>
-
-            <blockquote
-              style={{
-                borderLeft: "4px solid var(--color-primary)",
-                paddingLeft: "1rem",
-                margin: "0 0 1rem 0",
-                fontStyle: "italic",
-                fontSize: "0.875rem",
+                fontSize: "1.1rem",
+                fontWeight: 700,
                 color: "var(--color-text)",
               }}
             >
-              &ldquo;Memoization was introduced to prevent re-rendering when
-              table size exceeds 500 rows during streaming updates.&rdquo;
-            </blockquote>
-
-            {/* Evidence Card */}
-            <div
+              Recent Workspace Verifications
+            </h2>
+            <Link
+              href="/history"
               style={{
-                border: "1px solid var(--color-border)",
-                borderRadius: "6px",
-                padding: "1rem",
-                backgroundColor: "var(--color-card-muted)",
-                marginBottom: "1.25rem",
+                fontSize: "0.85rem",
+                color: "var(--color-primary)",
+                fontWeight: 600,
+                textDecoration: "none",
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "0.5rem",
-                  fontSize: "0.8125rem",
-                }}
-              >
-                <span style={{ fontWeight: 600 }}>📌 Commit Provenance</span>
-                <a
-                  href="https://github.com/Ujjawal-0103/HackFront"
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ fontWeight: 500 }}
-                >
-                  SHA: 7a8b9c1 • PR #42 ↗
-                </a>
-              </div>
-              <p
-                style={{
-                  fontSize: "0.8125rem",
-                  color: "var(--color-text-secondary)",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                Author: <code>alex@company.com</code> • Committed 18 months ago
-              </p>
-              <pre
-                style={{
-                  fontSize: "0.75rem",
-                  backgroundColor: "var(--color-surface)",
-                  padding: "0.5rem",
-                  borderRadius: "4px",
-                  border: "1px solid var(--color-border)",
-                  overflowX: "auto",
-                }}
-              >
-                <code>{`+ const memoizedRows = useMemo(() => {\n+   // Buffer streaming chunks when rows > 500\n+   return computeVisibleRows(data);\n+ }, [data]);`}</code>
-              </pre>
-            </div>
+              View All History →
+            </Link>
+          </div>
 
-            {/* Human Adjudication Controls */}
-            <div>
-              <p
-                style={{
-                  fontSize: "0.8125rem",
-                  fontWeight: 600,
-                  marginBottom: "0.5rem",
-                }}
-              >
-                Human Supervised Verdict:
-              </p>
-              <div style={{ display: "flex", gap: "0.5rem" }}>
-                <button
-                  type="button"
-                  id="verdict-supported"
-                  onClick={() => setSelectedVerdict("SUPPORTED")}
-                  style={{
-                    padding: "0.4rem 0.8rem",
-                    fontSize: "0.8125rem",
-                    fontWeight: 600,
-                    borderRadius: "6px",
-                    border: "1px solid var(--color-success)",
-                    backgroundColor:
-                      selectedVerdict === "SUPPORTED"
-                        ? "var(--color-success)"
-                        : "transparent",
-                    color:
-                      selectedVerdict === "SUPPORTED"
-                        ? "#FFFFFF"
-                        : "var(--color-success)",
-                    cursor: "pointer",
-                  }}
-                >
-                  ✓ Supported
-                </button>
-                <button
-                  type="button"
-                  id="verdict-contradicted"
-                  onClick={() => setSelectedVerdict("CONTRADICTED")}
-                  style={{
-                    padding: "0.4rem 0.8rem",
-                    fontSize: "0.8125rem",
-                    fontWeight: 600,
-                    borderRadius: "6px",
-                    border: "1px solid var(--color-error)",
-                    backgroundColor:
-                      selectedVerdict === "CONTRADICTED"
-                        ? "var(--color-error)"
-                        : "transparent",
-                    color:
-                      selectedVerdict === "CONTRADICTED"
-                        ? "#FFFFFF"
-                        : "var(--color-error)",
-                    cursor: "pointer",
-                  }}
-                >
-                  ✕ Contradicted
-                </button>
-                <button
-                  type="button"
-                  id="verdict-unverified"
-                  onClick={() => setSelectedVerdict("UNVERIFIED")}
-                  style={{
-                    padding: "0.4rem 0.8rem",
-                    fontSize: "0.8125rem",
-                    fontWeight: 600,
-                    borderRadius: "6px",
-                    border: "1px solid var(--color-warning)",
-                    backgroundColor:
-                      selectedVerdict === "UNVERIFIED"
-                        ? "var(--color-warning)"
-                        : "transparent",
-                    color:
-                      selectedVerdict === "UNVERIFIED"
-                        ? "#FFFFFF"
-                        : "var(--color-warning)",
-                    cursor: "pointer",
-                  }}
-                >
-                  ? Unverified
-                </button>
-              </div>
+          {isLoading ? (
+            <div
+              style={{
+                padding: "1.5rem",
+                textAlign: "center",
+                color: "var(--color-text-secondary)",
+              }}
+            >
+              Loading recent sessions...
             </div>
-          </section>
-        </div>
+          ) : recentVerifications.length === 0 ? (
+            <div
+              style={{
+                padding: "2rem",
+                textAlign: "center",
+                backgroundColor: "var(--color-card-muted)",
+                borderRadius: "6px",
+                color: "var(--color-text-secondary)",
+                fontSize: "0.9rem",
+              }}
+            >
+              No verifications saved yet. Click &ldquo;Verify AI
+              Explanation&rdquo; above to start.
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.75rem",
+              }}
+            >
+              {recentVerifications.map((v) => (
+                <div
+                  key={v.id}
+                  style={{
+                    padding: "0.85rem 1rem",
+                    border: "1px solid var(--color-border)",
+                    borderRadius: "6px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: "0.5rem",
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: "240px" }}>
+                    <div
+                      style={{
+                        fontWeight: 600,
+                        fontSize: "0.9rem",
+                        color: "var(--color-text)",
+                      }}
+                    >
+                      {v.repositoryFullName}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.8rem",
+                        color: "var(--color-text-secondary)",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        maxWidth: "500px",
+                      }}
+                    >
+                      &ldquo;{v.explanation}&rdquo;
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "1rem",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "0.8rem",
+                        color: "var(--color-text-secondary)",
+                      }}
+                    >
+                      {v.claimsCount} claims
+                    </span>
+                    <Link
+                      href={`/verify?sessionId=${v.id}&repoId=${v.repositoryId}`}
+                      style={{
+                        padding: "0.35rem 0.75rem",
+                        backgroundColor: "var(--color-card-muted)",
+                        border: "1px solid var(--color-border)",
+                        borderRadius: "4px",
+                        fontSize: "0.8rem",
+                        fontWeight: 600,
+                        color: "var(--color-primary)",
+                        textDecoration: "none",
+                      }}
+                    >
+                      Reopen →
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </main>
 
       {/* Footer */}
@@ -387,8 +492,8 @@ export default function HomePage() {
           color: "var(--color-text-secondary)",
         }}
       >
-        Traceback V1 Foundation • Light-first default theme • WCAG 2.1 AA
-        compliant
+        Traceback V1 • Epistemological Evidence Verification • Sprints 1–6
+        Complete
       </footer>
     </div>
   );

@@ -13,11 +13,17 @@ import {
   LoginRequest,
   LoginResponse,
   AuthSessionResponse,
+  RegisterRequest,
+  VerifyExplanationRequest,
+  VerificationSession,
+  SubmitHumanVerdictRequest,
+  HumanVerdictHistoryItem,
+  VerificationHistoryResponse,
+  TracebackReportExport,
 } from "@traceback/shared-types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 const DEFAULT_WORKSPACE_ID = "ws_alpha";
-const DEFAULT_USER_ID = "user_1";
 
 let currentAuthToken: string | null = null;
 let currentActiveWorkspaceId: string | null = null;
@@ -72,18 +78,10 @@ async function request<T>(
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  // Workspace and user headers for contextual metadata
+  // Workspace header for contextual metadata
   const activeWsId = getApiActiveWorkspaceId();
   if (!headers.has("x-workspace-id")) {
     headers.set("x-workspace-id", activeWsId);
-  }
-
-  if (!headers.has("x-user-id")) {
-    const userId =
-      (typeof window !== "undefined"
-        ? localStorage.getItem("traceback_user_id")
-        : null) || DEFAULT_USER_ID;
-    headers.set("x-user-id", userId);
   }
 
   try {
@@ -121,6 +119,13 @@ async function request<T>(
 
 export const api = {
   // Authentication & Session
+  async register(payload: RegisterRequest): Promise<LoginResponse> {
+    return request<LoginResponse>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
   async login(payload: LoginRequest = {}): Promise<LoginResponse> {
     return request<LoginResponse>("/auth/login", {
       method: "POST",
@@ -277,6 +282,110 @@ export const api = {
       {
         method: "POST",
       },
+    );
+  },
+
+  // Verification & Human Review (Sprint 5 & 6)
+  async verifyExplanation(
+    repositoryId: string,
+    payload: VerifyExplanationRequest,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<any> {
+    return request<any>(
+      `/workspaces/${workspaceId}/repositories/${repositoryId}/verify`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+    );
+  },
+
+  async getVerificationSession(
+    repositoryId: string,
+    sessionId: string,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<any> {
+    return request<any>(
+      `/workspaces/${workspaceId}/repositories/${repositoryId}/verify/${sessionId}`,
+    );
+  },
+
+  async recordVerdict(
+    repositoryId: string,
+    sessionId: string,
+    claimId: string,
+    payload: SubmitHumanVerdictRequest,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<any> {
+    return request<any>(
+      `/workspaces/${workspaceId}/repositories/${repositoryId}/verify/${sessionId}/claims/${claimId}/verdict`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+    );
+  },
+
+  async getClaimVerdicts(
+    repositoryId: string,
+    sessionId: string,
+    claimId: string,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<HumanVerdictHistoryItem[]> {
+    return request<HumanVerdictHistoryItem[]>(
+      `/workspaces/${workspaceId}/repositories/${repositoryId}/verify/${sessionId}/claims/${claimId}/verdicts`,
+    );
+  },
+
+  async updateClaim(
+    repositoryId: string,
+    sessionId: string,
+    claimId: string,
+    text: string,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<any> {
+    return request<any>(
+      `/workspaces/${workspaceId}/repositories/${repositoryId}/verify/${sessionId}/claims/${claimId}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ text }),
+      },
+    );
+  },
+
+  // Workspace History & Reports
+  async getWorkspaceHistory(
+    workspaceId: string = getApiActiveWorkspaceId(),
+    page: number = 1,
+    limit: number = 20,
+    repositoryId?: string,
+  ): Promise<VerificationHistoryResponse> {
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
+    if (repositoryId) {
+      params.set("repositoryId", repositoryId);
+    }
+    return request<VerificationHistoryResponse>(
+      `/workspaces/${workspaceId}/history?${params.toString()}`,
+    );
+  },
+
+  async getHistoricalSession(
+    sessionId: string,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<any> {
+    return request<any>(`/workspaces/${workspaceId}/history/${sessionId}`);
+  },
+
+  async exportReport(
+    repositoryId: string,
+    sessionId: string,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<TracebackReportExport> {
+    return request<TracebackReportExport>(
+      `/workspaces/${workspaceId}/repositories/${repositoryId}/verify/${sessionId}/export`,
     );
   },
 

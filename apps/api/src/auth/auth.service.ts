@@ -122,7 +122,10 @@ export class AuthService {
         );
       }
 
-      const slugBase = `ws-${request.name.toLowerCase().replace(/[^a-z0-9]/g, "-").slice(0, 20)}`;
+      const slugBase = `ws-${request.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "-")
+        .slice(0, 20)}`;
       const randomSuffix = crypto.randomBytes(3).toString("hex");
       const workspaceSlug = `${slugBase}-${randomSuffix}`;
 
@@ -182,8 +185,7 @@ export class AuthService {
    * enforcing brute-force mitigation and rate limiting.
    */
   async login(request: LoginRequest = {}): Promise<LoginResponse> {
-    const isTestEnv =
-      process.env.NODE_ENV === "test" || !process.env.NODE_ENV;
+    const isTestEnv = process.env.NODE_ENV === "test" || !process.env.NODE_ENV;
 
     // Backward-compatible mock login strictly for test suites when userId is specified without password
     if (isTestEnv && request.userId && !request.password && !request.email) {
@@ -256,10 +258,7 @@ export class AuthService {
       const mockUser = Object.values(this.mockUsers).find(
         (u) => u.email.toLowerCase() === email,
       );
-      if (
-        mockUser &&
-        verifyPassword(request.password, mockUser.passwordHash)
-      ) {
+      if (mockUser && verifyPassword(request.password, mockUser.passwordHash)) {
         user = {
           id: mockUser.id,
           email: mockUser.email,

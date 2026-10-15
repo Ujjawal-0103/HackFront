@@ -123,7 +123,9 @@ describe("VerificationHistoryController & JSON Export (Sprint 6)", () => {
         { provide: WorkspacesService, useValue: new WorkspacesService() },
         {
           provide: AuthService,
-          useValue: { validateToken: jest.fn().mockResolvedValue({ id: "user_1" }) },
+          useValue: {
+            validateToken: jest.fn().mockResolvedValue({ id: "user_1" }),
+          },
         },
       ],
     }).compile();
@@ -138,11 +140,14 @@ describe("VerificationHistoryController & JSON Export (Sprint 6)", () => {
     expect(result.items.length).toBe(1);
     expect(result.items[0].id).toBe("sess-123");
     expect(result.items[0].repositoryFullName).toBe("org/repo");
-    expect(sessionService.getWorkspaceHistory).toHaveBeenCalledWith("ws_alpha", {
-      page: 1,
-      limit: 20,
-      repositoryId: undefined,
-    });
+    expect(sessionService.getWorkspaceHistory).toHaveBeenCalledWith(
+      "ws_alpha",
+      {
+        page: 1,
+        limit: 20,
+        repositoryId: undefined,
+      },
+    );
   });
 
   it("should fetch session details for a session in the workspace", async () => {

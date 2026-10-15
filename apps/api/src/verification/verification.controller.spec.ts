@@ -91,7 +91,9 @@ describe("VerificationController (Sprint 5 & Sprint 6 Workflows)", () => {
         { provide: WorkspacesService, useValue: new WorkspacesService() },
         {
           provide: AuthService,
-          useValue: { validateToken: jest.fn().mockResolvedValue({ id: "user_1" }) },
+          useValue: {
+            validateToken: jest.fn().mockResolvedValue({ id: "user_1" }),
+          },
         },
       ],
     }).compile();

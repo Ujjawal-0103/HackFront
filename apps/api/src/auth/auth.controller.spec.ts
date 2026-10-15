@@ -17,10 +17,32 @@ describe("AuthController", () => {
     authService = module.get<AuthService>(AuthService);
   });
 
-  it("should handle login request", async () => {
-    const response = await controller.login({ userId: "user_1" });
+  it("should handle registration request", async () => {
+    const response = await controller.register({
+      name: "Alice Engineer",
+      email: "alice@company.com",
+      password: "StrongPassword123!",
+      passwordConfirmation: "StrongPassword123!",
+    });
     expect(response.token).toBeDefined();
-    expect(response.user.id).toBe("user_1");
+    expect(response.user.email).toBe("alice@company.com");
+    expect(response.workspaces.length).toBeGreaterThan(0);
+  });
+
+  it("should handle login request with valid credentials", async () => {
+    await controller.register({
+      name: "Bob Lead",
+      email: "bob@company.com",
+      password: "StrongPassword123!",
+      passwordConfirmation: "StrongPassword123!",
+    });
+
+    const response = await controller.login({
+      email: "bob@company.com",
+      password: "StrongPassword123!",
+    });
+    expect(response.token).toBeDefined();
+    expect(response.user.email).toBe("bob@company.com");
   });
 
   it("should handle session retrieval", async () => {
@@ -34,8 +56,13 @@ describe("AuthController", () => {
   });
 
   it("should handle logout request", async () => {
-    const loginRes = await authService.login({ userId: "user_1" });
-    const logoutRes = await controller.logout(`Bearer ${loginRes.token}`);
+    const registerRes = await controller.register({
+      name: "Charlie QA",
+      email: "charlie@company.com",
+      password: "StrongPassword123!",
+      passwordConfirmation: "StrongPassword123!",
+    });
+    const logoutRes = await controller.logout(`Bearer ${registerRes.token}`);
     expect(logoutRes.success).toBe(true);
   });
 });

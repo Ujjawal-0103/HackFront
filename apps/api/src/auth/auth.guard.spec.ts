@@ -8,7 +8,7 @@ describe("AuthGuard (Identity Boundary)", () => {
     guard = new AuthGuard();
   });
 
-  it("should accept valid Bearer token and attach authenticated user context", () => {
+  it("should accept valid Bearer token and attach authenticated user context", async () => {
     const mockRequest: any = {
       headers: {
         authorization: "Bearer sample-valid-token",
@@ -18,12 +18,13 @@ describe("AuthGuard (Identity Boundary)", () => {
       switchToHttp: () => ({ getRequest: () => mockRequest }),
     } as ExecutionContext;
 
-    expect(guard.canActivate(mockContext)).toBe(true);
+    const result = await guard.canActivate(mockContext);
+    expect(result).toBe(true);
     expect(mockRequest.user).toBeDefined();
     expect(mockRequest.user.id).toBe("usr_verified_123");
   });
 
-  it("should accept dev user header in development mode", () => {
+  it("should accept dev user header in development mode", async () => {
     const mockRequest: any = {
       headers: {
         "x-user-id": "dev_user_456",
@@ -33,11 +34,12 @@ describe("AuthGuard (Identity Boundary)", () => {
       switchToHttp: () => ({ getRequest: () => mockRequest }),
     } as ExecutionContext;
 
-    expect(guard.canActivate(mockContext)).toBe(true);
+    const result = await guard.canActivate(mockContext);
+    expect(result).toBe(true);
     expect(mockRequest.user.id).toBe("dev_user_456");
   });
 
-  it("should reject dev user header when in production mode", () => {
+  it("should reject dev user header when in production mode", async () => {
     const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = "production";
     try {
@@ -50,7 +52,7 @@ describe("AuthGuard (Identity Boundary)", () => {
         switchToHttp: () => ({ getRequest: () => mockRequest }),
       } as ExecutionContext;
 
-      expect(() => guard.canActivate(mockContext)).toThrow(
+      await expect(guard.canActivate(mockContext)).rejects.toThrow(
         UnauthorizedException,
       );
     } finally {
@@ -58,7 +60,7 @@ describe("AuthGuard (Identity Boundary)", () => {
     }
   });
 
-  it("should throw UnauthorizedException when no credentials are provided", () => {
+  it("should throw UnauthorizedException when no credentials are provided", async () => {
     const mockRequest: any = {
       headers: {},
     };
@@ -66,10 +68,12 @@ describe("AuthGuard (Identity Boundary)", () => {
       switchToHttp: () => ({ getRequest: () => mockRequest }),
     } as ExecutionContext;
 
-    expect(() => guard.canActivate(mockContext)).toThrow(UnauthorizedException);
+    await expect(guard.canActivate(mockContext)).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 
-  it("should throw UnauthorizedException on invalid token", () => {
+  it("should throw UnauthorizedException on invalid token", async () => {
     const mockRequest: any = {
       headers: {
         authorization: "Bearer invalid-token",
@@ -79,6 +83,8 @@ describe("AuthGuard (Identity Boundary)", () => {
       switchToHttp: () => ({ getRequest: () => mockRequest }),
     } as ExecutionContext;
 
-    expect(() => guard.canActivate(mockContext)).toThrow(UnauthorizedException);
+    await expect(guard.canActivate(mockContext)).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 });

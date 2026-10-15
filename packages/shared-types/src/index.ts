@@ -357,11 +357,18 @@ export interface AuthenticatedUser {
   avatarUrl?: string;
 }
 
+export interface RegisterRequest {
+  name: string;
+  email: string;
+  password: string;
+  passwordConfirmation: string;
+}
+
 export interface LoginRequest {
-  userId?: string;
   email?: string;
-  name?: string;
   password?: string;
+  userId?: string; // Kept as optional for test harnesses
+  name?: string;
 }
 
 export interface LoginResponse {
@@ -374,4 +381,89 @@ export interface AuthSessionResponse {
   user: AuthenticatedUser;
   workspaces: WorkspaceSummary[];
   activeWorkspaceId: string;
+}
+
+// 8. Human Review & Verdict Audit Contracts (Sprint 6)
+export interface SubmitHumanVerdictRequest {
+  verdict: HumanVerdict;
+  reviewNotes?: string;
+}
+
+export interface HumanVerdictHistoryItem {
+  id: string;
+  claimId: string;
+  verdict: HumanVerdict;
+  reviewerId: string | null;
+  reviewerName?: string;
+  reviewNotes: string | null;
+  decidedAt: string;
+}
+
+// 9. Verification History Contracts (Sprint 6)
+export interface VerificationHistoryItem {
+  id: string;
+  workspaceId: string;
+  repositoryId: string;
+  repositoryFullName: string;
+  explanation: string;
+  targetFilePath?: string;
+  status: string;
+  claimsCount: number;
+  assessedCount: number;
+  humanReviewedCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VerificationHistoryResponse {
+  items: VerificationHistoryItem[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+// 10. Report History & JSON Export Schema (Sprint 6)
+export interface TracebackReportExportClaim {
+  id: string;
+  text: string;
+  targetSymbol?: string;
+  preliminaryConfidence: AIAssessmentConfidence;
+  structuredStatus?: VerificationAssessmentStatus;
+  humanVerdict?: HumanVerdict;
+  reviewNotes?: string;
+  assessment?: {
+    confidence: AIAssessmentConfidence;
+    rationale: string;
+    modelIdentifier: string;
+  };
+  evidence: EvidenceReference[];
+  verdictHistory: HumanVerdictHistoryItem[];
+}
+
+export interface TracebackReportExport {
+  schemaVersion: "traceback.report.v1";
+  exportedAt: string;
+  verificationId: string;
+  workspace: {
+    id: string;
+    name: string;
+  };
+  repository: {
+    id: string;
+    fullName: string;
+  };
+  explanation: string;
+  codeSnippet?: string;
+  targetFilePath?: string;
+  status: string;
+  createdAt: string;
+  claims: TracebackReportExportClaim[];
+  summary: {
+    totalClaims: number;
+    supportedClaims: number;
+    contradictedClaims: number;
+    insufficientClaims: number;
+    mixedClaims: number;
+    humanReviewedClaims: number;
+  };
 }

@@ -109,6 +109,17 @@ export interface ClaimAssessmentResult {
   allValidatedEvidence: ValidatedEvidenceItem[];
   requiresHumanReview: boolean;
   abstentionNotice?: string;
+  humanVerdict?: HumanVerdict | null;
+  reviewNotes?: string | null;
+  verdictHistory?: Array<{
+    id: string;
+    claimId: string;
+    verdict: HumanVerdict;
+    reviewerId: string | null;
+    reviewerName?: string;
+    reviewNotes: string | null;
+    decidedAt: string;
+  }>;
 }
 
 export interface VerificationSessionResult {

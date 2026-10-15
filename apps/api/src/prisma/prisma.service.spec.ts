@@ -1,3 +1,4 @@
+import { Test } from "@nestjs/testing";
 import { PrismaService } from "./prisma.service";
 
 describe("PrismaService Live Database & Health Integration", () => {
@@ -44,5 +45,16 @@ describe("PrismaService Live Database & Health Integration", () => {
     expect(brokenHealth.healthy).toBe(false);
     expect(brokenHealth.message).toBeDefined();
     await brokenPrisma.onModuleDestroy();
+  });
+
+  it("should be resolvable within a NestJS testing module without constructor injection error", async () => {
+    const moduleRef = await Test.createTestingModule({
+      providers: [PrismaService],
+    }).compile();
+
+    const service = moduleRef.get(PrismaService);
+    expect(service).toBeDefined();
+    expect(typeof service.$connect).toBe("function");
+    await service.$disconnect();
   });
 });

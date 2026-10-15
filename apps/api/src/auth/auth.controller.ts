@@ -5,11 +5,14 @@ import {
   Body,
   UseGuards,
   Headers,
+  HttpCode,
+  HttpStatus,
 } from "@nestjs/common";
 import {
   LoginRequest,
   LoginResponse,
   AuthSessionResponse,
+  RegisterRequest,
 } from "@traceback/shared-types";
 import { AuthService } from "./auth.service";
 import { AuthGuard } from "./auth.guard";
@@ -20,7 +23,14 @@ import { AuthenticatedUser } from "./auth.types";
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Post("register")
+  @HttpCode(HttpStatus.CREATED)
+  async register(@Body() body: RegisterRequest): Promise<LoginResponse> {
+    return this.authService.register(body);
+  }
+
   @Post("login")
+  @HttpCode(HttpStatus.OK)
   async login(@Body() body: LoginRequest): Promise<LoginResponse> {
     return this.authService.login(body);
   }
@@ -40,7 +50,7 @@ export class AuthController {
   ): Promise<{ success: boolean; message: string }> {
     const token =
       authHeader && authHeader.startsWith("Bearer ")
-        ? authHeader.substring(7)
+        ? authHeader.substring(7).trim()
         : "";
     return this.authService.logout(token);
   }

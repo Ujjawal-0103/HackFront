@@ -9,10 +9,11 @@ import { AbstentionHandlerService } from "./abstention-handler.service";
 import { ClaimAssessmentService } from "./claim-assessment.service";
 import { VerificationSessionService } from "./verification-session.service";
 import { VerificationController } from "./verification.controller";
+import { VerificationHistoryController } from "./verification-history.controller";
 
 @Module({
   imports: [PrismaModule, EvidenceModule, AuthModule, WorkspacesModule],
-  controllers: [VerificationController],
+  controllers: [VerificationController, VerificationHistoryController],
   providers: [
     ClaimExtractorService,
     CitationValidatorService,

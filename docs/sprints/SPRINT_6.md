@@ -3,7 +3,7 @@
 > **Sprint:** Sprint 6 — Web Product Experience, Authentication Overhaul & Verification History  
 > **Status:** Completed & Verified  
 > **Branch:** `feat/authentication-authorization`  
-> **Date:** 2026-10-15  
+> **Date:** 2026-10-15
 
 ---
 
@@ -61,12 +61,14 @@ HackFront/
 ## 3. Implemented Capabilities & Workflows
 
 ### 3.1 Authentication & Authorization (Phase 2 Remediations)
+
 - **Registration (`/register`):** Validates user name, email format, password strength (minimum 8 characters, letters, and numbers), and confirmation. Computes scrypt hash with 16-byte random salt. Creates user account and default workspace transactionally.
 - **Login (`/login`):** Authenticates email against stored scrypt hash via constant-time buffer comparison. Generates 32-byte cryptographically secure session token stored in PostgreSQL `UserSession` with 7-day expiration. Includes in-memory brute-force rate limiter (5 failed attempts per 15 minutes).
 - **Session Lifecycle:** `GET /auth/session` validates bearer tokens against active, non-expired database records. `POST /auth/logout` revokes the session on the server.
 - **Cross-Workspace Isolation:** `WorkspaceGuard` enforces that the authenticated user has verified membership in the requested workspace (`WorkspaceMember`), preventing cross-tenant leakage across repositories, evidence, verification sessions, and verdicts.
 
 ### 3.2 Verification Workspace (`/verify`)
+
 - **Repository Selection:** Fetches only repositories accessible to the user's active workspace.
 - **Submission & Delimitation:** Accepts AI-generated explanation, optional target file path, and code snippets.
 - **Claim Extraction & Inspection:** Breaks text into atomic claims, detects target symbols, and allows users to edit claim text inline prior to assessment.
@@ -75,6 +77,7 @@ HackFront/
 - **Audit Trail Drawer:** Reviewers can view the complete history of previous verdicts on each claim, detailing who changed the verdict, when, and why.
 
 ### 3.3 Verification History & Reports (`/history`)
+
 - **Persistent PostgreSQL Storage:** All verification sessions, claims, assessments, and human verdicts are persistently queryable by workspace.
 - **Filtering & Reopening:** Filter historical verifications by repository. Click "Open Verification" to reload any past session directly in `/verify?sessionId=...&repoId=...`.
 - **JSON Report Export (`traceback.report.v1`):** Export structured audit reports containing full provenance:
@@ -90,6 +93,7 @@ HackFront/
 ## 4. Verification & Testing Metrics
 
 ### 4.1 Backend Test Results (`@traceback/api`)
+
 - **Command:** `npm run test --workspace=@traceback/api`
 - **Result:** **38 test suites passed, 324 tests passed (100% passing)**
 - **Coverage Highlights:**
@@ -103,6 +107,7 @@ HackFront/
   - `prisma.service.spec.ts`: Live PostgreSQL connectivity and schema validation on port 5434.
 
 ### 4.2 Frontend Test Results (`@traceback/web`)
+
 - **Command:** `npm run test --workspace=@traceback/web`
 - **Result:** **9 test suites passed, 32 tests passed (100% passing)**
   - `AuthContext.spec.tsx`: Session restoration, login, register, logout states.
@@ -116,6 +121,7 @@ HackFront/
   - `ThemeContext.spec.tsx`: Default light theme, toggle to dark theme, localStorage persistence.
 
 ### 4.3 Monorepo Quality Gates
+
 - **Typecheck:** `npm run typecheck` (`turbo run typecheck` across `@traceback/api`, `@traceback/web`, `@traceback/shared-types`) — **0 errors**.
 - **Lint:** `npm run lint` (`next lint`) — **✔ No ESLint warnings or errors**.
 - **Formatting:** `npm run format:check` (`prettier --check`) — **All matched files use Prettier code style!**.
@@ -125,22 +131,22 @@ HackFront/
 
 ## 5. Acceptance Criteria Matrix
 
-| Criterion | Requirement | Implementation | Status |
-| :--- | :--- | :--- | :--- |
-| **AUTH-01** | User Registration | `/register` with scrypt password hashing and unique email constraint | **VERIFIED** |
-| **AUTH-02** | User Login & Brute Force Mitigation | `/login` with constant-time verification & 5-attempt rate limit | **VERIFIED** |
-| **AUTH-03** | Persistent Database Sessions | `UserSession` table with secure tokens and server-side revocation | **VERIFIED** |
-| **AUTH-04** | Multi-Tenant Workspace Isolation | `WorkspaceGuard` enforces membership on all protected endpoints | **VERIFIED** |
-| **VFY-01** | Verification Workspace | `/verify` with repo selector, explanation input, and claim cards | **VERIFIED** |
-| **VFY-02** | Machine vs Human Separation | Machine confidence scores distinct from human reviewer verdicts | **VERIFIED** |
-| **VFY-03** | Claim Editing | Users can edit claim text inline prior to or during review | **VERIFIED** |
-| **VFY-04** | Human Review & Notes | Reviewers record `SUPPORTED`, `CONTRADICTED`, `UNVERIFIED` + notes | **VERIFIED** |
-| **VFY-05** | Verdict Audit Trail | Append-only history of every verdict decision and revision | **VERIFIED** |
-| **HIST-01** | Persistent Verification History | `/history` lists past runs from PostgreSQL with repo filters | **VERIFIED** |
-| **HIST-02** | Reopen Verifications | Users can reopen saved sessions by ID across browser reloads | **VERIFIED** |
-| **RPT-01** | JSON Report Export | Valid `traceback.report.v1` schema export with zero leaked secrets | **VERIFIED** |
-| **UX-01** | Light-First Brand Design | Light theme default on first visit, accessible dark mode toggle | **VERIFIED** |
-| **GATE-01** | Monorepo Quality Checks | Typecheck, lint, formatting, and production build all pass cleanly | **VERIFIED** |
+| Criterion   | Requirement                         | Implementation                                                       | Status       |
+| :---------- | :---------------------------------- | :------------------------------------------------------------------- | :----------- |
+| **AUTH-01** | User Registration                   | `/register` with scrypt password hashing and unique email constraint | **VERIFIED** |
+| **AUTH-02** | User Login & Brute Force Mitigation | `/login` with constant-time verification & 5-attempt rate limit      | **VERIFIED** |
+| **AUTH-03** | Persistent Database Sessions        | `UserSession` table with secure tokens and server-side revocation    | **VERIFIED** |
+| **AUTH-04** | Multi-Tenant Workspace Isolation    | `WorkspaceGuard` enforces membership on all protected endpoints      | **VERIFIED** |
+| **VFY-01**  | Verification Workspace              | `/verify` with repo selector, explanation input, and claim cards     | **VERIFIED** |
+| **VFY-02**  | Machine vs Human Separation         | Machine confidence scores distinct from human reviewer verdicts      | **VERIFIED** |
+| **VFY-03**  | Claim Editing                       | Users can edit claim text inline prior to or during review           | **VERIFIED** |
+| **VFY-04**  | Human Review & Notes                | Reviewers record `SUPPORTED`, `CONTRADICTED`, `UNVERIFIED` + notes   | **VERIFIED** |
+| **VFY-05**  | Verdict Audit Trail                 | Append-only history of every verdict decision and revision           | **VERIFIED** |
+| **HIST-01** | Persistent Verification History     | `/history` lists past runs from PostgreSQL with repo filters         | **VERIFIED** |
+| **HIST-02** | Reopen Verifications                | Users can reopen saved sessions by ID across browser reloads         | **VERIFIED** |
+| **RPT-01**  | JSON Report Export                  | Valid `traceback.report.v1` schema export with zero leaked secrets   | **VERIFIED** |
+| **UX-01**   | Light-First Brand Design            | Light theme default on first visit, accessible dark mode toggle      | **VERIFIED** |
+| **GATE-01** | Monorepo Quality Checks             | Typecheck, lint, formatting, and production build all pass cleanly   | **VERIFIED** |
 
 ---
 

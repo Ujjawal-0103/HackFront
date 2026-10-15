@@ -3,6 +3,7 @@ import {
   OnModuleInit,
   OnModuleDestroy,
   Logger,
+  Optional,
 } from "@nestjs/common";
 import { PrismaClient } from "@prisma/client";
 import { DatabaseHealthIndicator } from "../health/readiness.service";
@@ -14,7 +15,9 @@ export class PrismaService
 {
   private readonly logger = new Logger(PrismaService.name);
 
-  constructor(options?: ConstructorParameters<typeof PrismaClient>[0]) {
+  constructor(
+    @Optional() options?: ConstructorParameters<typeof PrismaClient>[0],
+  ) {
     super(
       options || {
         datasources: {

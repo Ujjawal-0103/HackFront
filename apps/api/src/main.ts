@@ -30,13 +30,35 @@ async function bootstrap() {
   // Global exception filter for structured error envelopes
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  // Configure CORS for web frontend
+  // Configure CORS for web frontend supporting local dev and configured origin
   app.enableCors({
-    origin: corsOrigin,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+      const isAllowed =
+        origin === corsOrigin ||
+        origin === "http://localhost:3000" ||
+        origin === "http://127.0.0.1:3000" ||
+        /^http:\/\/localhost:[0-9]+$/.test(origin) ||
+        /^http:\/\/127\.0\.0\.1:[0-9]+$/.test(origin);
+      if (isAllowed) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-workspace-id",
+      "Accept",
+      "Origin",
+      "X-Requested-With",
+    ],
   });
 
-  await app.listen(port);
+  await app.listen(port, "0.0.0.0");
   logger.log(`Traceback API running on http://localhost:${port}/api`);
 }
 

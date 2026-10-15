@@ -22,7 +22,12 @@ import {
   TracebackReportExport,
 } from "@traceback/shared-types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+// Ensure the API base URL targets the /api global prefix used by NestJS
+const rawBaseUrl =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+const API_BASE_URL = rawBaseUrl.endsWith("/api")
+  ? rawBaseUrl
+  : `${rawBaseUrl.replace(/\/+$/, "")}/api`;
 const DEFAULT_WORKSPACE_ID = "ws_alpha";
 
 let currentAuthToken: string | null = null;
@@ -60,7 +65,10 @@ async function request<T>(
   endpoint: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const url = cleanEndpoint.startsWith("/api/")
+    ? `${API_BASE_URL.replace(/\/api$/, "")}${cleanEndpoint}`
+    : `${API_BASE_URL}${cleanEndpoint}`;
 
   const headers = new Headers(options.headers || {});
   if (!headers.has("Content-Type")) {

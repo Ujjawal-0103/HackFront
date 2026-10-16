@@ -36,6 +36,7 @@ interface RateLimitAttempt {
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   private readonly activeSessions = new Map<string, SessionData>();
+  private readonly revokedTokens = new Set<string>();
   private readonly loginAttempts = new Map<string, RateLimitAttempt>();
 
   // Default seeded password hash for Password123!
@@ -185,10 +186,15 @@ export class AuthService {
    * enforcing brute-force mitigation and rate limiting.
    */
   async login(request: LoginRequest = {}): Promise<LoginResponse> {
-    const isTestEnv = process.env.NODE_ENV === "test" || !process.env.NODE_ENV;
+    const isTestEnv = process.env.NODE_ENV === "test";
 
     // Backward-compatible mock login strictly for test suites when userId is specified without password
-    if (isTestEnv && request.userId && !request.password && !request.email) {
+    if (request.userId && !request.password && !request.email) {
+      if (!isTestEnv) {
+        throw new UnauthorizedException(
+          "Unauthenticated user impersonation is forbidden. Password is required.",
+        );
+      }
       const mockUser = this.mockUsers[request.userId] || {
         id: request.userId,
         email: `${request.userId}@example.com`,
@@ -331,6 +337,9 @@ export class AuthService {
     }
 
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    if (this.revokedTokens.has(tokenHash)) {
+      return null;
+    }
 
     // 2. Check active in-memory session cache
     const memSession = this.activeSessions.get(tokenHash);
@@ -453,6 +462,7 @@ export class AuthService {
     }
 
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    this.revokedTokens.add(tokenHash);
     this.activeSessions.delete(tokenHash);
 
     if (this.prisma) {

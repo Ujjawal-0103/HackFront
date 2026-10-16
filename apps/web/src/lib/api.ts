@@ -20,6 +20,8 @@ import {
   HumanVerdictHistoryItem,
   VerificationHistoryResponse,
   TracebackReportExport,
+  CheckChangeAgainstDecisionsRequest,
+  CheckChangeAgainstDecisionsResponse,
 } from "@traceback/shared-types";
 
 // Ensure the API base URL targets the /api global prefix used by NestJS
@@ -394,6 +396,21 @@ export const api = {
   ): Promise<TracebackReportExport> {
     return request<TracebackReportExport>(
       `/workspaces/${workspaceId}/repositories/${repositoryId}/verify/${sessionId}/export`,
+    );
+  },
+
+  // Advisory Change Checks (Sprint 7)
+  async checkChangeAgainstDecisions(
+    repositoryId: string,
+    payload: CheckChangeAgainstDecisionsRequest,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<CheckChangeAgainstDecisionsResponse> {
+    return request<CheckChangeAgainstDecisionsResponse>(
+      `/workspaces/${workspaceId}/repositories/${repositoryId}/advisory/check-change`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
     );
   },
 

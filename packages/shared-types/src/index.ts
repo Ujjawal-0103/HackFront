@@ -467,3 +467,124 @@ export interface TracebackReportExport {
     humanReviewedClaims: number;
   };
 }
+
+// ============================================================================
+// Sprint 7: MCP Interoperability & Advisory Change Checks Contracts
+// ============================================================================
+
+export type AdvisorySeverity = "HIGH" | "MEDIUM" | "LOW";
+
+export type AdvisoryStatus =
+  | "CONFLICT_DETECTED"
+  | "POTENTIAL_RISK"
+  | "NO_CONFLICT_DETECTED"
+  | "INSUFFICIENT_EVIDENCE";
+
+export interface HistoricalConflict {
+  conflictId: string;
+  historicalConstraint: string;
+  severity: AdvisorySeverity;
+  severityBasis: string;
+  explanation: string;
+  supportingEvidence: EvidenceReference[];
+  recommendedFollowUp: string;
+}
+
+export interface CheckChangeAgainstDecisionsRequest {
+  workspaceId?: string;
+  repositoryId?: string;
+  diff?: string;
+  changeDescription?: string;
+  filePath?: string;
+  targetFilePaths?: string[];
+  pullRequestNumber?: number;
+  pullRequestId?: string;
+}
+
+export interface CheckChangeAgainstDecisionsResponse {
+  advisoryStatus: AdvisoryStatus;
+  summary: string;
+  conflicts: HistoricalConflict[];
+  advisoryNotice: string;
+  limitations: string[];
+  inspectedSourcesCount: number;
+  evaluatedAt: string;
+  repositoryId: string;
+  targetFilePath?: string;
+}
+
+export interface HistoricalContextMcpItem {
+  sourceId: string;
+  sourceType: EvidenceSourceType;
+  referenceKey: string;
+  title: string;
+  author: string;
+  timestamp: string;
+  url: string;
+  excerpt: string;
+  relevanceScore: number;
+  matchReasons: string[];
+}
+
+export interface HistoricalContextMcpResponse {
+  repositoryId: string;
+  query: string;
+  totalMatches: number;
+  sources: HistoricalContextMcpItem[];
+}
+
+export interface VerifyExplanationMcpClaim {
+  claimId: string;
+  claimText: string;
+  status: VerificationAssessmentStatus;
+  confidenceScore: number;
+  rationale: string;
+  citations: Array<{
+    sourceId: string;
+    sourceType: string;
+    referenceKey: string;
+    title: string;
+    url: string;
+    relevanceScore: number;
+  }>;
+  limitations?: string;
+}
+
+export interface VerifyExplanationMcpResponse {
+  sessionId: string;
+  status: VerificationAssessmentStatus;
+  confidenceScore: number;
+  claimsCount: number;
+  claims: VerifyExplanationMcpClaim[];
+  abstentionNotice?: string;
+  citationValidityRate: number;
+  advisoryNotice: string;
+}
+
+export interface VerificationSessionResult {
+  sessionId: string;
+  workspaceId: string;
+  repositoryId: string;
+  status: string;
+  explanation: string;
+  codeSnippet?: string;
+  targetFilePath?: string;
+  claimsCount: number;
+  assessments: Array<{
+    claimId: string;
+    claimText: string;
+    targetSymbol?: string;
+    status: VerificationAssessmentStatus;
+    confidenceScore: number;
+    rationale: string;
+    supportingEvidence: any[];
+    contradictingEvidence: any[];
+    allValidatedEvidence: any[];
+    requiresHumanReview: boolean;
+    abstentionNotice?: string;
+  }>;
+  citationValidityRate: number;
+  executionTimeMs: number;
+  estimatedTokensUsed: number;
+  fallbackNotice?: string;
+}

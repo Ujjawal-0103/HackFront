@@ -46,7 +46,13 @@ export class AuthGuard implements CanActivate {
         return true;
       }
 
-      // Fallback for standalone/mock unit tests without AuthService injected
+      // Fallback strictly for standalone/mock unit tests without AuthService injected
+      if (!this.authService && process.env.NODE_ENV === "production") {
+        throw new UnauthorizedException(
+          "Authentication service is unavailable in production environment",
+        );
+      }
+
       if (
         token.startsWith("tb_token_") ||
         token.startsWith("traceback_token_")

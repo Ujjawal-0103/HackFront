@@ -129,6 +129,20 @@ describe("AuthService (Authentication, Registration & Session Management)", () =
       ).rejects.toThrow(UnauthorizedException);
     });
 
+    it("should forbid unauthenticated user impersonation via userId when not in test environment", async () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = "production";
+      try {
+        await expect(
+          authService.login({
+            userId: "user_1",
+          }),
+        ).rejects.toThrow(UnauthorizedException);
+      } finally {
+        process.env.NODE_ENV = originalEnv;
+      }
+    });
+
     it("should enforce brute-force rate limiting after 5 consecutive failed attempts", async () => {
       const testEmail = "brute.force@company.com";
       await authService.register({

@@ -7,9 +7,14 @@ export const checkChangeAgainstDecisionsSchema = {
   repositoryId: z.string().min(1).describe("Authorized repository ID"),
   diff: z
     .string()
-    .max(20000, "Diff exceeds 20,000 character limit. Please supply a smaller patch or targeted description.")
+    .max(
+      20000,
+      "Diff exceeds 20,000 character limit. Please supply a smaller patch or targeted description.",
+    )
     .optional()
-    .describe("Proposed git diff or unified patch to evaluate against historical constraints"),
+    .describe(
+      "Proposed git diff or unified patch to evaluate against historical constraints",
+    ),
   changeDescription: z
     .string()
     .max(5000, "Change description exceeds 5,000 character limit.")
@@ -39,7 +44,8 @@ export async function handleCheckChangeAgainstDecisions(
             text: JSON.stringify(
               {
                 error: true,
-                message: "Either 'diff' or 'changeDescription' must be provided for advisory change evaluation.",
+                message:
+                  "Either 'diff' or 'changeDescription' must be provided for advisory change evaluation.",
                 code: "INVALID_ARGUMENTS",
                 statusCode: 400,
               },
@@ -71,7 +77,9 @@ export async function handleCheckChangeAgainstDecisions(
   } catch (error: any) {
     const errorPayload = {
       error: true,
-      message: error.message || "Failed to evaluate change against historical decisions",
+      message:
+        error.message ||
+        "Failed to evaluate change against historical decisions",
       code: error.code || "ADVISORY_CHECK_ERROR",
       statusCode: error.statusCode || 500,
     };

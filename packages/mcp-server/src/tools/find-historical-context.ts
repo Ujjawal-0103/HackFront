@@ -12,7 +12,9 @@ export const findHistoricalContextSchema = {
     .string()
     .min(1, "Search query cannot be empty")
     .max(500, "Search query exceeds 500 character maximum")
-    .describe("Natural language query or code concept to find historical context for"),
+    .describe(
+      "Natural language query or code concept to find historical context for",
+    ),
   filePath: z
     .string()
     .max(500)
@@ -32,7 +34,9 @@ export const findHistoricalContextSchema = {
   includeGraph: z
     .boolean()
     .optional()
-    .describe("Whether to include graph expansion relationships (falls back to PostgreSQL if unavailable)"),
+    .describe(
+      "Whether to include graph expansion relationships (falls back to PostgreSQL if unavailable)",
+    ),
 };
 
 export async function handleFindHistoricalContext(
@@ -50,7 +54,9 @@ export async function handleFindHistoricalContext(
       includeGraph: args.includeGraph ?? true,
     });
 
-    const sources: HistoricalContextMcpItem[] = (searchResponse.items || []).map((item) => {
+    const sources: HistoricalContextMcpItem[] = (
+      searchResponse.items || []
+    ).map((item) => {
       const source = item.source;
       const snippet = (source.snippet || "").trim();
       const boundedSnippet =

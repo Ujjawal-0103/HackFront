@@ -3,7 +3,7 @@
 > **Protocol Version:** `2024-11-05`  
 > **Official SDK:** `@modelcontextprotocol/sdk` v1.32.1  
 > **Package:** `@traceback/mcp-server`  
-> **Transport:** `stdio` (local subprocess) and HTTP/JSON-RPC (remote)  
+> **Transport:** `stdio` (local subprocess) and HTTP/JSON-RPC (remote)
 
 ---
 
@@ -37,7 +37,9 @@ TRACEBACK API (NestJS Backend)
 The server registers three official tools conforming to the MCP specification:
 
 ### 1. `verify_explanation`
+
 Submits an external AI-generated explanation of code for evidence-grounded verification.
+
 - **Input Schema:**
   - `workspaceId` (string, required): Authorized workspace ID.
   - `repositoryId` (string, required): Repository ID within the workspace.
@@ -49,7 +51,9 @@ Submits an external AI-generated explanation of code for evidence-grounded verif
 - **Output:** Bounded JSON containing `status` (`SUPPORTED`, `CONTRADICTED`, `INSUFFICIENT_EVIDENCE`, `MIXED`), confidence score, atomic claims with rationale, validated citations (`referenceKey`, `url`, `sourceType`), and abstention notices.
 
 ### 2. `find_historical_context`
+
 Searches historical repository records (commits, PRs, issues, ADRs) without requiring the web UI.
+
 - **Input Schema:**
   - `workspaceId` (string, required): Authorized workspace ID.
   - `repositoryId` (string, required): Repository ID within the workspace.
@@ -61,7 +65,9 @@ Searches historical repository records (commits, PRs, issues, ADRs) without requ
 - **Output:** Bounded list of canonical sources with excerpts (max 500 characters), verified URLs, author, timestamp, and match explanations.
 
 ### 3. `check_change_against_decisions`
+
 Evaluates a proposed code diff or change description against historical engineering constraints, recorded ADRs, and past bug fixes.
+
 - **Input Schema:**
   - `workspaceId` (string, required): Authorized workspace ID.
   - `repositoryId` (string, required): Repository ID within the workspace.
@@ -73,6 +79,7 @@ Evaluates a proposed code diff or change description against historical engineer
 - **SAFETY INVARIANT:** Advisory only. Traceback never modifies source code, commits changes, or blocks merges automatically.
 
 > **Security Rule (Sprint 8):** Tool input schemas do NOT accept bearer tokens or credentials. Models cannot supply or override API credentials through tool parameters. Credentials must be configured exclusively in the MCP server process environment (`TRACEBACK_API_TOKEN`).
+
 - **Input Schema:**
   - `workspaceId` (string, required): Authorized workspace ID.
   - `repositoryId` (string, required): Repository ID within the workspace.
@@ -99,9 +106,7 @@ Add the server to your `claude_desktop_config.json`:
   "mcpServers": {
     "traceback": {
       "command": "node",
-      "args": [
-        "C:\\Users\\Ujjaw\\HackFront\\packages\\mcp-server\\dist\\bin\\cli.js"
-      ],
+      "args": ["C:\\Users\\Ujjaw\\HackFront\\packages\\mcp-server\\dist\\bin\\cli.js"],
       "env": {
         "TRACEBACK_API_URL": "http://localhost:3001/api",
         "TRACEBACK_API_TOKEN": "tb_token_usr_verified_123_prod",
@@ -148,9 +153,7 @@ In your extension configuration (`mcpSettings.json`):
   "mcpServers": {
     "traceback": {
       "command": "node",
-      "args": [
-        "${workspaceFolder}/packages/mcp-server/dist/bin/cli.js"
-      ],
+      "args": ["${workspaceFolder}/packages/mcp-server/dist/bin/cli.js"],
       "env": {
         "TRACEBACK_API_URL": "http://localhost:3001/api",
         "TRACEBACK_API_TOKEN": "${env:TRACEBACK_API_TOKEN}"
@@ -164,12 +167,12 @@ In your extension configuration (`mcpSettings.json`):
 
 ## 4. Environment Variables
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `TRACEBACK_API_URL` | No | `http://localhost:3001/api` | Target Traceback REST API base endpoint |
-| `TRACEBACK_API_TOKEN` | Recommended | `undefined` | User session token for workspace authentication |
-| `TRACEBACK_WORKSPACE_ID` | No | `undefined` | Default workspace context |
-| `TRACEBACK_REQUEST_TIMEOUT_MS` | No | `15000` | HTTP request timeout in milliseconds |
+| Variable                       | Required    | Default                     | Description                                     |
+| ------------------------------ | ----------- | --------------------------- | ----------------------------------------------- |
+| `TRACEBACK_API_URL`            | No          | `http://localhost:3001/api` | Target Traceback REST API base endpoint         |
+| `TRACEBACK_API_TOKEN`          | Recommended | `undefined`                 | User session token for workspace authentication |
+| `TRACEBACK_WORKSPACE_ID`       | No          | `undefined`                 | Default workspace context                       |
+| `TRACEBACK_REQUEST_TIMEOUT_MS` | No          | `15000`                     | HTTP request timeout in milliseconds            |
 
 ---
 
@@ -187,9 +190,11 @@ In your extension configuration (`mcpSettings.json`):
 
 - **Server fails to start or client reports parse error:**
   Verify that no console logging is writing to `stdout`. Test directly with:
+
   ```bash
   node packages/mcp-server/dist/bin/cli.js
   ```
+
   Only stderr lines should be visible; stdout should produce nothing until a JSON-RPC message is sent to stdin.
 
 - **Authentication Error (`UNAUTHENTICATED` / 401):**

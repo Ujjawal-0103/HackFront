@@ -15,7 +15,10 @@ export class McpClientError extends Error {
     // Sanitize any potential token from error message
     const sanitizedMessage = message
       .replace(/Bearer\s+[a-zA-Z0-9_\-\.]+/gi, "Bearer [REDACTED]")
-      .replace(/(?:tb_token_|traceback_token_)[a-zA-Z0-9_\-\.]+/gi, "[REDACTED_TOKEN]");
+      .replace(
+        /(?:tb_token_|traceback_token_)[a-zA-Z0-9_\-\.]+/gi,
+        "[REDACTED_TOKEN]",
+      );
     super(sanitizedMessage);
     this.name = "McpClientError";
   }
@@ -66,7 +69,10 @@ export class TracebackApiClient {
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.config.requestTimeoutMs);
+    const timeoutId = setTimeout(
+      () => controller.abort(),
+      this.config.requestTimeoutMs,
+    );
 
     try {
       const response = await fetch(url, {
@@ -88,7 +94,10 @@ export class TracebackApiClient {
         // Sanitize error detail to prevent any internal credential leakage
         errorDetail = errorDetail
           .replace(/Bearer\s+[a-zA-Z0-9_\-\.]+/gi, "Bearer [REDACTED]")
-          .replace(/(?:tb_token_|traceback_token_)[a-zA-Z0-9_\-\.]+/gi, "[REDACTED_TOKEN]");
+          .replace(
+            /(?:tb_token_|traceback_token_)[a-zA-Z0-9_\-\.]+/gi,
+            "[REDACTED_TOKEN]",
+          );
 
         if (response.status === 401) {
           throw new McpClientError(

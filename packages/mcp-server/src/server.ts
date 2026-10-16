@@ -19,7 +19,9 @@ export interface CreateMcpServerOptions {
   config?: Partial<McpServerConfig>;
 }
 
-export function createTracebackMcpServer(options: CreateMcpServerOptions = {}): McpServer {
+export function createTracebackMcpServer(
+  options: CreateMcpServerOptions = {},
+): McpServer {
   const config = loadConfig(options.config);
   const client = options.client || new TracebackApiClient(config);
 

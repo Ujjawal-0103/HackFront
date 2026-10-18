@@ -133,5 +133,44 @@ describe("AuthGuard (Identity Boundary)", () => {
     expect(mockRequest.user.id).toBe("usr_prod_777");
     expect(mockAuthService.validateToken).toHaveBeenCalledWith("valid-prod-token");
   });
+
+  it("should reject arbitrary unknown token without authService rather than substituting mock user", async () => {
+    const unprovidedGuard = new AuthGuard();
+    const mockRequest: any = {
+      headers: {
+        authorization: "Bearer tb_live_unknown_user_token_12345",
+      },
+    };
+    const mockContext = {
+      switchToHttp: () => ({ getRequest: () => mockRequest }),
+    } as ExecutionContext;
+
+    await expect(unprovidedGuard.canActivate(mockContext)).rejects.toThrow(
+      UnauthorizedException,
+    );
+  });
+
+  it("should reject revoked or expired token when authService returns null", async () => {
+    const mockAuthService: any = {
+      validateToken: jest.fn().mockResolvedValue(null),
+    };
+    const injectedGuard = new AuthGuard(mockAuthService);
+
+    const mockRequest: any = {
+      headers: {
+        authorization: "Bearer tb_live_revoked_token_67890",
+      },
+    };
+    const mockContext = {
+      switchToHttp: () => ({ getRequest: () => mockRequest }),
+    } as ExecutionContext;
+
+    await expect(injectedGuard.canActivate(mockContext)).rejects.toThrow(
+      UnauthorizedException,
+    );
+    expect(mockAuthService.validateToken).toHaveBeenCalledWith(
+      "tb_live_revoked_token_67890",
+    );
+  });
 });
 

@@ -288,4 +288,21 @@ describe("RepositoriesPage (Sprint 3 & GitHub Hardening)", () => {
       ).toBeInTheDocument();
     });
   });
+
+  it("displays actionable error banner when repository loading fails with an authorization error", async () => {
+    (api.getRepositories as jest.Mock).mockRejectedValue(
+      new Error("Cross-workspace access denied: User does not have access"),
+    );
+
+    render(<RepositoriesPage />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/API Connection Warning:/),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/Cross-workspace access denied/),
+      ).toBeInTheDocument();
+    });
+  });
 });

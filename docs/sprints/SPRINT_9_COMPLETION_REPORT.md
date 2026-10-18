@@ -291,7 +291,7 @@ The following focused local commits were completed on the working branch (`sprin
    - Created `DATABASE_BACKUP_AND_RECOVERY.md`, `DEPLOYMENT_GUIDE.md`, `ENVIRONMENT_VARIABLES.md`, and `OPERATIONAL_RUNBOOK.md`.
    - Added Redis service and dependency audit quality gate to `.github/workflows/ci.yml`.
 
-6. *(Pending)* — `docs(sprint-9): record production readiness, release hardening, and usability study kit`
+6. **`2942b72`** — `docs(sprint-9): record production readiness, release hardening, and usability study kit`
    - Documents completion report and external usability testing kit.
 
 ---

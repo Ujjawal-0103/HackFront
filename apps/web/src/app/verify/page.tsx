@@ -335,7 +335,8 @@ function VerifyWorkspaceContent() {
   };
 
   return (
-    <div
+    <main
+      id="main-content"
       style={{ maxWidth: "1120px", margin: "2rem auto", padding: "0 1.5rem" }}
     >
       {/* Page Header */}
@@ -1508,7 +1509,7 @@ function VerifyWorkspaceContent() {
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }
 

@@ -178,6 +178,7 @@ export default function RepositoriesPage() {
 
   return (
     <main
+      id="main-content"
       style={{
         padding: "2rem",
         maxWidth: "1200px",

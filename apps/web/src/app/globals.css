@@ -61,3 +61,29 @@ select:focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
+
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 9999;
+}
+
+.skip-to-content:focus {
+  position: fixed !important;
+  top: 1rem !important;
+  left: 1rem !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 0.5rem 1rem !important;
+  background-color: var(--color-primary) !important;
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15) !important;
+  z-index: 10000 !important;
+  text-decoration: none !important;
+}

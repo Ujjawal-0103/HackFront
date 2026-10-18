@@ -59,7 +59,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <div
+    <main
+      id="main-content"
       style={{
         maxWidth: "460px",
         margin: "2.5rem auto",
@@ -293,6 +294,6 @@ export default function RegisterPage() {
           Sign in
         </Link>
       </div>
-    </div>
+    </main>
   );
 }

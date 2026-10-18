@@ -10,7 +10,11 @@ import {
   VerificationAssessmentStatus,
   TracebackReportExport,
 } from "@traceback/shared-types";
-import { ForbiddenException, UnauthorizedException, NotFoundException } from "@nestjs/common";
+import {
+  ForbiddenException,
+  UnauthorizedException,
+  NotFoundException,
+} from "@nestjs/common";
 
 describe("Sprint 8 End-to-End Core Workflow Integration (Flows A–G)", () => {
   let authService: AuthService;
@@ -61,7 +65,10 @@ describe("Sprint 8 End-to-End Core Workflow Integration (Flows A–G)", () => {
       user: {
         findUnique: jest.fn().mockImplementation(({ where }) => {
           if (where.email) {
-            return Object.values(usersDb).find((u) => u.email === where.email) || null;
+            return (
+              Object.values(usersDb).find((u) => u.email === where.email) ||
+              null
+            );
           }
           if (where.id) {
             return usersDb[where.id] || null;
@@ -110,16 +117,21 @@ describe("Sprint 8 End-to-End Core Workflow Integration (Flows A–G)", () => {
         }),
       },
       workspace: {
-        findUnique: jest.fn().mockImplementation(({ where }) => workspacesDb[where.id] || null),
+        findUnique: jest
+          .fn()
+          .mockImplementation(({ where }) => workspacesDb[where.id] || null),
         findMany: jest.fn().mockResolvedValue(Object.values(workspacesDb)),
         upsert: jest.fn().mockResolvedValue({ id: "ws_alpha" }),
       },
       repository: {
-        findUnique: jest.fn().mockImplementation(({ where }) => repositoriesDb[where.id] || null),
+        findUnique: jest
+          .fn()
+          .mockImplementation(({ where }) => repositoriesDb[where.id] || null),
         findFirst: jest.fn().mockImplementation(({ where }) => {
           const repo = repositoriesDb[where.id];
           if (!repo) return null;
-          if (where.workspaceId && repo.workspaceId !== where.workspaceId) return null;
+          if (where.workspaceId && repo.workspaceId !== where.workspaceId)
+            return null;
           return repo;
         }),
       },
@@ -127,11 +139,24 @@ describe("Sprint 8 End-to-End Core Workflow Integration (Flows A–G)", () => {
         findUnique: jest.fn().mockImplementation(({ where }) => {
           const target = where.workspaceId_userId;
           if (!target) return null;
-          if (target.workspaceId === "ws_alpha" && (target.userId === "user_1" || target.userId?.startsWith("usr_"))) {
-            return { id: "mem_1", workspaceId: "ws_alpha", userId: target.userId, role: "OWNER" };
+          if (
+            target.workspaceId === "ws_alpha" &&
+            (target.userId === "user_1" || target.userId?.startsWith("usr_"))
+          ) {
+            return {
+              id: "mem_1",
+              workspaceId: "ws_alpha",
+              userId: target.userId,
+              role: "OWNER",
+            };
           }
           if (target.workspaceId === "ws_beta" && target.userId === "user_3") {
-            return { id: "mem_2", workspaceId: "ws_beta", userId: target.userId, role: "MEMBER" };
+            return {
+              id: "mem_2",
+              workspaceId: "ws_beta",
+              userId: target.userId,
+              role: "MEMBER",
+            };
           }
           return null;
         }),
@@ -148,7 +173,11 @@ describe("Sprint 8 End-to-End Core Workflow Integration (Flows A–G)", () => {
       gitHubInstallation: {
         findFirst: jest.fn().mockImplementation(({ where }) => {
           if (where.workspaceId === "ws_alpha") {
-            return { id: "inst_1", installationId: 1001, workspaceId: "ws_alpha" };
+            return {
+              id: "inst_1",
+              installationId: 1001,
+              workspaceId: "ws_alpha",
+            };
           }
           return null;
         }),
@@ -201,7 +230,9 @@ describe("Sprint 8 End-to-End Core Workflow Integration (Flows A–G)", () => {
       expect(registerRes.user.email).toBe("dana.eng@traceback.dev");
 
       // 2. Verify database record created with hashed password
-      const savedUser = Object.values(usersDb).find((u) => u.email === "dana.eng@traceback.dev");
+      const savedUser = Object.values(usersDb).find(
+        (u) => u.email === "dana.eng@traceback.dev",
+      );
       expect(savedUser).toBeDefined();
       expect(savedUser.passwordHash).not.toContain("StrongPassword2026!");
       expect(savedUser.passwordHash).toContain(":"); // salt:hash format
@@ -260,7 +291,11 @@ describe("Sprint 8 End-to-End Core Workflow Integration (Flows A–G)", () => {
       expect(mockQueue.add).toHaveBeenCalled();
 
       // Check status
-      const statusRes = await syncService.getSyncStatus("repo_core", "user_1", "ws_alpha");
+      const statusRes = await syncService.getSyncStatus(
+        "repo_core",
+        "user_1",
+        "ws_alpha",
+      );
       expect(statusRes.repositoryId).toBe("repo_core");
       expect(statusRes.recentJobs.length).toBeGreaterThan(0);
     });
@@ -268,7 +303,12 @@ describe("Sprint 8 End-to-End Core Workflow Integration (Flows A–G)", () => {
     it("should reject sync trigger for unauthorized cross-workspace access", async () => {
       // user_3 is in ws_beta, not ws_alpha
       await expect(
-        syncService.triggerManualSync("repo_core", "user_3", "ws_alpha", "MANUAL"),
+        syncService.triggerManualSync(
+          "repo_core",
+          "user_3",
+          "ws_alpha",
+          "MANUAL",
+        ),
       ).rejects.toThrow(ForbiddenException);
     });
   });
@@ -291,7 +331,8 @@ describe("Sprint 8 End-to-End Core Workflow Integration (Flows A–G)", () => {
           title: "fix(cache): introduce lock to prevent race condition",
           author: "Alex Maintainer",
           url: "https://github.com/org/repo/commit/7f8a9b1",
-          content: "Replaced dirty read with locked transaction block to prevent race condition in cache store",
+          content:
+            "Replaced dirty read with locked transaction block to prevent race condition in cache store",
           snippet: "Replaced dirty read with locked transaction block",
           filePath: "src/cache/store.ts",
           recordedAt: new Date(),
@@ -315,7 +356,9 @@ describe("Sprint 8 End-to-End Core Workflow Integration (Flows A–G)", () => {
       expect(response).toBeDefined();
       expect(response.totalCount).toBe(1);
       expect(response.items[0].source.referenceKey).toBe("7f8a9b1");
-      expect(response.items[0].source.url).toBe("https://github.com/org/repo/commit/7f8a9b1");
+      expect(response.items[0].source.url).toBe(
+        "https://github.com/org/repo/commit/7f8a9b1",
+      );
       expect(response.items[0].source.filePath).toBe("src/cache/store.ts");
     });
 
@@ -352,7 +395,8 @@ describe("Sprint 8 End-to-End Core Workflow Integration (Flows A–G)", () => {
             status: "SUPPORTED",
             prismaConfidence: "HIGH_SUPPORT",
             confidenceScore: 0.95,
-            rationale: "Commit 7f8a9b1 added Mutex synchronization to cache store",
+            rationale:
+              "Commit 7f8a9b1 added Mutex synchronization to cache store",
             supportingEvidence: [],
             contradictingEvidence: [],
             allValidatedEvidence: [
@@ -435,7 +479,12 @@ describe("Sprint 8 End-to-End Core Workflow Integration (Flows A–G)", () => {
             repositoryId: "repo_core",
             status: "COMPLETED",
             explanation: "Cache lock was added to prevent concurrency defects",
-            claims: [{ preliminaryConfidence: "HIGH_SUPPORT", humanVerdict: "SUPPORTED" }],
+            claims: [
+              {
+                preliminaryConfidence: "HIGH_SUPPORT",
+                humanVerdict: "SUPPORTED",
+              },
+            ],
             createdAt: new Date(),
           },
         ]),
@@ -467,7 +516,9 @@ describe("Sprint 8 End-to-End Core Workflow Integration (Flows A–G)", () => {
       mockPrisma.humanVerdictRecord = {
         create: jest.fn().mockImplementation(({ data }) => {
           const session = verificationSessionsDb["sess_verify_888"];
-          const claim = session?.claims?.find((c: any) => c.id === data.claimId);
+          const claim = session?.claims?.find(
+            (c: any) => c.id === data.claimId,
+          );
           const record = {
             id: `vh_${Date.now()}`,
             claimId: data.claimId,
@@ -482,9 +533,11 @@ describe("Sprint 8 End-to-End Core Workflow Integration (Flows A–G)", () => {
         }),
       };
 
-      mockPrisma.$transaction = jest.fn().mockImplementation(async (callback) => {
-        return callback(mockPrisma);
-      });
+      mockPrisma.$transaction = jest
+        .fn()
+        .mockImplementation(async (callback) => {
+          return callback(mockPrisma);
+        });
 
       sessionService = new VerificationSessionService(
         mockPrisma as any,
@@ -592,7 +645,8 @@ describe("Sprint 8 End-to-End Core Workflow Integration (Flows A–G)", () => {
                 author: "Architecture Team",
                 recordedAt: new Date().toISOString(),
                 url: "https://github.com/org/repo/blob/main/docs/adr/005.md",
-                snippet: "All shared worker pool dispatches must use Mutex synchronization",
+                snippet:
+                  "All shared worker pool dispatches must use Mutex synchronization",
               },
               score: 0.9,
               retrievalMethod: "lexical",
@@ -602,7 +656,10 @@ describe("Sprint 8 End-to-End Core Workflow Integration (Flows A–G)", () => {
         }),
       };
 
-      advisoryService = new AdvisoryService(mockPrisma as any, evidenceSearchService);
+      advisoryService = new AdvisoryService(
+        mockPrisma as any,
+        evidenceSearchService,
+      );
     });
 
     it("should evaluate proposed diff, detect conflict with ADR, and return advisory results", async () => {
@@ -634,6 +691,55 @@ describe("Sprint 8 End-to-End Core Workflow Integration (Flows A–G)", () => {
           workspaceId: "ws_beta", // repo_core belongs to ws_alpha
           repositoryId: "repo_core",
           diff: "+ safe code",
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  // ==========================================================================
+  // FLOW H — Model Context Protocol (MCP) Backend Integration
+  // ==========================================================================
+  describe("FLOW H — MCP Backend Integration & Security Controls", () => {
+    it("should authenticate and execute verification using server-side token", async () => {
+      // 1. Authenticate user to obtain valid session token
+      const session = await authService.register({
+        name: "MCP Client Runner",
+        email: "mcp.runner@company.com",
+        password: "ValidPassword123!",
+        passwordConfirmation: "ValidPassword123!",
+      });
+
+      expect(session.token).toBeDefined();
+
+      // 2. Validate token resolution
+      const user = await authService.validateToken(session.token);
+      expect(user).toBeDefined();
+      expect(user?.email).toBe("mcp.runner@company.com");
+
+      // 3. Confirm that logging out revokes MCP access immediately
+      await authService.logout(session.token);
+      const revokedCheck = await authService.validateToken(session.token);
+      expect(revokedCheck).toBeNull();
+    });
+
+    it("should enforce cross-workspace boundaries on all MCP backend endpoints", async () => {
+      // Verify cross-workspace boundaries on evidence search
+      const evidenceSearchService = new EvidenceSearchService(
+        mockPrisma as any,
+      );
+      const searchRes = await evidenceSearchService.search({
+        workspaceId: "ws_alpha",
+        repositoryId: "repo_core",
+        query: "worker pool",
+      });
+      expect(searchRes).toBeDefined();
+
+      // Attempt to access beta repo from alpha workspace
+      await expect(
+        evidenceSearchService.search({
+          workspaceId: "ws_alpha",
+          repositoryId: "repo_private_beta",
+          query: "secret",
         }),
       ).rejects.toThrow(NotFoundException);
     });

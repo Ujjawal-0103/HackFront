@@ -1,0 +1,103 @@
+# ==============================================================================
+# Traceback Production Docker Compose Configuration
+# Complete multi-service orchestration with isolated networks and healthchecks
+# ==============================================================================
+
+services:
+  # 1. PostgreSQL 16 Relational Database (Internal network only - not exposed to host)
+  postgres:
+    image: postgres:16-alpine
+    container_name: traceback-prod-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-traceback_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Database password must be provided in production environment}
+      POSTGRES_DB: ${POSTGRES_DB:-traceback_prod}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-traceback_app} -d ${POSTGRES_DB:-traceback_prod}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - traceback-internal
+
+  # 2. Redis 7 Job Queue for BullMQ Ingestion (Internal network only)
+  redis:
+    image: redis:7-alpine
+    container_name: traceback-prod-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_prod_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - traceback-internal
+
+  # 3. Traceback API Backend Service (NestJS)
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: traceback-prod-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-traceback_app}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-traceback_prod}?schema=public"
+      WEB_URL: ${WEB_URL:-http://localhost:3000}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      GITHUB_APP_ID: ${GITHUB_APP_ID:-}
+      GITHUB_APP_CLIENT_ID: ${GITHUB_APP_CLIENT_ID:-}
+      GITHUB_APP_CLIENT_SECRET: ${GITHUB_APP_CLIENT_SECRET:-}
+      GITHUB_APP_PRIVATE_KEY: ${GITHUB_APP_PRIVATE_KEY:-}
+      GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET:-}
+    ports:
+      - "127.0.0.1:3001:3001"
+    networks:
+      - traceback-internal
+      - traceback-public
+
+  # 4. Traceback Web Frontend Service (Next.js 14)
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: traceback-prod-web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api}
+      DEFAULT_THEME: light
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks:
+      - traceback-internal
+      - traceback-public
+
+volumes:
+  postgres_prod_data:
+  redis_prod_data:
+
+networks:
+  # Internal network: database and redis traffic is strictly isolated here
+  traceback-internal:
+    internal: true
+  # Public/ingress network: binds API and Web to local reverse proxy or host
+  traceback-public:
+    driver: bridge

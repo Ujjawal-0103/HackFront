@@ -30,8 +30,20 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     env:
       DATABASE_URL: "postgresql://postgres:postgrespassword@localhost:5434/traceback_test?schema=public"
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
 
     steps:
       - name: Checkout Code
@@ -62,6 +74,9 @@ jobs:
 
       - name: Apply Database Migrations
         run: npm run prisma:migrate:deploy
+
+      - name: Run Dependency Security Audit
+        run: npm audit --audit-level=critical
 
       - name: Check Formatting
         run: npm run format:check

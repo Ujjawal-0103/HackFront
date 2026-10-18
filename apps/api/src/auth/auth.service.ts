@@ -260,7 +260,7 @@ export class AuthService {
       }
     }
 
-    if (!user) {
+    if (!user && process.env.NODE_ENV !== "production") {
       const mockUser = Object.values(this.mockUsers).find(
         (u) => u.email.toLowerCase() === email,
       );
@@ -333,6 +333,9 @@ export class AuthService {
 
     // 1. Check for recognized mock/system token in unit test environments
     if (token === "sample-valid-token") {
+      if (process.env.NODE_ENV === "production") {
+        return null;
+      }
       return this.mockUsers["usr_verified_123"];
     }
 
@@ -382,8 +385,9 @@ export class AuthService {
       }
     }
 
-    // 4. Test environment fallback for tb_token_ test helpers
+    // 4. Test environment fallback for tb_token_ test helpers (strictly disabled in production)
     if (
+      process.env.NODE_ENV !== "production" &&
       (process.env.NODE_ENV === "test" || !process.env.NODE_ENV) &&
       (token.startsWith("tb_token_") || token.startsWith("traceback_token_"))
     ) {

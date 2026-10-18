@@ -216,5 +216,38 @@ describe("AuthService (Authentication, Registration & Session Management)", () =
       expect(session.activeWorkspaceId).toBe("ws_alpha");
       expect(session.workspaces.some((w) => w.id === "ws_alpha")).toBe(true);
     });
+
+    it("should strictly reject sample-valid-token and mock token fallback when in production environment", async () => {
+      const originalEnv = process.env.NODE_ENV;
+      try {
+        process.env.NODE_ENV = "production";
+        expect(
+          await authService.validateToken("sample-valid-token"),
+        ).toBeNull();
+        expect(
+          await authService.validateToken("tb_token_user_1_123456"),
+        ).toBeNull();
+        expect(
+          await authService.validateToken("traceback_token_user_1"),
+        ).toBeNull();
+      } finally {
+        process.env.NODE_ENV = originalEnv;
+      }
+    });
+
+    it("should reject mock user login fallback in production environment", async () => {
+      const originalEnv = process.env.NODE_ENV;
+      try {
+        process.env.NODE_ENV = "production";
+        await expect(
+          authService.login({
+            email: "alex@company.com",
+            password: "Password123!",
+          }),
+        ).rejects.toThrow(UnauthorizedException);
+      } finally {
+        process.env.NODE_ENV = originalEnv;
+      }
+    });
   });
 });

@@ -30,6 +30,26 @@ async function bootstrap() {
   // Global exception filter for structured error envelopes
   app.useGlobalFilters(new HttpExceptionFilter());
 
+  // Security Headers & Request Correlation Middleware
+  app.use((req: any, res: any, next: any) => {
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader("X-XSS-Protection", "1; mode=block");
+    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    if (process.env.NODE_ENV === "production") {
+      res.setHeader(
+        "Strict-Transport-Security",
+        "max-age=31536000; includeSubDomains; preload",
+      );
+    }
+    const correlationId =
+      req.headers["x-request-id"] ||
+      `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    res.setHeader("X-Request-ID", correlationId);
+    req.correlationId = correlationId;
+    next();
+  });
+
   // Configure CORS for web frontend supporting local dev and configured origin
   app.enableCors({
     origin: (origin, callback) => {
@@ -52,6 +72,7 @@ async function bootstrap() {
       "Content-Type",
       "Authorization",
       "x-workspace-id",
+      "x-request-id",
       "Accept",
       "Origin",
       "X-Requested-With",

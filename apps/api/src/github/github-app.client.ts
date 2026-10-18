@@ -132,6 +132,46 @@ export class GitHubAppClient implements IGitHubClient {
     return this.mapRepoMetadata(data);
   }
 
+  async getInstallation(installationId: number): Promise<{
+    id: number;
+    accountLogin: string;
+    accountType: string;
+    permissions: Record<string, string>;
+  }> {
+    const jwt = this.authService.generateAppJwt();
+    const response = await fetch(
+      `${this.baseUrl}/app/installations/${installationId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+          Accept: "application/vnd.github.v3+json",
+          "User-Agent": "Traceback-GitHub-App-Client/1.0",
+        },
+      },
+    );
+
+    if (response.status === 404) {
+      throw new GitHubNotFoundError(
+        `GitHub App installation ${installationId} not found on GitHub`,
+      );
+    }
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new GitHubForbiddenError(
+        `Failed to verify installation ${installationId}: ${err.message || response.statusText}`,
+      );
+    }
+
+    const data = (await response.json()) as any;
+    return {
+      id: data.id,
+      accountLogin: data.account?.login || "unknown",
+      accountType: data.account?.type || "User",
+      permissions: data.permissions || {},
+    };
+  }
+
   private mapRepoMetadata(data: any): GitHubRepositoryMetadata {
     const permissions = data.permissions || {};
     return {

@@ -107,4 +107,29 @@ export class MockGitHubClient implements IGitHubClient {
     }
     return target;
   }
+
+  async getInstallation(installationId: number): Promise<{
+    id: number;
+    accountLogin: string;
+    accountType: string;
+    permissions: Record<string, string>;
+  }> {
+    if (this.authorizedRepos.has(installationId)) {
+      const repos = this.authorizedRepos.get(installationId)!;
+      const first = repos[0];
+      return {
+        id: installationId,
+        accountLogin: first ? first.owner : "mock-sandbox-org",
+        accountType: "User",
+        permissions: {
+          contents: "read",
+          issues: "read",
+          pullRequests: "read",
+        },
+      };
+    }
+    throw new Error(
+      `GitHub App installation ${installationId} not found in mock sandbox`,
+    );
+  }
 }

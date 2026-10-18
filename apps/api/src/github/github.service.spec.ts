@@ -103,4 +103,51 @@ describe("GitHubService (Read-Only Least-Privilege Repository Boundary)", () => 
       7788,
     );
   });
+
+  describe("connect state signing & validation", () => {
+    it("should sign and verify valid connect state token", () => {
+      const state = service.createConnectState("ws_alpha", "user_1");
+      expect(typeof state).toBe("string");
+
+      const verified = service.verifyConnectState(state, "ws_alpha");
+      expect(verified.workspaceId).toBe("ws_alpha");
+      expect(verified.userId).toBe("user_1");
+    });
+
+    it("should reject connect state token with mismatched workspace", () => {
+      const state = service.createConnectState("ws_alpha", "user_1");
+      expect(() => service.verifyConnectState(state, "ws_beta")).toThrow();
+    });
+
+    it("should reject malformed or tampered state tokens", () => {
+      expect(() => service.verifyConnectState("not-a-valid-token", "ws_alpha")).toThrow();
+    });
+  });
+
+  describe("production safety", () => {
+    it("should disable mock client and reject calls in production when credentials missing", async () => {
+      const prodModule: TestingModule = await Test.createTestingModule({
+        providers: [
+          {
+            provide: ConfigService,
+            useValue: {
+              get: jest.fn((key: string) => {
+                if (key === "app.nodeEnv") return "production";
+                return null;
+              }),
+            },
+          },
+          GitHubService,
+        ],
+      }).compile();
+
+      const prodService = prodModule.get<GitHubService>(GitHubService);
+      expect(prodService.isConfigured()).toBe(false);
+      expect(prodService.isMock()).toBe(false);
+
+      await expect(prodService.listAuthorizedRepositories(1001)).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+  });
 });

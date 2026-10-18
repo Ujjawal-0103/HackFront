@@ -23,9 +23,17 @@ describe("RepositoriesService", () => {
         upsert: jest.fn(),
         delete: jest.fn(),
       },
+      gitHubInstallation: {
+        findFirst: jest.fn().mockResolvedValue({
+          id: "inst_1",
+          workspaceId: "ws_alpha",
+          installationId: 1001,
+        }),
+      },
     };
 
     mockGitHubService = {
+      isMock: jest.fn().mockReturnValue(true),
       verifyRepositoryAccess: jest.fn().mockResolvedValue({
         authorized: true,
         permissions: { contents: "read" },

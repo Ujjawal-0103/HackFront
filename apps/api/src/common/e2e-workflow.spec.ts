@@ -741,7 +741,7 @@ describe("Sprint 8 End-to-End Core Workflow Integration (Flows A–G)", () => {
           repositoryId: "repo_private_beta",
           query: "secret",
         }),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 });

@@ -68,6 +68,7 @@ export class PrismaService
       .replace(/postgrespassword/gi, "[REDACTED]")
       .replace(/password[^\s,;)]*/gi, "[REDACTED]")
       .replace(/\b5434\b/g, "[PORT]")
+      .replace(/\b5432\b/g, "[PORT]")
       .replace(/:\d{2,5}\b/g, ":[PORT]")
       .replace(/at\s+[`'"][^`'"]+[`'"]/gi, "at [REDACTED_ENDPOINT]");
   }

@@ -112,48 +112,94 @@ export class AuthService {
     let user: AuthenticatedUser;
 
     if (this.prisma) {
-      await this.workspacesService.ensureDefaultWorkspaces();
+      try {
+        await this.workspacesService.ensureDefaultWorkspaces();
 
-      const existing = await this.prisma.user.findUnique({
-        where: { email },
-      });
-      if (existing) {
-        throw new ConflictException(
-          "An account with this email address already exists",
-        );
-      }
+        const existing = await this.prisma.user.findUnique({
+          where: { email },
+        });
+        if (existing) {
+          throw new ConflictException(
+            "An account with this email address already exists",
+          );
+        }
 
-      const slugBase = `ws-${request.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, "-")
-        .slice(0, 20)}`;
-      const randomSuffix = crypto.randomBytes(3).toString("hex");
-      const workspaceSlug = `${slugBase}-${randomSuffix}`;
+        const slugBase = `ws-${request.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "-")
+          .slice(0, 20)}`;
+        const randomSuffix = crypto.randomBytes(3).toString("hex");
+        const workspaceSlug = `${slugBase}-${randomSuffix}`;
 
-      const created = await this.prisma.user.create({
-        data: {
-          name: request.name.trim(),
-          email,
-          passwordHash,
-          memberships: {
-            create: {
-              role: "OWNER",
-              workspace: {
-                create: {
-                  name: `${request.name.trim()}'s Workspace`,
-                  slug: workspaceSlug,
+        const created = await this.prisma.user.create({
+          data: {
+            name: request.name.trim(),
+            email,
+            passwordHash,
+            memberships: {
+              create: {
+                role: "OWNER",
+                workspace: {
+                  create: {
+                    name: `${request.name.trim()}'s Workspace`,
+                    slug: workspaceSlug,
+                  },
                 },
               },
             },
           },
-        },
-      });
+        });
 
-      user = {
-        id: created.id,
-        email: created.email,
-        name: created.name,
-      };
+        user = {
+          id: created.id,
+          email: created.email,
+          name: created.name,
+        };
+      } catch (err) {
+        if (err instanceof HttpException) {
+          throw err;
+        }
+        if (
+          err &&
+          typeof err === "object" &&
+          "code" in err &&
+          (err as any).code === "P2002"
+        ) {
+          throw new ConflictException(
+            "An account with this email address already exists",
+          );
+        }
+        this.logger.warn(
+          `Database user registration deferred: ${err instanceof Error ? err.message : String(err)}`,
+        );
+        if (process.env.NODE_ENV !== "production") {
+          const existing = Object.values(this.mockUsers).find(
+            (u) => u.email.toLowerCase() === email,
+          );
+          if (existing) {
+            throw new ConflictException(
+              "An account with this email address already exists",
+            );
+          }
+
+          const userId = `usr_${crypto.randomBytes(6).toString("hex")}`;
+          user = {
+            id: userId,
+            email,
+            name: request.name.trim(),
+          };
+          this.mockUsers[userId] = {
+            ...user,
+            passwordHash,
+          };
+          this.workspacesService.registerMembership("ws_alpha", userId, "OWNER");
+        } else {
+          throw new HttpException(
+            "Database service is currently unavailable. Please try again later.",
+            HttpStatus.SERVICE_UNAVAILABLE,
+          );
+        }
+      }
     } else {
       // Memory fallback for tests without PostgreSQL
       const existing = Object.values(this.mockUsers).find(
@@ -221,8 +267,8 @@ export class AuthService {
     let user: AuthenticatedUser | null = null;
 
     if (this.prisma) {
-      await this.workspacesService.ensureDefaultWorkspaces();
       try {
+        await this.workspacesService.ensureDefaultWorkspaces();
         const dbUser = await this.prisma.user.findUnique({
           where: { email },
         });

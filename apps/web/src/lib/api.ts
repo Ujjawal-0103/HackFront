@@ -108,10 +108,14 @@ async function request<T>(
       let details: unknown = undefined;
       try {
         const errorJson = await res.json();
-        if (errorJson.message) {
-          errorMsg = Array.isArray(errorJson.message)
-            ? errorJson.message.join(", ")
-            : errorJson.message;
+        const extracted =
+          errorJson.error?.message ||
+          errorJson.message ||
+          (typeof errorJson.error === "string" ? errorJson.error : null);
+        if (extracted) {
+          errorMsg = Array.isArray(extracted)
+            ? extracted.join(", ")
+            : extracted;
         }
         details = errorJson;
       } catch {

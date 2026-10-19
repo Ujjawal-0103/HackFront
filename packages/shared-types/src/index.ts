@@ -512,7 +512,6 @@ export interface HistoricalConflict {
   recommendedFollowUp: string;
 }
 
-
 export interface CheckChangeAgainstDecisionsRequest {
   workspaceId?: string;
   repositoryId?: string;
@@ -611,5 +610,3 @@ export interface VerificationSessionResult {
   estimatedTokensUsed: number;
   fallbackNotice?: string;
 }
-
-

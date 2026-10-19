@@ -1,13 +1,24 @@
 import * as crypto from "crypto";
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
-import { ForbiddenException, NotFoundException, BadRequestException } from "@nestjs/common";
+import {
+  ForbiddenException,
+  NotFoundException,
+  BadRequestException,
+} from "@nestjs/common";
 import { GitHubService } from "./github.service";
 import { GitHubController } from "./github.controller";
-import { GitHubAppAuthService, normalizePrivateKey } from "./github-app-auth.service";
+import {
+  GitHubAppAuthService,
+  normalizePrivateKey,
+} from "./github-app-auth.service";
 import { GitHubAppClient } from "./github-app.client";
 import { MockGitHubClient } from "./mock-github.client";
-import { GitHubAuthError, GitHubNotFoundError, GitHubRateLimitError } from "./github.errors";
+import {
+  GitHubAuthError,
+  GitHubNotFoundError,
+  GitHubRateLimitError,
+} from "./github.errors";
 import { PrismaService } from "../prisma/prisma.service";
 
 describe("GitHub App Live vs Mock Integration & Hardening Verification (Section 10)", () => {
@@ -49,7 +60,8 @@ describe("GitHub App Live vs Mock Integration & Hardening Verification (Section 
     });
 
     it("should reject malformed private key without crashing or exposing key content", () => {
-      const malformedKey = "-----BEGIN RSA PRIVATE KEY-----\nNOT_A_VALID_KEY\n-----END RSA PRIVATE KEY-----";
+      const malformedKey =
+        "-----BEGIN RSA PRIVATE KEY-----\nNOT_A_VALID_KEY\n-----END RSA PRIVATE KEY-----";
       expect(() => normalizePrivateKey(malformedKey)).toThrow(GitHubAuthError);
 
       const config = {
@@ -93,7 +105,9 @@ describe("GitHub App Live vs Mock Integration & Hardening Verification (Section 
       expect(service.isConfigured()).toBe(false);
       expect(service.isMock()).toBe(false);
 
-      await expect(service.listAuthorizedRepositories(1001)).rejects.toThrow(ForbiddenException);
+      await expect(service.listAuthorizedRepositories(1001)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
@@ -127,7 +141,9 @@ describe("GitHub App Live vs Mock Integration & Hardening Verification (Section 
       };
 
       await expect(
-        controller.connectInstallation("ws-1", req, { installationId: "invalid" as any }),
+        controller.connectInstallation("ws-1", req, {
+          installationId: "invalid" as any,
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 

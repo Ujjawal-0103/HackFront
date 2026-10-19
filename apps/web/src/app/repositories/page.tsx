@@ -137,9 +137,7 @@ export default function RepositoriesPage() {
       setAuthorizedRepos([]);
       await fetchStatus();
     } catch (err: any) {
-      alert(
-        `Failed to disconnect installation: ${err.message || String(err)}`,
-      );
+      alert(`Failed to disconnect installation: ${err.message || String(err)}`);
     } finally {
       setIsDisconnecting(false);
     }
@@ -316,8 +314,8 @@ export default function RepositoriesPage() {
               lineHeight: 1.5,
             }}
           >
-            You must be signed in to manage, synchronize, and connect repositories
-            for a workspace.
+            You must be signed in to manage, synchronize, and connect
+            repositories for a workspace.
           </p>
           <Link
             href="/login?returnTo=/repositories"
@@ -369,8 +367,8 @@ export default function RepositoriesPage() {
             No Active Workspace
           </h1>
           <p style={{ color: "var(--color-text-secondary)" }}>
-            Please select an active workspace from the navigation bar or settings
-            to manage repositories.
+            Please select an active workspace from the navigation bar or
+            settings to manage repositories.
           </p>
         </div>
       </main>
@@ -1402,8 +1400,8 @@ export default function RepositoriesPage() {
                 marginBottom: "1.25rem",
               }}
             >
-              Import repositories from an authorized GitHub App installation into
-              workspace <code>{workspaceId}</code>:
+              Import repositories from an authorized GitHub App installation
+              into workspace <code>{workspaceId}</code>:
             </p>
 
             {/* Error in modal if fetching authorized repos failed */}
@@ -1466,7 +1464,8 @@ export default function RepositoriesPage() {
                   The system administrator has not configured live GitHub App
                   credentials (<code>GITHUB_APP_ID</code> and{" "}
                   <code>GITHUB_APP_PRIVATE_KEY</code>). Please refer to the
-                  setup guide in <code>docs/integrations/GITHUB_APP_SETUP.md</code>.
+                  setup guide in{" "}
+                  <code>docs/integrations/GITHUB_APP_SETUP.md</code>.
                 </p>
               </div>
             ) : !gitHubStatus?.installation && gitHubStatus?.isConfigured ? (

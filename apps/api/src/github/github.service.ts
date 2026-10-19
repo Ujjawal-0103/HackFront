@@ -154,7 +154,9 @@ export class GitHubService {
         hmacBuf.length !== expectedBuf.length ||
         !crypto.timingSafeEqual(hmacBuf, expectedBuf)
       ) {
-        throw new BadRequestException("Invalid GitHub App connect state signature");
+        throw new BadRequestException(
+          "Invalid GitHub App connect state signature",
+        );
       }
 
       const timestamp = parseInt(timestampStr, 10);

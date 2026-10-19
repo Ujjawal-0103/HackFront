@@ -14,9 +14,7 @@ import {
   AdvisorySeverity,
 } from "@traceback/shared-types";
 
-export class CheckChangeAgainstDecisionsDto
-  implements CheckChangeAgainstDecisionsRequest
-{
+export class CheckChangeAgainstDecisionsDto implements CheckChangeAgainstDecisionsRequest {
   @IsOptional()
   @IsString()
   repositoryId?: string;

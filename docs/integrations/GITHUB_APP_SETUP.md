@@ -7,6 +7,7 @@ This guide details the complete configuration, installation, authentication, and
 ## 1. Overview & Architecture
 
 Traceback connects to GitHub via a dedicated GitHub App rather than legacy OAuth Apps or personal access tokens (PATs). This ensures:
+
 - Fine-grained, repository-scoped access.
 - Organization and personal account compatibility.
 - Workspace-isolated repository management: each workspace associates with its authorized GitHub App installation.
@@ -21,22 +22,22 @@ The backend API (`apps/api`) and web frontend (`apps/web`) require the following
 
 ### Backend Configuration (`apps/api/.env`)
 
-| Variable Name | Required | Description | Example / Format |
-|---|---|---|---|
-| `GITHUB_APP_ID` | Yes (Live) | GitHub App numeric ID (from App settings page) | `123456` |
-| `GITHUB_APP_PRIVATE_KEY` | Yes (Live*) | RSA Private Key PEM string or Base64 (see Section 4) | `-----BEGIN RSA PRIVATE KEY-----...` |
-| `GITHUB_APP_PRIVATE_KEY_PATH` | Alternative | Path to downloaded `.pem` key file (used if key string is omitted) | `./secrets/github-app-private-key.pem` |
-| `GITHUB_APP_SLUG` | Optional | GitHub App slug (URL identifier) for install redirects | `traceback-verifier` |
-| `GITHUB_WEBHOOK_SECRET` | Recommended | Secret token configured for webhook delivery validation | Random 32+ character string |
-| `JWT_SECRET` | Required | Application secret used for signing session and connection state tokens | `min-32-chars-hex-or-base64` |
-| `NODE_ENV` | Optional | Set to `production` in live environments | `production` / `development` / `test` |
+| Variable Name                 | Required    | Description                                                             | Example / Format                       |
+| ----------------------------- | ----------- | ----------------------------------------------------------------------- | -------------------------------------- |
+| `GITHUB_APP_ID`               | Yes (Live)  | GitHub App numeric ID (from App settings page)                          | `123456`                               |
+| `GITHUB_APP_PRIVATE_KEY`      | Yes (Live*) | RSA Private Key PEM string or Base64 (see Section 4)                    | `-----BEGIN RSA PRIVATE KEY-----...`   |
+| `GITHUB_APP_PRIVATE_KEY_PATH` | Alternative | Path to downloaded `.pem` key file (used if key string is omitted)      | `./secrets/github-app-private-key.pem` |
+| `GITHUB_APP_SLUG`             | Optional    | GitHub App slug (URL identifier) for install redirects                  | `traceback-verifier`                   |
+| `GITHUB_WEBHOOK_SECRET`       | Recommended | Secret token configured for webhook delivery validation                 | Random 32+ character string            |
+| `JWT_SECRET`                  | Required    | Application secret used for signing session and connection state tokens | `min-32-chars-hex-or-base64`           |
+| `NODE_ENV`                    | Optional    | Set to `production` in live environments                                | `production` / `development` / `test`  |
 
 > **Production Safety Rule**: When `NODE_ENV=production`, Traceback **strictly disables mock mode**. Missing live credentials will reject requests with `403 Forbidden` (`Live GitHub App integration is not configured`), preventing accidental exposure of mock sandbox data in production environments.
 
 ### Frontend Configuration (`apps/web/.env.local`)
 
-| Variable Name | Required | Description | Default |
-|---|---|---|---|
+| Variable Name         | Required | Description                       | Default                 |
+| --------------------- | -------- | --------------------------------- | ----------------------- |
 | `NEXT_PUBLIC_API_URL` | Required | Base URL of Traceback API backend | `http://localhost:3001` |
 
 ---
@@ -82,6 +83,7 @@ The backend API (`apps/api`) and web frontend (`apps/web`) require the following
 After registering the app, scroll to the bottom of the App settings page and click **Generate a private key**. A `.pem` file will download.
 
 To configure `GITHUB_APP_PRIVATE_KEY` in environment variables:
+
 1. **Single-line with literal `\n`**:
    Replace all real newlines with `\n`:
    ```bash
@@ -139,15 +141,15 @@ To configure `GITHUB_APP_PRIVATE_KEY` in environment variables:
 
 Traceback provides explicit frontend states and backend diagnostic error codes:
 
-| Error State / Status | Root Cause | Resolution |
-|---|---|---|
-| **Authentication Required (401)** | User session is missing or expired. | Click "Sign In to Continue". Preserves `returnTo=/repositories`. |
-| **No Active Workspace** | No workspace selected in current session. | Select or create a workspace from the workspace switcher. |
-| **GitHub App Not Configured (403)** | `GITHUB_APP_ID` or `GITHUB_APP_PRIVATE_KEY` missing in production. | Provide valid GitHub App credentials in `apps/api/.env`. |
-| **Installation Not Found (404)** | Workspace has not yet connected a GitHub App installation. | Click "Install GitHub App" to begin authorization. |
-| **No Authorized Repositories** | GitHub App is installed, but 0 repositories were granted. | Configure GitHub App installation settings in GitHub to grant access to desired repositories. |
-| **State Token Invalid / Expired (400)** | Callback state signature mismatch or older than 15 minutes. | Initiate the connection flow again from the Traceback UI. |
-| **Cross-Workspace Access Denied (403)** | Non-owner/admin user attempted to connect/disconnect installation. | Only workspace `OWNER` or `ADMIN` roles may modify installations. |
+| Error State / Status                    | Root Cause                                                         | Resolution                                                                                    |
+| --------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| **Authentication Required (401)**       | User session is missing or expired.                                | Click "Sign In to Continue". Preserves `returnTo=/repositories`.                              |
+| **No Active Workspace**                 | No workspace selected in current session.                          | Select or create a workspace from the workspace switcher.                                     |
+| **GitHub App Not Configured (403)**     | `GITHUB_APP_ID` or `GITHUB_APP_PRIVATE_KEY` missing in production. | Provide valid GitHub App credentials in `apps/api/.env`.                                      |
+| **Installation Not Found (404)**        | Workspace has not yet connected a GitHub App installation.         | Click "Install GitHub App" to begin authorization.                                            |
+| **No Authorized Repositories**          | GitHub App is installed, but 0 repositories were granted.          | Configure GitHub App installation settings in GitHub to grant access to desired repositories. |
+| **State Token Invalid / Expired (400)** | Callback state signature mismatch or older than 15 minutes.        | Initiate the connection flow again from the Traceback UI.                                     |
+| **Cross-Workspace Access Denied (403)** | Non-owner/admin user attempted to connect/disconnect installation. | Only workspace `OWNER` or `ADMIN` roles may modify installations.                             |
 
 ---
 

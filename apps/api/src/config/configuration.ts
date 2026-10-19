@@ -82,7 +82,8 @@ export const configuration = (): { app: AppConfig; github: GitHubConfig } => {
   const githubBaseUrl =
     process.env.GITHUB_API_BASE_URL?.trim() || "https://api.github.com";
 
-  let githubPrivateKey = process.env.GITHUB_APP_PRIVATE_KEY?.trim() || undefined;
+  let githubPrivateKey =
+    process.env.GITHUB_APP_PRIVATE_KEY?.trim() || undefined;
   const githubPrivateKeyPath =
     process.env.GITHUB_APP_PRIVATE_KEY_PATH?.trim() || undefined;
 

@@ -131,7 +131,9 @@ describe("AuthGuard (Identity Boundary)", () => {
     const result = await injectedGuard.canActivate(mockContext);
     expect(result).toBe(true);
     expect(mockRequest.user.id).toBe("usr_prod_777");
-    expect(mockAuthService.validateToken).toHaveBeenCalledWith("valid-prod-token");
+    expect(mockAuthService.validateToken).toHaveBeenCalledWith(
+      "valid-prod-token",
+    );
   });
 
   it("should reject arbitrary unknown token without authService rather than substituting mock user", async () => {
@@ -173,4 +175,3 @@ describe("AuthGuard (Identity Boundary)", () => {
     );
   });
 });
-

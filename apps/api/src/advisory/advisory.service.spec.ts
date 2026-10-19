@@ -90,7 +90,8 @@ describe("AdvisoryService (Sprint 7 Advisory Change Checks)", () => {
             sourceType: "COMMIT" as EvidenceSourceType,
             externalId: "abc1234",
             referenceKey: "abc1234",
-            title: "fix: add mutex lock to cache operations to prevent race conditions",
+            title:
+              "fix: add mutex lock to cache operations to prevent race conditions",
             author: "Alex",
             url: "https://github.com/org/repo/commit/abc1234",
             snippet: "Acquires mutex lock before updating cache entries",
@@ -186,7 +187,8 @@ diff --git a/src/cache.ts b/src/cache.ts
             title: "ADR-004: Hybrid Search Retrieval Baseline",
             author: "Lead Architect",
             url: "https://github.com/org/repo/blob/main/docs/ADR-004.md",
-            snippet: "Mandates reciprocal rank fusion combining lexical and dense search",
+            snippet:
+              "Mandates reciprocal rank fusion combining lexical and dense search",
             filePath: "docs/ADR-004.md",
             recordedAt: "2026-06-01T00:00:00Z",
           },
@@ -209,7 +211,9 @@ diff --git a/src/cache.ts b/src/cache.ts
     });
 
     expect(result.advisoryStatus).toBe("POTENTIAL_RISK");
-    expect(result.conflicts.some((c) => c.historicalConstraint.includes("ADR"))).toBe(true);
+    expect(
+      result.conflicts.some((c) => c.historicalConstraint.includes("ADR")),
+    ).toBe(true);
   });
 
   it("should return INSUFFICIENT_EVIDENCE when no historical records match without inventing conclusions", async () => {

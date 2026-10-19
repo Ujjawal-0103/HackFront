@@ -56,3 +56,6 @@ desktop.ini
 *.sublime-project
 *.sublime-workspace
 .gemini/
+
+# GitHub App private keys
+/secrets/*.pem

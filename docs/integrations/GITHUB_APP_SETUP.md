@@ -24,7 +24,8 @@ The backend API (`apps/api`) and web frontend (`apps/web`) require the following
 | Variable Name | Required | Description | Example / Format |
 |---|---|---|---|
 | `GITHUB_APP_ID` | Yes (Live) | GitHub App numeric ID (from App settings page) | `123456` |
-| `GITHUB_APP_PRIVATE_KEY` | Yes (Live) | RSA Private Key generated in GitHub App settings | PEM string format (see Section 4) |
+| `GITHUB_APP_PRIVATE_KEY` | Yes (Live*) | RSA Private Key PEM string or Base64 (see Section 4) | `-----BEGIN RSA PRIVATE KEY-----...` |
+| `GITHUB_APP_PRIVATE_KEY_PATH` | Alternative | Path to downloaded `.pem` key file (used if key string is omitted) | `./secrets/github-app-private-key.pem` |
 | `GITHUB_APP_SLUG` | Optional | GitHub App slug (URL identifier) for install redirects | `traceback-verifier` |
 | `GITHUB_WEBHOOK_SECRET` | Recommended | Secret token configured for webhook delivery validation | Random 32+ character string |
 | `JWT_SECRET` | Required | Application secret used for signing session and connection state tokens | `min-32-chars-hex-or-base64` |

@@ -468,16 +468,16 @@ export default function RepositoriesPage() {
           alignItems: "center",
           justifyContent: "space-between",
           padding: "0.75rem 1.25rem",
-          backgroundColor: gitHubStatus?.installation
-            ? "rgba(34, 197, 94, 0.08)"
-            : gitHubStatus?.isMockMode
-              ? "rgba(245, 158, 11, 0.08)"
+          backgroundColor: gitHubStatus?.isMockMode
+            ? "rgba(245, 158, 11, 0.08)"
+            : gitHubStatus?.installation
+              ? "rgba(34, 197, 94, 0.08)"
               : "var(--color-card-muted)",
           border: `1px solid ${
-            gitHubStatus?.installation
-              ? "var(--color-success)"
-              : gitHubStatus?.isMockMode
-                ? "var(--color-warning)"
+            gitHubStatus?.isMockMode
+              ? "var(--color-warning)"
+              : gitHubStatus?.installation
+                ? "var(--color-success)"
                 : "var(--color-border)"
           }`,
           borderRadius: "8px",
@@ -489,17 +489,19 @@ export default function RepositoriesPage() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <span>
-            {gitHubStatus?.installation
-              ? "🟢"
-              : gitHubStatus?.isMockMode
-                ? "🟡"
+            {gitHubStatus?.isMockMode
+              ? "🟡"
+              : gitHubStatus?.installation
+                ? "🟢"
                 : "⚪"}
           </span>
           <span style={{ fontWeight: 600, color: "var(--color-text)" }}>
-            {gitHubStatus?.installation
-              ? `GitHub App Connected: ${gitHubStatus.installation.accountLogin} (#${gitHubStatus.installation.installationId})`
-              : gitHubStatus?.isMockMode
-                ? "Development Mock Sandbox (Live credentials unconfigured)"
+            {gitHubStatus?.isMockMode
+              ? gitHubStatus?.installation
+                ? `Development Mock Sandbox Active (Mock Installation #${gitHubStatus.installation.installationId} - Fixtures Only)`
+                : "Development Mock Sandbox (Live credentials unconfigured)"
+              : gitHubStatus?.installation
+                ? `Live GitHub App Connected: ${gitHubStatus.installation.accountLogin} (#${gitHubStatus.installation.installationId})`
                 : gitHubStatus?.isConfigured
                   ? "GitHub App Configured (No installation connected to this workspace)"
                   : "GitHub App Unconfigured (Live credentials missing in environment)"}

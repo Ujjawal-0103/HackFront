@@ -21,7 +21,18 @@ import { WorkspacesModule } from "../workspaces/workspaces.module";
     MockGitHubIngestionAdapter,
     {
       provide: GITHUB_INGESTION_ADAPTER_TOKEN,
-      useClass: GitHubIngestionAdapter,
+      useFactory: (
+        gitHubService: GitHubService,
+        liveAdapter: GitHubIngestionAdapter,
+        mockAdapter: MockGitHubIngestionAdapter,
+      ) => {
+        return gitHubService.isConfigured() ? liveAdapter : mockAdapter;
+      },
+      inject: [
+        GitHubService,
+        GitHubIngestionAdapter,
+        MockGitHubIngestionAdapter,
+      ],
     },
   ],
   exports: [

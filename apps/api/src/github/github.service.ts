@@ -53,12 +53,15 @@ export class GitHubService {
       "development";
     const isProduction = nodeEnv === "production";
 
-    if (appId && privateKey) {
+    if (!this.authService) {
+      this.authService = new GitHubAppAuthService(this.configService);
+    }
+
+    const isLiveReady = Boolean(appId && this.authService.isConfigured());
+
+    if (isLiveReady) {
       this.isLiveConfigured = true;
       this.isMockMode = false;
-      if (!this.authService) {
-        this.authService = new GitHubAppAuthService(this.configService);
-      }
       const baseUrl =
         this.configService.get<string>("GITHUB_API_BASE_URL") ||
         this.configService.get<string>("github.baseUrl") ||

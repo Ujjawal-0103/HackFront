@@ -13,7 +13,16 @@ export interface AppConfig {
   neo4jDatabase?: string;
 }
 
-export const configuration = (): { app: AppConfig } => {
+export interface GitHubConfig {
+  appId?: string;
+  privateKey?: string;
+  privateKeyPath?: string;
+  appSlug?: string;
+  webhookSecret?: string;
+  baseUrl: string;
+}
+
+export const configuration = (): { app: AppConfig; github: GitHubConfig } => {
   const nodeEnv = process.env.NODE_ENV || "development";
   const isProduction = nodeEnv === "production";
   const port = parseInt(process.env.PORT || "3001", 10);
@@ -68,6 +77,30 @@ export const configuration = (): { app: AppConfig } => {
   const neo4jPassword = process.env.NEO4J_PASSWORD?.trim() || undefined;
   const neo4jDatabase = process.env.NEO4J_DATABASE?.trim() || "neo4j";
 
+  const githubAppId = process.env.GITHUB_APP_ID?.trim() || undefined;
+  const githubAppSlug = process.env.GITHUB_APP_SLUG?.trim() || undefined;
+  const githubBaseUrl =
+    process.env.GITHUB_API_BASE_URL?.trim() || "https://api.github.com";
+
+  let githubPrivateKey = process.env.GITHUB_APP_PRIVATE_KEY?.trim() || undefined;
+  const githubPrivateKeyPath =
+    process.env.GITHUB_APP_PRIVATE_KEY_PATH?.trim() || undefined;
+
+  if (!githubPrivateKey && githubPrivateKeyPath) {
+    try {
+      const fs = require("fs");
+      const path = require("path");
+      const resolvedPath = path.isAbsolute(githubPrivateKeyPath)
+        ? githubPrivateKeyPath
+        : path.resolve(process.cwd(), githubPrivateKeyPath);
+      if (fs.existsSync(resolvedPath)) {
+        githubPrivateKey = fs.readFileSync(resolvedPath, "utf8").trim();
+      }
+    } catch {
+      // Ignored - validation happens in GitHubAppAuthService
+    }
+  }
+
   return {
     app: {
       nodeEnv,
@@ -82,6 +115,14 @@ export const configuration = (): { app: AppConfig } => {
       neo4jUsername,
       neo4jPassword,
       neo4jDatabase,
+    },
+    github: {
+      appId: githubAppId,
+      privateKey: githubPrivateKey,
+      privateKeyPath: githubPrivateKeyPath,
+      appSlug: githubAppSlug,
+      webhookSecret: githubWebhookSecret,
+      baseUrl: githubBaseUrl,
     },
   };
 };

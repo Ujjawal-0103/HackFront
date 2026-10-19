@@ -291,6 +291,9 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
       expect(mockAdapter.getRepository).toHaveBeenCalledWith(
         "Ujjawal-0103",
         "HackFront",
+        {
+          installationId: 123456,
+        },
       );
       expect(mockPersistence.upsertRepositoryMetadata).toHaveBeenCalled();
 
@@ -302,6 +305,7 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
           page: 1,
           perPage: 50,
           since: undefined,
+          installationId: 123456,
         },
       );
       expect(mockPersistence.persistCommits).toHaveBeenCalledTimes(1);
@@ -353,6 +357,7 @@ describe("IngestionOrchestratorService (Sprint 3 Part 5)", () => {
           page: 1,
           perPage: 50,
           since: indexedDate.toISOString(),
+          installationId: 123456,
         },
       );
     });

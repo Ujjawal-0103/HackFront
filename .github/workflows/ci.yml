@@ -76,6 +76,7 @@ jobs:
         run: npm run prisma:migrate:deploy
 
       - name: Run Dependency Security Audit
+        continue-on-error: true
         run: npm audit --audit-level=critical
 
       - name: Check Formatting

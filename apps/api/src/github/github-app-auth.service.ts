@@ -57,6 +57,9 @@ export function normalizePrivateKey(rawKey: string): string {
     cleaned = cleaned.slice(1, -1).trim();
   }
 
+  // Normalize Windows CRLF
+  cleaned = cleaned.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
   // Expand escaped newlines from .env or JSON configurations
   if (cleaned.includes("\\n")) {
     cleaned = cleaned.replace(/\\n/g, "\n");
@@ -141,9 +144,31 @@ export class GitHubAppAuthService {
     const rawAppId =
       this.configService?.get<string>("GITHUB_APP_ID") ||
       this.configService?.get<string>("github.appId");
-    const rawPrivateKey =
+    let rawPrivateKey =
       this.configService?.get<string>("GITHUB_APP_PRIVATE_KEY") ||
       this.configService?.get<string>("github.privateKey");
+
+    if (!rawPrivateKey) {
+      const keyPath =
+        this.configService?.get<string>("GITHUB_APP_PRIVATE_KEY_PATH") ||
+        this.configService?.get<string>("github.privateKeyPath");
+      if (keyPath) {
+        try {
+          const fs = require("fs");
+          const path = require("path");
+          const resolved = path.isAbsolute(keyPath)
+            ? keyPath
+            : path.resolve(process.cwd(), keyPath);
+          if (fs.existsSync(resolved)) {
+            rawPrivateKey = fs.readFileSync(resolved, "utf8");
+          }
+        } catch (readErr: any) {
+          this.logger.warn(
+            `Failed to read GITHUB_APP_PRIVATE_KEY_PATH: ${sanitizeErrorMessage(readErr.message)}`,
+          );
+        }
+      }
+    }
 
     this.appId = rawAppId ? String(rawAppId).trim() : undefined;
 

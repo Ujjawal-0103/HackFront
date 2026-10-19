@@ -12,11 +12,19 @@ import { AuthModule } from "./auth/auth.module";
 import { VerificationModule } from "./verification/verification.module";
 import { AdvisoryModule } from "./advisory/advisory.module";
 
+import * as path from "path";
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
+      envFilePath: [
+        path.resolve(process.cwd(), ".env"),
+        path.resolve(process.cwd(), "apps/api/.env"),
+        path.resolve(__dirname, "../../.env"),
+        path.resolve(__dirname, "../.env"),
+      ],
     }),
     PrismaModule,
     HealthModule,

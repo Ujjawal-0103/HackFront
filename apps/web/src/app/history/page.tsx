@@ -123,7 +123,8 @@ export default function HistoryPage() {
   };
 
   return (
-    <div
+    <main
+      id="main-content"
       style={{ maxWidth: "1080px", margin: "2rem auto", padding: "0 1.5rem" }}
     >
       {/* Header */}
@@ -537,6 +538,6 @@ export default function HistoryPage() {
           )}
         </div>
       )}
-    </div>
+    </main>
   );
 }

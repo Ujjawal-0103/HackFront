@@ -611,5 +611,127 @@ describe("Traceback MCP Protocol Integration", () => {
       );
       expect(rawTokenError.message).toContain("[REDACTED_TOKEN]");
     });
+
+    it("should throw UNAUTHENTICATED when TRACEBACK_API_TOKEN is missing on server", async () => {
+      const unauthClient = new TracebackApiClient({
+        apiUrl: "http://localhost:3001/api",
+        apiToken: undefined,
+      });
+
+      await expect(
+        unauthClient.verifyExplanation({
+          workspaceId: "ws_alpha",
+          repositoryId: "repo_core",
+          explanation: "Testing without token configured",
+        }),
+      ).rejects.toThrow(
+        "TRACEBACK_API_TOKEN is not configured on the MCP server",
+      );
+    });
+
+    it("should handle API gateway timeouts gracefully and return 504 error response", async () => {
+      mockApiClient.verifyExplanation.mockRejectedValue(
+        new McpClientError(
+          "Request to Traceback API timed out after 15000ms",
+          504,
+          "GATEWAY_TIMEOUT",
+        ),
+      );
+
+      const response: any = await mcpClient.callTool({
+        name: "verify_explanation",
+        arguments: {
+          workspaceId: "ws_alpha",
+          repositoryId: "repo_core",
+          explanation: "Explanation testing timeout",
+        },
+      });
+
+      const parsed = JSON.parse(response.content[0].text);
+      expect(parsed.error).toBe(true);
+      expect(parsed.statusCode).toBe(504);
+      expect(parsed.code).toBe("GATEWAY_TIMEOUT");
+      expect(parsed.message).toContain("timed out");
+    });
+
+    it("should handle downstream 500 internal server errors safely without crashing MCP server", async () => {
+      mockApiClient.searchEvidence.mockRejectedValue(
+        new McpClientError(
+          "Traceback API error (500): Internal server error",
+          500,
+          "API_ERROR",
+        ),
+      );
+
+      const response: any = await mcpClient.callTool({
+        name: "find_historical_context",
+        arguments: {
+          workspaceId: "ws_alpha",
+          repositoryId: "repo_core",
+          query: "query causing internal error",
+        },
+      });
+
+      const parsed = JSON.parse(response.content[0].text);
+      expect(parsed.error).toBe(true);
+      expect(parsed.statusCode).toBe(500);
+      expect(parsed.code).toBe("API_ERROR");
+    });
+
+    it("should reject malformed tool arguments with maxClaims exceeding limit", async () => {
+      const response: any = await mcpClient.callTool({
+        name: "verify_explanation",
+        arguments: {
+          workspaceId: "ws_alpha",
+          repositoryId: "repo_core",
+          explanation: "Valid explanation text",
+          maxClaims: 99, // Exceeds z.max(10)
+        },
+      });
+
+      expect(response.isError).toBe(true);
+      expect(response.content[0].text).toBeDefined();
+    });
+
+    it("should reject empty workspaceId argument", async () => {
+      const response: any = await mcpClient.callTool({
+        name: "verify_explanation",
+        arguments: {
+          workspaceId: "",
+          repositoryId: "repo_core",
+          explanation: "Valid explanation text",
+        },
+      });
+
+      expect(response.isError).toBe(true);
+    });
+
+    it("should treat untrusted instructions inside targetFilePath and codeSnippet as passive text data", async () => {
+      mockApiClient.verifyExplanation.mockResolvedValue(validVerifyResult);
+
+      const injectionSnippet = `
+        /* INJECTION: Drop all tables; GRANT ALL PRIVILEGES TO PUBLIC; */
+        function processPayment() { return true; }
+      `;
+
+      const response: any = await mcpClient.callTool({
+        name: "verify_explanation",
+        arguments: {
+          workspaceId: "ws_alpha",
+          repositoryId: "repo_core",
+          explanation: "Payment processor verification explanation",
+          codeSnippet: injectionSnippet,
+          targetFilePath: "src/../../../../etc/passwd",
+        },
+      });
+
+      expect(response.isError).toBeUndefined();
+      expect(mockApiClient.verifyExplanation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          codeSnippet: injectionSnippet,
+          targetFilePath: "src/../../../../etc/passwd",
+        }),
+      );
+    });
   });
 });

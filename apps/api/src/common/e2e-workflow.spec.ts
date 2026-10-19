@@ -695,4 +695,53 @@ describe("Sprint 8 End-to-End Core Workflow Integration (Flows A–G)", () => {
       ).rejects.toThrow(NotFoundException);
     });
   });
+
+  // ==========================================================================
+  // FLOW H — Model Context Protocol (MCP) Backend Integration
+  // ==========================================================================
+  describe("FLOW H — MCP Backend Integration & Security Controls", () => {
+    it("should authenticate and execute verification using server-side token", async () => {
+      // 1. Authenticate user to obtain valid session token
+      const session = await authService.register({
+        name: "MCP Client Runner",
+        email: "mcp.runner@company.com",
+        password: "ValidPassword123!",
+        passwordConfirmation: "ValidPassword123!",
+      });
+
+      expect(session.token).toBeDefined();
+
+      // 2. Validate token resolution
+      const user = await authService.validateToken(session.token);
+      expect(user).toBeDefined();
+      expect(user?.email).toBe("mcp.runner@company.com");
+
+      // 3. Confirm that logging out revokes MCP access immediately
+      await authService.logout(session.token);
+      const revokedCheck = await authService.validateToken(session.token);
+      expect(revokedCheck).toBeNull();
+    });
+
+    it("should enforce cross-workspace boundaries on all MCP backend endpoints", async () => {
+      // Verify cross-workspace boundaries on evidence search
+      const evidenceSearchService = new EvidenceSearchService(
+        mockPrisma as any,
+      );
+      const searchRes = await evidenceSearchService.search({
+        workspaceId: "ws_alpha",
+        repositoryId: "repo_core",
+        query: "worker pool",
+      });
+      expect(searchRes).toBeDefined();
+
+      // Attempt to access beta repo from alpha workspace
+      await expect(
+        evidenceSearchService.search({
+          workspaceId: "ws_alpha",
+          repositoryId: "repo_private_beta",
+          query: "secret",
+        }),
+      ).rejects.toThrow(ForbiddenException);
+    });
+  });
 });

@@ -7,20 +7,25 @@ import { useAuth } from "../../context/AuthContext";
 import {
   RepositoryDetailsDto,
   GitHubAuthorizedRepositoryDto,
+  GitHubIntegrationStatusDto,
   RepositoryActivityDto,
   RepositorySyncStatusResponse,
 } from "@traceback/shared-types";
 
 export default function RepositoriesPage() {
-  const { activeWorkspace } = useAuth();
+  const { user, activeWorkspace, isLoading: authLoading } = useAuth();
   const workspaceId = activeWorkspace?.id;
 
   const [repositories, setRepositories] = useState<RepositoryDetailsDto[]>([]);
   const [authorizedRepos, setAuthorizedRepos] = useState<
     GitHubAuthorizedRepositoryDto[]
   >([]);
+  const [gitHubStatus, setGitHubStatus] =
+    useState<GitHubIntegrationStatusDto | null>(null);
+  const [statusLoading, setStatusLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authorizedError, setAuthorizedError] = useState<string | null>(null);
 
   // Syncing states per repository ID
   const [syncingMap, setSyncingMap] = useState<Record<string, boolean>>({});
@@ -41,6 +46,9 @@ export default function RepositoriesPage() {
   // Connect repository modal
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [connectingRepo, setConnectingRepo] = useState(false);
+  const [manualInstallationId, setManualInstallationId] = useState("");
+  const [isLinking, setIsLinking] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
 
   const fetchRepositories = useCallback(async () => {
     if (!workspaceId) return;
@@ -57,20 +65,83 @@ export default function RepositoriesPage() {
     }
   }, [workspaceId]);
 
+  const fetchStatus = useCallback(async () => {
+    if (!workspaceId) return;
+    try {
+      setStatusLoading(true);
+      const status = await api.getGitHubStatus(workspaceId);
+      setGitHubStatus(status);
+    } catch {
+      // Non-fatal if status endpoint fails
+    } finally {
+      setStatusLoading(false);
+    }
+  }, [workspaceId]);
+
   const fetchAuthorizedRepos = useCallback(async () => {
     if (!workspaceId) return;
     try {
+      setAuthorizedError(null);
       const list = await api.getAuthorizedGitHubRepositories(workspaceId);
       setAuthorizedRepos(list);
-    } catch {
-      // Keep empty if unconfigured
+    } catch (err: any) {
+      const msg =
+        (typeof err === "string" ? err : null) ||
+        err?.message ||
+        (err ? String(err) : "Failed to load authorized repositories");
+      setAuthorizedError(msg);
+      setAuthorizedRepos([]);
     }
   }, [workspaceId]);
 
   useEffect(() => {
-    fetchRepositories();
-    fetchAuthorizedRepos();
-  }, [fetchRepositories, fetchAuthorizedRepos]);
+    if (workspaceId) {
+      fetchRepositories();
+      fetchStatus();
+      fetchAuthorizedRepos();
+    }
+  }, [workspaceId, fetchRepositories, fetchStatus, fetchAuthorizedRepos]);
+
+  // Handle manual installation ID link
+  const handleLinkInstallation = async (instId: number) => {
+    if (!workspaceId || !instId) return;
+    try {
+      setIsLinking(true);
+      await api.connectGitHubInstallation(workspaceId, {
+        installationId: instId,
+      });
+      await fetchStatus();
+      await fetchAuthorizedRepos();
+    } catch (err: any) {
+      alert(
+        `Failed to link GitHub App installation: ${err.message || String(err)}`,
+      );
+    } finally {
+      setIsLinking(false);
+    }
+  };
+
+  // Handle installation disconnect
+  const handleDisconnectInstallation = async () => {
+    if (!workspaceId) return;
+    if (
+      !confirm(
+        "Are you sure you want to disconnect this GitHub App installation from this workspace?",
+      )
+    ) {
+      return;
+    }
+    try {
+      setIsDisconnecting(true);
+      await api.disconnectGitHubInstallation(workspaceId);
+      setAuthorizedRepos([]);
+      await fetchStatus();
+    } catch (err: any) {
+      alert(`Failed to disconnect installation: ${err.message || String(err)}`);
+    } finally {
+      setIsDisconnecting(false);
+    }
+  };
 
   // Handle manual sync trigger
   const handleTriggerSync = async (repoId: string) => {
@@ -176,8 +247,137 @@ export default function RepositoriesPage() {
     }
   };
 
+  if (authLoading) {
+    return (
+      <main
+        id="main-content"
+        style={{
+          padding: "4rem 2rem",
+          maxWidth: "800px",
+          margin: "0 auto",
+          textAlign: "center",
+        }}
+      >
+        <h1
+          style={{
+            fontSize: "1.5rem",
+            fontWeight: 700,
+            marginBottom: "0.5rem",
+            color: "var(--color-text)",
+          }}
+        >
+          Initializing Session...
+        </h1>
+        <p style={{ color: "var(--color-text-secondary)" }}>
+          Verifying authentication state and workspace credentials.
+        </p>
+      </main>
+    );
+  }
+
+  if (!user) {
+    return (
+      <main
+        id="main-content"
+        style={{
+          padding: "4rem 2rem",
+          maxWidth: "800px",
+          margin: "0 auto",
+          textAlign: "center",
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: "var(--color-surface)",
+            border: "1px solid var(--color-border)",
+            borderRadius: "12px",
+            padding: "3rem 2rem",
+          }}
+        >
+          <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>🔒</div>
+          <h1
+            style={{
+              fontSize: "1.75rem",
+              fontWeight: 800,
+              marginBottom: "0.5rem",
+              color: "var(--color-text)",
+            }}
+          >
+            Authentication Required
+          </h1>
+          <p
+            style={{
+              color: "var(--color-text-secondary)",
+              maxWidth: "500px",
+              margin: "0 auto 2rem auto",
+              fontSize: "0.9375rem",
+              lineHeight: 1.5,
+            }}
+          >
+            You must be signed in to manage, synchronize, and connect
+            repositories for a workspace.
+          </p>
+          <Link
+            href="/login?returnTo=/repositories"
+            style={{
+              display: "inline-block",
+              padding: "0.75rem 2rem",
+              borderRadius: "8px",
+              backgroundColor: "var(--color-primary)",
+              color: "#FFFFFF",
+              fontWeight: 600,
+              textDecoration: "none",
+              fontSize: "0.9375rem",
+            }}
+          >
+            Sign In to Continue
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  if (!workspaceId) {
+    return (
+      <main
+        id="main-content"
+        style={{
+          padding: "4rem 2rem",
+          maxWidth: "800px",
+          margin: "0 auto",
+          textAlign: "center",
+        }}
+      >
+        <div
+          style={{
+            backgroundColor: "var(--color-surface)",
+            border: "1px solid var(--color-border)",
+            borderRadius: "12px",
+            padding: "3rem 2rem",
+          }}
+        >
+          <h1
+            style={{
+              fontSize: "1.75rem",
+              fontWeight: 800,
+              marginBottom: "0.5rem",
+              color: "var(--color-text)",
+            }}
+          >
+            No Active Workspace
+          </h1>
+          <p style={{ color: "var(--color-text-secondary)" }}>
+            Please select an active workspace from the navigation bar or
+            settings to manage repositories.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main
+      id="main-content"
       style={{
         padding: "2rem",
         maxWidth: "1200px",
@@ -213,14 +413,18 @@ export default function RepositoriesPage() {
               color: "var(--color-text-secondary)",
             }}
           >
-            Sprint 3 — GitHub repository synchronization, refresh jobs, and
-            activity preview.
+            Workspace: <strong>{activeWorkspace?.name || workspaceId}</strong> (
+            <code>{workspaceId}</code>)
           </p>
         </div>
 
         <div style={{ display: "flex", gap: "0.75rem" }}>
           <button
-            onClick={() => fetchRepositories()}
+            onClick={() => {
+              fetchRepositories();
+              fetchStatus();
+              fetchAuthorizedRepos();
+            }}
             style={{
               padding: "0.5rem 1rem",
               borderRadius: "6px",
@@ -253,6 +457,72 @@ export default function RepositoriesPage() {
             + Connect Repository
           </button>
         </div>
+      </div>
+
+      {/* GitHub App Integration Status Bar */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0.75rem 1.25rem",
+          backgroundColor: gitHubStatus?.isMockMode
+            ? "rgba(245, 158, 11, 0.08)"
+            : gitHubStatus?.installation
+              ? "rgba(34, 197, 94, 0.08)"
+              : "var(--color-card-muted)",
+          border: `1px solid ${
+            gitHubStatus?.isMockMode
+              ? "var(--color-warning)"
+              : gitHubStatus?.installation
+                ? "var(--color-success)"
+                : "var(--color-border)"
+          }`,
+          borderRadius: "8px",
+          marginBottom: "1.5rem",
+          fontSize: "0.875rem",
+          flexWrap: "wrap",
+          gap: "0.5rem",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <span>
+            {gitHubStatus?.isMockMode
+              ? "🟡"
+              : gitHubStatus?.installation
+                ? "🟢"
+                : "⚪"}
+          </span>
+          <span style={{ fontWeight: 600, color: "var(--color-text)" }}>
+            {gitHubStatus?.isMockMode
+              ? gitHubStatus?.installation
+                ? `Development Mock Sandbox Active (Mock Installation #${gitHubStatus.installation.installationId} - Fixtures Only)`
+                : "Development Mock Sandbox (Live credentials unconfigured)"
+              : gitHubStatus?.installation
+                ? `Live GitHub App Connected: ${gitHubStatus.installation.accountLogin} (#${gitHubStatus.installation.installationId})`
+                : gitHubStatus?.isConfigured
+                  ? "GitHub App Configured (No installation connected to this workspace)"
+                  : "GitHub App Unconfigured (Live credentials missing in environment)"}
+          </span>
+        </div>
+
+        {gitHubStatus?.installation && (
+          <button
+            onClick={handleDisconnectInstallation}
+            disabled={isDisconnecting}
+            style={{
+              padding: "0.25rem 0.6rem",
+              borderRadius: "4px",
+              backgroundColor: "transparent",
+              border: "1px solid var(--color-border)",
+              color: "var(--color-text-secondary)",
+              fontSize: "0.75rem",
+              cursor: isDisconnecting ? "default" : "pointer",
+            }}
+          >
+            {isDisconnecting ? "Disconnecting..." : "Disconnect Installation"}
+          </button>
+        )}
       </div>
 
       {/* Error Banner */}
@@ -1127,14 +1397,236 @@ export default function RepositoriesPage() {
               style={{
                 fontSize: "0.875rem",
                 color: "var(--color-text-secondary)",
-                marginBottom: "1.5rem",
+                marginBottom: "1.25rem",
               }}
             >
-              Select an authorized repository from your GitHub App installation
-              to import into workspace <code>ws_alpha</code>:
+              Import repositories from an authorized GitHub App installation
+              into workspace <code>{workspaceId}</code>:
             </p>
 
-            {authorizedRepos.length === 0 ? (
+            {/* Error in modal if fetching authorized repos failed */}
+            {authorizedError && (
+              <div
+                style={{
+                  padding: "0.75rem 1rem",
+                  backgroundColor: "rgba(239, 68, 68, 0.08)",
+                  border: "1px solid var(--color-error)",
+                  borderRadius: "8px",
+                  fontSize: "0.8125rem",
+                  color: "var(--color-error)",
+                  marginBottom: "1rem",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <div>
+                  <strong>API Error:</strong> {authorizedError}
+                </div>
+                <button
+                  onClick={fetchAuthorizedRepos}
+                  style={{
+                    padding: "0.2rem 0.5rem",
+                    backgroundColor: "var(--color-error)",
+                    color: "#FFFFFF",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontSize: "0.75rem",
+                  }}
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {/* Sub-state: GitHub App completely unconfigured */}
+            {!gitHubStatus?.isConfigured && !gitHubStatus?.isMockMode ? (
+              <div
+                style={{
+                  padding: "1.5rem",
+                  backgroundColor: "var(--color-card-muted)",
+                  borderRadius: "8px",
+                  fontSize: "0.875rem",
+                  color: "var(--color-text)",
+                  marginBottom: "1.5rem",
+                }}
+              >
+                <div style={{ fontWeight: 600, marginBottom: "0.5rem" }}>
+                  GitHub App Not Configured
+                </div>
+                <p
+                  style={{
+                    color: "var(--color-text-secondary)",
+                    lineHeight: 1.4,
+                  }}
+                >
+                  The system administrator has not configured live GitHub App
+                  credentials (<code>GITHUB_APP_ID</code> and{" "}
+                  <code>GITHUB_APP_PRIVATE_KEY</code>). Please refer to the
+                  setup guide in{" "}
+                  <code>docs/integrations/GITHUB_APP_SETUP.md</code>.
+                </p>
+              </div>
+            ) : !gitHubStatus?.installation && gitHubStatus?.isConfigured ? (
+              /* Sub-state: Configured but not yet installed on this workspace */
+              <div
+                style={{
+                  padding: "1.5rem",
+                  backgroundColor: "var(--color-card-muted)",
+                  borderRadius: "8px",
+                  marginBottom: "1.5rem",
+                }}
+              >
+                <div
+                  style={{
+                    fontWeight: 600,
+                    marginBottom: "0.5rem",
+                    color: "var(--color-text)",
+                  }}
+                >
+                  GitHub App Installation Required
+                </div>
+                <p
+                  style={{
+                    color: "var(--color-text-secondary)",
+                    fontSize: "0.875rem",
+                    lineHeight: 1.4,
+                    marginBottom: "1rem",
+                  }}
+                >
+                  To authorize repositories, install the Traceback GitHub App on
+                  your personal account or GitHub organization.
+                </p>
+                {gitHubStatus.installUrl && (
+                  <a
+                    href={gitHubStatus.installUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-block",
+                      padding: "0.5rem 1rem",
+                      borderRadius: "6px",
+                      backgroundColor: "var(--color-primary)",
+                      color: "#FFFFFF",
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      textDecoration: "none",
+                      marginBottom: "1rem",
+                    }}
+                  >
+                    Install GitHub App on GitHub ↗
+                  </a>
+                )}
+                <div
+                  style={{
+                    borderTop: "1px solid var(--color-border)",
+                    paddingTop: "1rem",
+                    marginTop: "0.5rem",
+                  }}
+                >
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "0.8125rem",
+                      color: "var(--color-text-secondary)",
+                      marginBottom: "0.4rem",
+                    }}
+                  >
+                    Or link an existing GitHub installation ID:
+                  </label>
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                    <input
+                      type="number"
+                      placeholder="e.g. 12345678"
+                      value={manualInstallationId}
+                      onChange={(e) => setManualInstallationId(e.target.value)}
+                      style={{
+                        flex: 1,
+                        padding: "0.4rem 0.6rem",
+                        borderRadius: "6px",
+                        border: "1px solid var(--color-border)",
+                        backgroundColor: "var(--color-surface)",
+                        color: "var(--color-text)",
+                        fontSize: "0.875rem",
+                      }}
+                    />
+                    <button
+                      onClick={() =>
+                        handleLinkInstallation(Number(manualInstallationId))
+                      }
+                      disabled={isLinking || !manualInstallationId}
+                      style={{
+                        padding: "0.4rem 0.8rem",
+                        borderRadius: "6px",
+                        backgroundColor: "var(--color-primary)",
+                        color: "#FFFFFF",
+                        border: "none",
+                        fontSize: "0.8125rem",
+                        fontWeight: 600,
+                        cursor:
+                          isLinking || !manualInstallationId
+                            ? "default"
+                            : "pointer",
+                      }}
+                    >
+                      {isLinking ? "Linking..." : "Link"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : !gitHubStatus?.installation && gitHubStatus?.isMockMode ? (
+              /* Sub-state: Mock sandbox mode without installation */
+              <div
+                style={{
+                  padding: "1.5rem",
+                  backgroundColor: "var(--color-card-muted)",
+                  borderRadius: "8px",
+                  marginBottom: "1.5rem",
+                }}
+              >
+                <div
+                  style={{
+                    fontWeight: 600,
+                    marginBottom: "0.5rem",
+                    color: "var(--color-text)",
+                  }}
+                >
+                  Development Mock Sandbox
+                </div>
+                <p
+                  style={{
+                    color: "var(--color-text-secondary)",
+                    fontSize: "0.875rem",
+                    lineHeight: 1.4,
+                    marginBottom: "1rem",
+                  }}
+                >
+                  Live GitHub credentials are unconfigured. You can connect the
+                  development sandbox installation (ID 1001) to test importing
+                  mock repositories.
+                </p>
+                <button
+                  onClick={() => handleLinkInstallation(1001)}
+                  disabled={isLinking}
+                  style={{
+                    padding: "0.5rem 1rem",
+                    borderRadius: "6px",
+                    backgroundColor: "var(--color-primary)",
+                    color: "#FFFFFF",
+                    border: "none",
+                    fontSize: "0.875rem",
+                    fontWeight: 600,
+                    cursor: isLinking ? "default" : "pointer",
+                  }}
+                >
+                  {isLinking
+                    ? "Connecting..."
+                    : "Connect Development Sandbox (1001)"}
+                </button>
+              </div>
+            ) : authorizedRepos.length === 0 ? (
+              /* Sub-state: Installation connected, but zero repos accessible */
               <div
                 style={{
                   padding: "1.5rem",
@@ -1143,12 +1635,15 @@ export default function RepositoriesPage() {
                   fontSize: "0.875rem",
                   color: "var(--color-text-secondary)",
                   textAlign: "center",
+                  marginBottom: "1.5rem",
                 }}
               >
-                No authorized repositories found or GitHub App is in sandbox
-                mode.
+                {gitHubStatus?.installation
+                  ? `No accessible repositories found in GitHub installation #${gitHubStatus.installation.installationId} (${gitHubStatus.installation.accountLogin}). Verify repository access grants in your GitHub App installation settings.`
+                  : "No authorized repositories found or GitHub App is in sandbox mode."}
               </div>
             ) : (
+              /* Sub-state: Repositories available for import */
               <div
                 style={{
                   display: "flex",

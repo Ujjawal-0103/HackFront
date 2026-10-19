@@ -40,7 +40,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div
+    <main
+      id="main-content"
       style={{
         maxWidth: "420px",
         margin: "3rem auto",
@@ -206,6 +207,6 @@ export default function LoginPage() {
           Register here
         </Link>
       </div>
-    </div>
+    </main>
   );
 }

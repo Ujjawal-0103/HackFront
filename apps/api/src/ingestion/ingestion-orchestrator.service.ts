@@ -191,7 +191,9 @@ export class IngestionOrchestratorService {
 
       // 4. Repository Metadata (do not update indexedAt here; checkpoint is managed after commit ingestion)
       this.logger.log(`Fetching metadata for ${owner}/${repo}...`);
-      const repoDetails = await this.githubAdapter.getRepository(owner, repo);
+      const repoDetails = await this.githubAdapter.getRepository(owner, repo, {
+        installationId: payload.installationId,
+      });
       await this.persistenceService.upsertRepositoryMetadata(
         syncJob.repositoryId,
         repoDetails,
@@ -208,6 +210,7 @@ export class IngestionOrchestratorService {
         syncJob.id,
         owner,
         repo,
+        payload.installationId,
         since,
       );
       totalCommits += commitsResult.count;
@@ -218,6 +221,7 @@ export class IngestionOrchestratorService {
         syncJob.id,
         owner,
         repo,
+        payload.installationId,
       );
       totalPrs += prsResult.count;
 
@@ -227,6 +231,7 @@ export class IngestionOrchestratorService {
         syncJob.id,
         owner,
         repo,
+        payload.installationId,
       );
       totalIssues += issuesResult.count;
 
@@ -328,6 +333,7 @@ export class IngestionOrchestratorService {
     syncJobId: string,
     owner: string,
     repo: string,
+    installationId?: number,
     since?: string,
   ): Promise<{ count: number; isTruncated: boolean }> {
     let page = 1;
@@ -342,6 +348,7 @@ export class IngestionOrchestratorService {
           page,
           perPage: DEFAULT_PAGE_SIZE,
           since,
+          installationId,
         },
       );
 
@@ -355,6 +362,7 @@ export class IngestionOrchestratorService {
             owner,
             repo,
             summary.sha,
+            { installationId },
           );
           detailedCommits.push(detail);
         } catch (detailErr) {
@@ -397,6 +405,7 @@ export class IngestionOrchestratorService {
     syncJobId: string,
     owner: string,
     repo: string,
+    installationId?: number,
   ): Promise<{ count: number; isTruncated: boolean }> {
     let page = 1;
     let addedPrs = 0;
@@ -410,6 +419,7 @@ export class IngestionOrchestratorService {
           page,
           perPage: DEFAULT_PAGE_SIZE,
           state: "all",
+          installationId,
         },
       );
 
@@ -425,6 +435,7 @@ export class IngestionOrchestratorService {
             owner,
             repo,
             prSummary.number,
+            { installationId },
           );
           detailedPrs.push(detail);
         } catch {
@@ -446,7 +457,7 @@ export class IngestionOrchestratorService {
             owner,
             repo,
             prSummary.number,
-            { page: 1, perPage: DEFAULT_PAGE_SIZE },
+            { page: 1, perPage: DEFAULT_PAGE_SIZE, installationId },
           );
           if (commentsRes.items && commentsRes.items.length > 0) {
             commentsMap.set(prSummary.number, commentsRes.items);
@@ -460,7 +471,7 @@ export class IngestionOrchestratorService {
             owner,
             repo,
             prSummary.number,
-            { page: 1, perPage: DEFAULT_PAGE_SIZE },
+            { page: 1, perPage: DEFAULT_PAGE_SIZE, installationId },
           );
           if (reviewsRes.items && reviewsRes.items.length > 0) {
             reviewsMap.set(prSummary.number, reviewsRes.items);
@@ -502,6 +513,7 @@ export class IngestionOrchestratorService {
     syncJobId: string,
     owner: string,
     repo: string,
+    installationId?: number,
   ): Promise<{ count: number; isTruncated: boolean }> {
     let page = 1;
     let addedIssues = 0;
@@ -515,6 +527,7 @@ export class IngestionOrchestratorService {
           page,
           perPage: DEFAULT_PAGE_SIZE,
           state: "all",
+          installationId,
         },
       );
 
@@ -530,7 +543,7 @@ export class IngestionOrchestratorService {
               owner,
               repo,
               issue.number,
-              { page: 1, perPage: DEFAULT_PAGE_SIZE },
+              { page: 1, perPage: DEFAULT_PAGE_SIZE, installationId },
             );
             if (commentsRes.items && commentsRes.items.length > 0) {
               commentsMap.set(issue.number, commentsRes.items);

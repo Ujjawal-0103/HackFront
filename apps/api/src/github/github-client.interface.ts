@@ -20,5 +20,11 @@ export interface IGitHubClient {
     owner: string,
     repo: string,
   ): Promise<GitHubRepositoryMetadata>;
+  getInstallation?(installationId: number): Promise<{
+    id: number;
+    accountLogin: string;
+    accountType: string;
+    permissions: Record<string, string>;
+  }>;
   getInstallationAccessToken?(installationId: number): Promise<string>;
 }

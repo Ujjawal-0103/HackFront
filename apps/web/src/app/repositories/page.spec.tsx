@@ -2,9 +2,11 @@ import React from "react";
 import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import RepositoriesPage from "./page";
-import { api } from "../../lib/api";
+import { api, ApiError } from "../../lib/api";
+import { useAuth } from "../../context/AuthContext";
 
 jest.mock("../../lib/api");
+jest.mock("../../context/AuthContext");
 
 const mockRepositories = [
   {
@@ -58,13 +60,74 @@ const mockAuthorizedRepos = [
   },
 ];
 
-describe("RepositoriesPage (Sprint 3)", () => {
+describe("RepositoriesPage (Sprint 3 & GitHub Hardening)", () => {
+  const defaultAuthContext = {
+    user: { id: "user_1", email: "alex@company.com", name: "Alex Maintainer" },
+    workspaces: [
+      { id: "ws_alpha", name: "Alpha Corp", slug: "alpha-corp", role: "OWNER" },
+    ],
+    activeWorkspace: {
+      id: "ws_alpha",
+      name: "Alpha Corp",
+      slug: "alpha-corp",
+      role: "OWNER",
+    },
+    token: "mock-token",
+    isLoading: false,
+    error: null,
+    login: jest.fn(),
+    register: jest.fn(),
+    logout: jest.fn(),
+    switchWorkspace: jest.fn(),
+    refreshSession: jest.fn(),
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
+    (useAuth as jest.Mock).mockReturnValue(defaultAuthContext);
     (api.getRepositories as jest.Mock).mockResolvedValue(mockRepositories);
     (api.getAuthorizedGitHubRepositories as jest.Mock).mockResolvedValue(
       mockAuthorizedRepos,
     );
+    (api.getGitHubStatus as jest.Mock).mockResolvedValue({
+      isConfigured: true,
+      isMockMode: false,
+      appSlug: "traceback-app",
+      installation: {
+        id: "inst-1",
+        workspaceId: "ws_alpha",
+        installationId: 1001,
+        accountLogin: "acme-corp",
+        accountType: "Organization",
+        createdAt: "2026-10-18T10:00:00Z",
+      },
+    });
+  });
+
+  it("renders unauthenticated state with sign in prompt when user is not logged in", () => {
+    (useAuth as jest.Mock).mockReturnValue({
+      ...defaultAuthContext,
+      user: null,
+      activeWorkspace: null,
+    });
+
+    render(<RepositoriesPage />);
+
+    expect(screen.getByText("Authentication Required")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /sign in to continue/i }),
+    ).toHaveAttribute("href", "/login?returnTo=/repositories");
+  });
+
+  it("renders initializing session placeholder while auth is loading", () => {
+    (useAuth as jest.Mock).mockReturnValue({
+      ...defaultAuthContext,
+      isLoading: true,
+    });
+
+    render(<RepositoriesPage />);
+
+    expect(screen.getByText("Initializing Session...")).toBeInTheDocument();
   });
 
   it("renders repository list with metadata, branch, and counts", async () => {
@@ -139,6 +202,68 @@ describe("RepositoriesPage (Sprint 3)", () => {
     expect(screen.getByText("acme-corp/payment-service")).toBeInTheDocument();
   });
 
+  it("renders unconfigured state banner in modal when GitHub App credentials are missing", async () => {
+    (api.getGitHubStatus as jest.Mock).mockResolvedValue({
+      isConfigured: false,
+      isMockMode: false,
+      installation: null,
+    });
+
+    render(<RepositoriesPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Ujjawal-0103/HackFront")).toBeInTheDocument();
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /\+ connect repository/i }),
+    );
+
+    expect(screen.getByText("GitHub App Not Configured")).toBeInTheDocument();
+  });
+
+  it("renders zero accessible repositories message when installation has no repos granted", async () => {
+    (api.getAuthorizedGitHubRepositories as jest.Mock).mockResolvedValue([]);
+
+    render(<RepositoriesPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Ujjawal-0103/HackFront")).toBeInTheDocument();
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /\+ connect repository/i }),
+    );
+
+    expect(
+      screen.getByText(
+        /No accessible repositories found in GitHub installation #1001/,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("displays API error in modal when fetching authorized repositories fails", async () => {
+    (api.getAuthorizedGitHubRepositories as jest.Mock).mockRejectedValue(
+      new Error("GitHub API rate limit exceeded"),
+    );
+
+    render(<RepositoriesPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Ujjawal-0103/HackFront")).toBeInTheDocument();
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /\+ connect repository/i }),
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/GitHub API rate limit exceeded/),
+      ).toBeInTheDocument();
+    });
+  });
+
   it("expands activity details when View Details button is clicked", async () => {
     (api.getRepositoryActivity as jest.Mock).mockResolvedValue({
       repositoryId: "repo-123",
@@ -176,6 +301,21 @@ describe("RepositoriesPage (Sprint 3)", () => {
       expect(api.getRepositoryActivity).toHaveBeenCalledWith("repo-123");
       expect(
         screen.getByText("fix: prevent memory leak in reconnection buffer"),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("displays actionable error banner when repository loading fails with an authorization error", async () => {
+    (api.getRepositories as jest.Mock).mockRejectedValue(
+      new Error("Cross-workspace access denied: User does not have access"),
+    );
+
+    render(<RepositoriesPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/API Connection Warning:/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Cross-workspace access denied/),
       ).toBeInTheDocument();
     });
   });

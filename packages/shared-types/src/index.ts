@@ -213,6 +213,28 @@ export interface GitHubAuthorizedRepositoryDto {
   };
 }
 
+export interface GitHubInstallationSummaryDto {
+  id: string;
+  workspaceId: string;
+  installationId: number;
+  accountLogin: string;
+  accountType: string;
+  createdAt: string;
+}
+
+export interface GitHubIntegrationStatusDto {
+  isConfigured: boolean;
+  isMockMode: boolean;
+  appSlug?: string;
+  installation: GitHubInstallationSummaryDto | null;
+  installUrl?: string;
+}
+
+export interface ConnectInstallationDto {
+  installationId: number;
+  state?: string;
+}
+
 // 5. Ingestion & Repository Sync Contracts
 export type SyncStatus = "PENDING" | "SYNCING" | "COMPLETED" | "FAILED";
 export type SyncTrigger = "MANUAL" | "WEBHOOK";

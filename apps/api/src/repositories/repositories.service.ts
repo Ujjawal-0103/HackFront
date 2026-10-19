@@ -4,6 +4,7 @@ import {
   NotFoundException,
   ForbiddenException,
   ConflictException,
+  BadRequestException,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { GitHubService } from "../github/github.service";
@@ -194,7 +195,26 @@ export class RepositoriesService {
     }
     const [owner, repoName] = parts;
 
-    const installationId = dto.installationId || 1001;
+    let installationId = dto.installationId;
+    if (!installationId && this.prisma?.gitHubInstallation) {
+      const inst = await this.prisma.gitHubInstallation.findFirst({
+        where: { workspaceId },
+      });
+      if (inst) {
+        installationId = inst.installationId;
+      }
+    }
+
+    if (!installationId) {
+      if (this.githubService.isMock()) {
+        installationId = 1001;
+      } else {
+        throw new BadRequestException(
+          `Workspace "${workspaceId}" has no active GitHub App installation. Please connect an installation before importing repositories.`,
+        );
+      }
+    }
+
     await this.githubService.verifyRepositoryAccess(
       installationId,
       owner,

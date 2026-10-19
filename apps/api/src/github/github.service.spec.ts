@@ -103,4 +103,105 @@ describe("GitHubService (Read-Only Least-Privilege Repository Boundary)", () => 
       7788,
     );
   });
+
+  describe("connect state signing & validation", () => {
+    it("should sign and verify valid connect state token", () => {
+      const state = service.createConnectState("ws_alpha", "user_1");
+      expect(typeof state).toBe("string");
+
+      const verified = service.verifyConnectState(state, "ws_alpha");
+      expect(verified.workspaceId).toBe("ws_alpha");
+      expect(verified.userId).toBe("user_1");
+    });
+
+    it("should reject connect state token with mismatched workspace", () => {
+      const state = service.createConnectState("ws_alpha", "user_1");
+      expect(() => service.verifyConnectState(state, "ws_beta")).toThrow();
+    });
+
+    it("should reject malformed or tampered state tokens", () => {
+      expect(() =>
+        service.verifyConnectState("not-a-valid-token", "ws_alpha"),
+      ).toThrow();
+    });
+  });
+
+  describe("credentials validation and live vs mock mode", () => {
+    it("should stay in mock mode if private key is corrupt even if appId is present", async () => {
+      const corruptModule: TestingModule = await Test.createTestingModule({
+        providers: [
+          {
+            provide: ConfigService,
+            useValue: {
+              get: jest.fn((key: string) => {
+                if (key === "GITHUB_APP_ID") return "123456";
+                if (key === "GITHUB_APP_PRIVATE_KEY")
+                  return "not-a-valid-pem-key";
+                return null;
+              }),
+            },
+          },
+          GitHubService,
+        ],
+      }).compile();
+
+      const corruptService = corruptModule.get<GitHubService>(GitHubService);
+      expect(corruptService.isConfigured()).toBe(false);
+      expect(corruptService.isMock()).toBe(true);
+    });
+
+    it("should reject unconfigured integration in production even if corrupt key provided", async () => {
+      const prodCorruptModule: TestingModule = await Test.createTestingModule({
+        providers: [
+          {
+            provide: ConfigService,
+            useValue: {
+              get: jest.fn((key: string) => {
+                if (key === "app.nodeEnv") return "production";
+                if (key === "GITHUB_APP_ID") return "123456";
+                if (key === "GITHUB_APP_PRIVATE_KEY") return "corrupt-key";
+                return null;
+              }),
+            },
+          },
+          GitHubService,
+        ],
+      }).compile();
+
+      const prodCorruptService =
+        prodCorruptModule.get<GitHubService>(GitHubService);
+      expect(prodCorruptService.isConfigured()).toBe(false);
+      expect(prodCorruptService.isMock()).toBe(false);
+      await expect(
+        prodCorruptService.listAuthorizedRepositories(1001),
+      ).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe("production safety", () => {
+    it("should disable mock client and reject calls in production when credentials missing", async () => {
+      const prodModule: TestingModule = await Test.createTestingModule({
+        providers: [
+          {
+            provide: ConfigService,
+            useValue: {
+              get: jest.fn((key: string) => {
+                if (key === "app.nodeEnv") return "production";
+                return null;
+              }),
+            },
+          },
+          GitHubService,
+        ],
+      }).compile();
+
+      const prodService = prodModule.get<GitHubService>(GitHubService);
+      expect(prodService.isConfigured()).toBe(false);
+      expect(prodService.isMock()).toBe(false);
+
+      await expect(
+        prodService.listAuthorizedRepositories(1001),
+      ).rejects.toThrow(ForbiddenException);
+    });
+  });
 });

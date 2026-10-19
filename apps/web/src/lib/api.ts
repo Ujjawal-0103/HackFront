@@ -4,6 +4,9 @@ import {
   RepositoryActivityDto,
   CreateRepositoryDto,
   GitHubAuthorizedRepositoryDto,
+  GitHubIntegrationStatusDto,
+  GitHubInstallationSummaryDto,
+  ConnectInstallationDto,
   RepositorySyncStatusResponse,
   TriggerSyncResponse,
   EvidenceSearchQuery,
@@ -105,10 +108,14 @@ async function request<T>(
       let details: unknown = undefined;
       try {
         const errorJson = await res.json();
-        if (errorJson.message) {
-          errorMsg = Array.isArray(errorJson.message)
-            ? errorJson.message.join(", ")
-            : errorJson.message;
+        const extracted =
+          errorJson.error?.message ||
+          errorJson.message ||
+          (typeof errorJson.error === "string" ? errorJson.error : null);
+        if (extracted) {
+          errorMsg = Array.isArray(extracted)
+            ? extracted.join(", ")
+            : extracted;
         }
         details = errorJson;
       } catch {
@@ -179,6 +186,46 @@ export const api = {
   ): Promise<RepositoryDetailsDto> {
     return request<RepositoryDetailsDto>(
       `/workspaces/${workspaceId}/repositories/${repositoryId}`,
+    );
+  },
+
+  async getGitHubStatus(
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<GitHubIntegrationStatusDto> {
+    return request<GitHubIntegrationStatusDto>(
+      `/workspaces/${workspaceId}/github/status`,
+    );
+  },
+
+  async getGitHubInstallUrl(
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<{ installUrl: string | null; state: string }> {
+    return request<{ installUrl: string | null; state: string }>(
+      `/workspaces/${workspaceId}/github/install-url`,
+    );
+  },
+
+  async connectGitHubInstallation(
+    workspaceId: string = getApiActiveWorkspaceId(),
+    payload: ConnectInstallationDto,
+  ): Promise<GitHubInstallationSummaryDto> {
+    return request<GitHubInstallationSummaryDto>(
+      `/workspaces/${workspaceId}/github/installation`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+    );
+  },
+
+  async disconnectGitHubInstallation(
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<{ success: boolean; message: string }> {
+    return request<{ success: boolean; message: string }>(
+      `/workspaces/${workspaceId}/github/installation`,
+      {
+        method: "DELETE",
+      },
     );
   },
 

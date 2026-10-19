@@ -78,6 +78,7 @@ export default function HomePage() {
 
       {/* Main Dashboard */}
       <main
+        id="main-content"
         style={{
           flex: 1,
           maxWidth: "1160px",

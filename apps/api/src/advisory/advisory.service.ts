@@ -15,6 +15,11 @@ import {
   AdvisorySeverity,
   EvidenceReference,
   SourceRecordDto,
+  HistoricalIntentOutcome,
+  HumanDisposition,
+  IntentConflictItem,
+  HistoricalIntentCheckSessionDto,
+  RunHistoricalIntentCheckRequest,
 } from "@traceback/shared-types";
 import { CheckChangeAgainstDecisionsDto } from "./advisory.dto";
 
@@ -217,6 +222,52 @@ export class AdvisoryService {
       });
     }
 
+    // Check for conflicts against persistent Engineering Decision Memory
+    const decisions = this.prisma.engineeringDecision
+      ? await this.prisma.engineeringDecision.findMany({
+          where: {
+            repositoryId,
+            status: { in: ["ACCEPTED", "IN_REVIEW"] },
+          },
+        })
+      : [];
+
+    for (const dec of decisions) {
+      const pathMatch = dec.targetFilePath && targetFiles.some((f) => f.includes(dec.targetFilePath!) || dec.targetFilePath!.includes(f));
+      const keywordMatch = targetKeywords.some(
+        (kw) =>
+          dec.title.toLowerCase().includes(kw) ||
+          dec.decision.toLowerCase().includes(kw) ||
+          dec.rationale.toLowerCase().includes(kw),
+      );
+      const symbolMatch = dec.targetSymbol && (sanitizedDiff.includes(dec.targetSymbol) || sanitizedDesc.includes(dec.targetSymbol));
+
+      if (pathMatch || symbolMatch || keywordMatch) {
+        const isAccepted = dec.status === "ACCEPTED";
+        conflicts.push({
+          conflictId: `conflict-decision-${dec.id}`,
+          historicalConstraint: `Reviewed Engineering Decision: ${dec.title}`,
+          severity: isAccepted ? (dec.severity as any) || "HIGH" : "MEDIUM",
+          severityBasis: isAccepted
+            ? `Change modifies a code area governed by an ACCEPTED engineering decision (${dec.id}).`
+            : `Change touches a candidate engineering decision under review (${dec.id}).`,
+          explanation: `Engineering Decision (${dec.status}): "${dec.decision}". Rationale: "${dec.rationale}". Target scope: ${dec.targetFilePath || dec.targetSymbol || "repository"}.`,
+          supportingEvidence: ((dec.supportingEvidence as any[]) || []).map((ev: any) => ({
+            id: ev.id || dec.id,
+            sourceType: ev.sourceType || "DOCUMENTATION",
+            referenceKey: ev.referenceKey || dec.relatedCommitSha || `DEC-${dec.id.slice(0, 8)}`,
+            title: ev.title || dec.title,
+            author: ev.author || dec.reviewerName || "Engineering Team",
+            timestamp: ev.timestamp || dec.createdAt.toISOString(),
+            url: ev.url || "",
+            snippet: ev.snippet || dec.decision,
+            filePath: ev.filePath || dec.targetFilePath || undefined,
+          })),
+          recommendedFollowUp: `Review decision ${dec.id}. If this change intentionally alters the constraint, propose an updated or superseding decision record.`,
+        });
+      }
+    }
+
     // 7. Determine overall advisory status
     let advisoryStatus: AdvisoryStatus = "NO_CONFLICT_DETECTED";
     let summary =
@@ -228,12 +279,12 @@ export class AdvisoryService {
     } else if (conflicts.length > 0) {
       advisoryStatus = "POTENTIAL_RISK";
       summary = `Identified ${conflicts.length} potential risk(s) or historical decision overlap(s). Advisory review recommended.`;
-    } else if (relevantSources.length === 0) {
+    } else if (relevantSources.length === 0 && decisions.length === 0) {
       advisoryStatus = "INSUFFICIENT_EVIDENCE";
       summary =
         "No historical decisions, ADRs, or related commit history found for the target scope. Absence of evidence does not prove the change is risk-free.";
       limitations.push(
-        "No indexed documentation or commits match the modified file paths.",
+        "No indexed documentation, decisions, or commits match the modified file paths.",
       );
     }
 
@@ -250,12 +301,186 @@ export class AdvisoryService {
       advisoryNotice:
         "This analysis is advisory only. Traceback does not block merges, approve pull requests, or alter source code. Human review is required.",
       limitations,
-      inspectedSourcesCount: relevantSources.length,
+      inspectedSourcesCount: relevantSources.length + decisions.length,
       evaluatedAt: new Date().toISOString(),
       repositoryId,
       targetFilePath: primaryFile,
     };
   }
+
+  /**
+   * Flagship Feature Two: Historical Intent Check
+   * Runs advisory check against prospective code change and records an auditable session.
+   */
+  async runHistoricalIntentCheck(
+    options: {
+      workspaceId: string;
+      repositoryId: string;
+      diff: string;
+      filePath?: string;
+      changeDescription?: string;
+    },
+  ): Promise<HistoricalIntentCheckSessionDto> {
+    const { workspaceId, repositoryId, diff, filePath, changeDescription } = options;
+    await this.verifyRepositoryAccess(workspaceId, repositoryId);
+
+    const checkResult = await this.checkChangeAgainstDecisions({
+      workspaceId,
+      repositoryId,
+      diff,
+      filePath,
+      changeDescription,
+    });
+
+    // Map to HistoricalIntentOutcome
+    let outcome: HistoricalIntentOutcome = "NO_KNOWN_CONFLICT";
+    if (checkResult.advisoryStatus === "CONFLICT_DETECTED") {
+      outcome = "DOCUMENTED_CONFLICT";
+    } else if (checkResult.advisoryStatus === "POTENTIAL_RISK") {
+      outcome = "POTENTIAL_CONFLICT";
+    } else if (checkResult.advisoryStatus === "INSUFFICIENT_EVIDENCE" || (!diff.trim() && !changeDescription?.trim())) {
+      outcome = "INSUFFICIENT_CONTEXT";
+    }
+
+    const intentConflicts: IntentConflictItem[] = checkResult.conflicts.map((c) => ({
+      id: c.conflictId,
+      title: c.historicalConstraint,
+      affectedCodeOrSymbol: filePath || undefined,
+      severity: c.severity,
+      outcome: outcome,
+      rationale: c.explanation,
+      unestablishedContext: c.severityBasis,
+      supportingEvidence: c.supportingEvidence,
+      recommendedReview: c.recommendedFollowUp,
+    }));
+
+    let sessionId = `intent-${Date.now()}`;
+    let createdAt = new Date();
+    let updatedAt = new Date();
+    let humanDisposition: string | null = null;
+    let dispositionNotes: string | null = null;
+
+    if (this.prisma.intentCheckSession) {
+      const session = await this.prisma.intentCheckSession.create({
+        data: {
+          workspaceId,
+          repositoryId,
+          diff: diff || "",
+          filePath: filePath || null,
+          changeDescription: changeDescription || null,
+          status: "COMPLETED",
+          conflicts: intentConflicts as any,
+        },
+      });
+      sessionId = session.id;
+      createdAt = session.createdAt;
+      updatedAt = session.updatedAt;
+      humanDisposition = session.humanDisposition;
+      dispositionNotes = session.dispositionNotes;
+    }
+
+    this.logger.log(`Created intent check session ${sessionId} with outcome ${outcome}`);
+
+    return {
+      id: sessionId,
+      workspaceId,
+      repositoryId,
+      diff: diff || "",
+      filePath: filePath || null,
+      changeDescription: changeDescription || null,
+      status: "COMPLETED",
+      outcome,
+      summary: checkResult.summary,
+      conflicts: intentConflicts,
+      humanDisposition: (humanDisposition as any) || null,
+      dispositionNotes,
+      createdAt: createdAt.toISOString(),
+      updatedAt: updatedAt.toISOString(),
+    };
+  }
+
+  async listIntentCheckSessions(
+    workspaceId: string,
+    repositoryId: string,
+  ): Promise<HistoricalIntentCheckSessionDto[]> {
+    await this.verifyRepositoryAccess(workspaceId, repositoryId);
+
+    const records = await this.prisma.intentCheckSession.findMany({
+      where: { workspaceId, repositoryId },
+      orderBy: { createdAt: "desc" },
+      take: 25,
+    });
+
+    return records.map((r) => this.mapIntentSessionToDto(r));
+  }
+
+  async getIntentCheckSession(
+    workspaceId: string,
+    repositoryId: string,
+    sessionId: string,
+  ): Promise<HistoricalIntentCheckSessionDto> {
+    await this.verifyRepositoryAccess(workspaceId, repositoryId);
+
+    const record = await this.prisma.intentCheckSession.findFirst({
+      where: { id: sessionId, workspaceId, repositoryId },
+    });
+
+    if (!record) {
+      throw new NotFoundException(`Intent check session ${sessionId} not found.`);
+    }
+
+    return this.mapIntentSessionToDto(record);
+  }
+
+  async recordIntentDisposition(
+    workspaceId: string,
+    repositoryId: string,
+    sessionId: string,
+    disposition: HumanDisposition,
+    notes?: string,
+  ): Promise<HistoricalIntentCheckSessionDto> {
+    await this.getIntentCheckSession(workspaceId, repositoryId, sessionId);
+
+    const updated = await this.prisma.intentCheckSession.update({
+      where: { id: sessionId },
+      data: {
+        humanDisposition: disposition,
+        dispositionNotes: notes?.trim() || null,
+      },
+    });
+
+    return this.mapIntentSessionToDto(updated);
+  }
+
+  private mapIntentSessionToDto(record: any): HistoricalIntentCheckSessionDto {
+    const conflicts = (record.conflicts as IntentConflictItem[]) || [];
+    let outcome: HistoricalIntentOutcome = "NO_KNOWN_CONFLICT";
+    if (conflicts.some((c) => c.severity === "HIGH")) {
+      outcome = "DOCUMENTED_CONFLICT";
+    } else if (conflicts.length > 0) {
+      outcome = "POTENTIAL_CONFLICT";
+    }
+
+    return {
+      id: record.id,
+      workspaceId: record.workspaceId,
+      repositoryId: record.repositoryId,
+      diff: record.diff,
+      filePath: record.filePath,
+      changeDescription: record.changeDescription,
+      status: record.status,
+      outcome,
+      summary: conflicts.length > 0
+        ? `Identified ${conflicts.length} conflict(s) or historical decision overlap(s).`
+        : "No direct conflicts with recorded historical decisions were detected.",
+      conflicts,
+      humanDisposition: (record.humanDisposition as any) || null,
+      dispositionNotes: record.dispositionNotes || null,
+      createdAt: record.createdAt.toISOString(),
+      updatedAt: record.updatedAt.toISOString(),
+    };
+  }
+
 
   private async verifyRepositoryAccess(
     workspaceId: string,

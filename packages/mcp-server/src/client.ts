@@ -230,4 +230,58 @@ export class TracebackApiClient {
       },
     );
   }
+
+  /**
+   * Retrieve engineering decisions for a repository.
+   */
+  async getEngineeringDecisions(params: {
+    workspaceId: string;
+    repositoryId: string;
+    status?: any;
+  }): Promise<any[]> {
+    const qs = params.status ? `?status=${encodeURIComponent(params.status)}` : "";
+    return this.request<any[]>(
+      `workspaces/${encodeURIComponent(params.workspaceId)}/repositories/${encodeURIComponent(params.repositoryId)}/decisions${qs}`,
+      {
+        method: "GET",
+        workspaceId: params.workspaceId,
+      },
+    );
+  }
+
+  /**
+   * Propose a candidate engineering decision.
+   */
+  async proposeEngineeringDecision(params: {
+    workspaceId: string;
+    repositoryId: string;
+    title: string;
+    summary: string;
+    decision: string;
+    rationale: string;
+    targetFilePath?: string;
+    targetSymbol?: string;
+    severity?: string;
+    supportingEvidence?: any[];
+  }): Promise<any> {
+    return this.request<any>(
+      `workspaces/${encodeURIComponent(params.workspaceId)}/repositories/${encodeURIComponent(params.repositoryId)}/decisions`,
+      {
+        method: "POST",
+        workspaceId: params.workspaceId,
+        body: {
+          title: params.title,
+          summary: params.summary,
+          decision: params.decision,
+          rationale: params.rationale,
+          targetFilePath: params.targetFilePath,
+          targetSymbol: params.targetSymbol,
+          severity: params.severity || "MEDIUM",
+          status: "CANDIDATE",
+          supportingEvidence: params.supportingEvidence || [],
+        },
+      },
+    );
+  }
 }
+

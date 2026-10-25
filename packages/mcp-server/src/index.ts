@@ -4,3 +4,4 @@ export * from "./server";
 export * from "./tools/verify-explanation";
 export * from "./tools/find-historical-context";
 export * from "./tools/check-change-against-decisions";
+export * from "./tools/engineering-decisions";

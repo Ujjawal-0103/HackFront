@@ -46,7 +46,7 @@ export class WorkspacesService {
         { id: "user_2", email: "sam@company.com", name: "Sam Reviewer" },
         {
           id: "usr_verified_123",
-          email: "alex@company.com",
+          email: "alex.verified@company.com",
           name: "Alex Maintainer",
         },
         { id: "user_3", email: "jordan@betalabs.com", name: "Jordan Security" },

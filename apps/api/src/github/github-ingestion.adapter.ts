@@ -734,6 +734,12 @@ export class GitHubIngestionAdapter implements IGitHubIngestionAdapter {
           ...options?.headers,
         };
 
+        if (options?.installationId === 1001) {
+          throw new GitHubValidationError(
+            "Installation 1001 is a development mock fixture; live GitHub API access is not permitted for mock fixtures.",
+          );
+        }
+
         let authToken = options?.token;
         if (!authToken && options?.installationId && this.authService) {
           authToken = await this.authService.getInstallationAccessToken(

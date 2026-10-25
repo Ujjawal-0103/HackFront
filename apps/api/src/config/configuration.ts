@@ -82,7 +82,8 @@ export const configuration = (): { app: AppConfig; github: GitHubConfig } => {
   const githubBaseUrl =
     process.env.GITHUB_API_BASE_URL?.trim() || "https://api.github.com";
 
-  let githubPrivateKey = process.env.GITHUB_APP_PRIVATE_KEY?.trim() || undefined;
+  let githubPrivateKey =
+    process.env.GITHUB_APP_PRIVATE_KEY?.trim() || undefined;
   const githubPrivateKeyPath =
     process.env.GITHUB_APP_PRIVATE_KEY_PATH?.trim() || undefined;
 
@@ -90,11 +91,20 @@ export const configuration = (): { app: AppConfig; github: GitHubConfig } => {
     try {
       const fs = require("fs");
       const path = require("path");
-      const resolvedPath = path.isAbsolute(githubPrivateKeyPath)
-        ? githubPrivateKeyPath
-        : path.resolve(process.cwd(), githubPrivateKeyPath);
-      if (fs.existsSync(resolvedPath)) {
-        githubPrivateKey = fs.readFileSync(resolvedPath, "utf8").trim();
+      const candidatePaths = path.isAbsolute(githubPrivateKeyPath)
+        ? [githubPrivateKeyPath]
+        : [
+            path.resolve(process.cwd(), githubPrivateKeyPath),
+            path.resolve(process.cwd(), "../..", githubPrivateKeyPath),
+            path.resolve(process.cwd(), "..", githubPrivateKeyPath),
+            path.resolve(__dirname, "../../..", githubPrivateKeyPath),
+            path.resolve(__dirname, "../../../..", githubPrivateKeyPath),
+          ];
+      for (const cand of candidatePaths) {
+        if (fs.existsSync(cand)) {
+          githubPrivateKey = fs.readFileSync(cand, "utf8").trim();
+          break;
+        }
       }
     } catch {
       // Ignored - validation happens in GitHubAppAuthService

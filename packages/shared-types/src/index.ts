@@ -642,4 +642,137 @@ export interface VerificationSessionResult {
   fallbackNotice?: string;
 }
 
+// ============================================================================
+// Sprint 10: Engineering Decision Memory & Historical Intent Contracts
+// ============================================================================
+
+export type DecisionStatus =
+  | "CANDIDATE"
+  | "IN_REVIEW"
+  | "ACCEPTED"
+  | "SUPERSEDED"
+  | "DISPUTED"
+  | "ARCHIVED";
+
+export type DecisionSeverity =
+  | "CRITICAL"
+  | "HIGH"
+  | "MEDIUM"
+  | "LOW"
+  | "ADVISORY";
+
+export interface EngineeringDecisionDto {
+  id: string;
+  workspaceId: string;
+  repositoryId: string;
+  title: string;
+  summary: string;
+  decision: string;
+  rationale: string;
+  targetFilePath?: string | null;
+  targetSymbol?: string | null;
+  status: DecisionStatus;
+  severity: DecisionSeverity;
+  supportingEvidence: EvidenceReference[];
+  relatedCommitSha?: string | null;
+  relatedPrNumber?: number | null;
+  reviewerId?: string | null;
+  reviewerName?: string | null;
+  reviewNotes?: string | null;
+  reviewedAt?: string | null;
+  supersedesId?: string | null;
+  supersededById?: string | null;
+  createdFromClaimId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateEngineeringDecisionDto {
+  title: string;
+  summary: string;
+  decision: string;
+  rationale: string;
+  targetFilePath?: string;
+  targetSymbol?: string;
+  status?: DecisionStatus;
+  severity?: DecisionSeverity;
+  supportingEvidence?: EvidenceReference[];
+  relatedCommitSha?: string;
+  relatedPrNumber?: number;
+  supersedesId?: string;
+  createdFromClaimId?: string;
+}
+
+export interface UpdateEngineeringDecisionDto {
+  title?: string;
+  summary?: string;
+  decision?: string;
+  rationale?: string;
+  targetFilePath?: string;
+  targetSymbol?: string;
+  status?: DecisionStatus;
+  severity?: DecisionSeverity;
+  reviewNotes?: string;
+  supersedesId?: string;
+  supersededById?: string;
+}
+
+export interface ProposeDecisionFromClaimDto {
+  claimId: string;
+  title?: string;
+  severity?: DecisionSeverity;
+}
+
+export type HistoricalIntentOutcome =
+  | "DOCUMENTED_CONFLICT"
+  | "POTENTIAL_CONFLICT"
+  | "NO_KNOWN_CONFLICT"
+  | "INSUFFICIENT_CONTEXT";
+
+export type HumanDisposition = "APPROVED" | "REJECTED" | "NEEDS_DISCUSSION";
+
+export interface IntentConflictItem {
+  id: string;
+  title: string;
+  affectedCodeOrSymbol?: string;
+  conflictingDecisionId?: string;
+  conflictingDecisionTitle?: string;
+  severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+  outcome: HistoricalIntentOutcome;
+  rationale: string;
+  unestablishedContext?: string;
+  supportingEvidence: EvidenceReference[];
+  recommendedReview: string;
+}
+
+export interface HistoricalIntentCheckSessionDto {
+  id: string;
+  workspaceId: string;
+  repositoryId: string;
+  diff: string;
+  filePath?: string | null;
+  changeDescription?: string | null;
+  status: string;
+  outcome: HistoricalIntentOutcome;
+  summary: string;
+  conflicts: IntentConflictItem[];
+  humanDisposition?: HumanDisposition | null;
+  dispositionNotes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RunHistoricalIntentCheckRequest {
+  diff: string;
+  filePath?: string;
+  changeDescription?: string;
+  targetFilePaths?: string[];
+}
+
+export interface RecordIntentDispositionDto {
+  disposition: HumanDisposition;
+  notes?: string;
+}
+
+
 

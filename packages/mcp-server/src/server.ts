@@ -13,6 +13,12 @@ import {
   checkChangeAgainstDecisionsSchema,
   handleCheckChangeAgainstDecisions,
 } from "./tools/check-change-against-decisions";
+import {
+  getEngineeringDecisionsSchema,
+  handleGetEngineeringDecisions,
+  proposeEngineeringDecisionSchema,
+  handleProposeEngineeringDecision,
+} from "./tools/engineering-decisions";
 
 export interface CreateMcpServerOptions {
   client?: TracebackApiClient;
@@ -59,6 +65,22 @@ export function createTracebackMcpServer(
     "Advisory check of a proposed code diff or change description against historical engineering decisions, ADRs, past reverts, and tests.",
     checkChangeAgainstDecisionsSchema,
     async (args) => handleCheckChangeAgainstDecisions(args, client),
+  );
+
+  // 4. Tool: get_engineering_decisions
+  server.tool(
+    "get_engineering_decisions",
+    "Retrieve human-reviewed engineering decisions and architectural constraints for a repository from Engineering Decision Memory.",
+    getEngineeringDecisionsSchema,
+    async (args) => handleGetEngineeringDecisions(args, client),
+  );
+
+  // 5. Tool: propose_engineering_decision
+  server.tool(
+    "propose_engineering_decision",
+    "Propose a candidate engineering decision or architectural constraint to be stored in Engineering Decision Memory for human review.",
+    proposeEngineeringDecisionSchema,
+    async (args) => handleProposeEngineeringDecision(args, client),
   );
 
   return server;

@@ -20,6 +20,8 @@ model User {
   verdicts             HumanVerdictRecord[]
   sessions             UserSession[]
   verificationSessions VerificationSession[]
+  passwordResetTokens  PasswordResetToken[]
+  reviewedDecisions    EngineeringDecision[]
 
   @@map("users")
 }
@@ -36,6 +38,21 @@ model UserSession {
   @@index([userId])
   @@index([tokenHash])
   @@map("user_sessions")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  tokenHash String    @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("password_reset_tokens")
 }
 
 enum WorkspaceRole {
@@ -56,6 +73,8 @@ model Workspace {
   gitHubInstallations   GitHubInstallation[]
   verificationSessions  VerificationSession[]
   reports               VerificationReport[]
+  engineeringDecisions  EngineeringDecision[]
+  intentCheckSessions   IntentCheckSession[]
 
   @@map("workspaces")
 }
@@ -109,6 +128,8 @@ model Repository {
   pullRequests   PullRequest[]
   issues         Issue[]
   sourceRecords  SourceRecord[]
+  engineeringDecisions EngineeringDecision[]
+  intentCheckSessions  IntentCheckSession[]
 
   @@unique([workspaceId, fullName])
   @@map("repositories")
@@ -431,3 +452,77 @@ model IssueComment {
   @@index([issueId])
   @@map("issue_comments")
 }
+
+// 6. Engineering Decision Memory & Historical Intent Records
+enum DecisionStatus {
+  CANDIDATE
+  IN_REVIEW
+  ACCEPTED
+  SUPERSEDED
+  DISPUTED
+  ARCHIVED
+}
+
+enum DecisionSeverity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+  ADVISORY
+}
+
+model EngineeringDecision {
+  id                 String           @id @default(uuid())
+  workspaceId        String
+  repositoryId       String
+  title              String
+  summary            String           @db.Text
+  decision           String           @db.Text
+  rationale          String           @db.Text
+  targetFilePath     String?
+  targetSymbol       String?
+  status             DecisionStatus   @default(CANDIDATE)
+  severity           DecisionSeverity @default(MEDIUM)
+  supportingEvidence Json             @default("[]") // array of evidence items
+  relatedCommitSha   String?
+  relatedPrNumber    Int?
+  reviewerId         String?
+  reviewerName       String?
+  reviewNotes        String?          @db.Text
+  reviewedAt         DateTime?
+  supersedesId       String?
+  supersededById     String?
+  createdFromClaimId String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  workspace          Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  repository         Repository       @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  reviewer           User?            @relation(fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, repositoryId])
+  @@index([repositoryId, status])
+  @@map("engineering_decisions")
+}
+
+model IntentCheckSession {
+  id                 String           @id @default(uuid())
+  workspaceId        String
+  repositoryId       String
+  diff               String           @db.Text
+  filePath           String?
+  changeDescription  String?          @db.Text
+  status             String           // "COMPLETED", "FAILED"
+  conflicts          Json             @default("[]") // array of detected conflicts / checks
+  humanDisposition   String?          // "APPROVED", "REJECTED", "NEEDS_DISCUSSION"
+  dispositionNotes   String?          @db.Text
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  workspace          Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  repository         Repository       @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, repositoryId])
+  @@map("intent_check_sessions")
+}
+

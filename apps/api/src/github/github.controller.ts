@@ -110,6 +110,12 @@ export class GitHubController {
 
     const installationId = Number(body.installationId);
 
+    if (this.githubService.isConfigured() && installationId === 1001) {
+      throw new BadRequestException(
+        "Installation 1001 is a development mock sandbox fixture and cannot be linked in live mode. Please link a valid GitHub App installation.",
+      );
+    }
+
     if (body.state) {
       this.githubService.verifyConnectState(body.state, workspaceId);
     }
@@ -118,6 +124,14 @@ export class GitHubController {
       await this.githubService.getInstallationDetails(installationId);
 
     if (this.prisma) {
+      // Clean up previous installations for this workspace (e.g. mock 1001 fixture)
+      await this.prisma.gitHubInstallation.deleteMany({
+        where: {
+          workspaceId,
+          installationId: { not: installationId },
+        },
+      });
+
       const record = await this.prisma.gitHubInstallation.upsert({
         where: { installationId },
         create: {

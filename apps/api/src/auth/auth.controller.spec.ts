@@ -2,15 +2,22 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { WorkspacesService } from "../workspaces/workspaces.service";
+import { EmailService } from "./email.service";
 
 describe("AuthController", () => {
   let controller: AuthController;
   let authService: AuthService;
+  let emailService: EmailService;
 
   beforeEach(async () => {
+    emailService = new EmailService();
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [AuthService, WorkspacesService],
+      providers: [
+        AuthService,
+        WorkspacesService,
+        { provide: EmailService, useValue: emailService },
+      ],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
@@ -64,5 +71,39 @@ describe("AuthController", () => {
     });
     const logoutRes = await controller.logout(`Bearer ${registerRes.token}`);
     expect(logoutRes.success).toBe(true);
+  });
+
+  it("should handle forgot-password and reset-password endpoints", async () => {
+    await controller.register({
+      name: "Daisy Dev",
+      email: "daisy@company.com",
+      password: "InitialPassword123!",
+      passwordConfirmation: "InitialPassword123!",
+    });
+
+    const forgotRes = await controller.forgotPassword({
+      email: "daisy@company.com",
+    });
+    expect(forgotRes.success).toBe(true);
+    expect(forgotRes.message).toBe(
+      "If an account exists for that email, password-reset instructions will be sent.",
+    );
+
+    const token = emailService.getLatestResetTokenForTest("daisy@company.com");
+    expect(token).toBeDefined();
+
+    const resetRes = await controller.resetPassword({
+      token: token!,
+      newPassword: "UpdatedPassword456!",
+      confirmPassword: "UpdatedPassword456!",
+    });
+    expect(resetRes.success).toBe(true);
+
+    // Should be able to log in with new password
+    const loginRes = await controller.login({
+      email: "daisy@company.com",
+      password: "UpdatedPassword456!",
+    });
+    expect(loginRes.token).toBeDefined();
   });
 });

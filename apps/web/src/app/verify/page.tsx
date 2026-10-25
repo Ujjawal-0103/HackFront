@@ -106,6 +106,38 @@ function VerifyWorkspaceContent() {
   const [editingClaimId, setEditingClaimId] = useState<string | null>(null);
   const [editedClaimText, setEditedClaimText] = useState("");
 
+  // Proposing to Decision Memory state
+  const [proposedDecisions, setProposedDecisions] = useState<
+    Record<string, { id: string; title: string }>
+  >({});
+  const [proposingDecisionClaimId, setProposingDecisionClaimId] = useState<
+    string | null
+  >(null);
+
+  const handleProposeDecision = async (claimId: string) => {
+    if (!selectedRepoId || !activeWorkspace?.id) return;
+    try {
+      setProposingDecisionClaimId(claimId);
+      setError(null);
+      const res = await api.proposeDecisionFromClaim(
+        selectedRepoId,
+        claimId,
+        undefined,
+        "HIGH",
+        activeWorkspace.id,
+      );
+      setProposedDecisions((prev) => ({
+        ...prev,
+        [claimId]: { id: res.id, title: res.title },
+      }));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(`Failed to propose decision candidate: ${msg}`);
+    } finally {
+      setProposingDecisionClaimId(null);
+    }
+  };
+
   // Load repositories for current workspace
   const loadRepositories = useCallback(async () => {
     if (!activeWorkspace?.id) return;
@@ -1442,6 +1474,58 @@ function VerifyWorkspaceContent() {
                       >
                         ? Mark Unverified
                       </button>
+
+                      {/* Bridge to Feature Three: Propose into Engineering Decision Memory */}
+                      {proposedDecisions[assessment.claimId] ? (
+                        <Link
+                          href={`/decisions`}
+                          id={`link-decision-view-${assessment.claimId}`}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "0.4rem",
+                            padding: "0.45rem 0.85rem",
+                            borderRadius: "6px",
+                            backgroundColor:
+                              "var(--color-primary-light, rgba(37, 99, 235, 0.1))",
+                            color: "var(--color-primary)",
+                            fontSize: "0.825rem",
+                            fontWeight: 600,
+                            textDecoration: "none",
+                            border: "1px solid var(--color-primary)",
+                          }}
+                        >
+                          🏛️ View Candidate in Decision Memory →
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          id={`btn-propose-decision-${assessment.claimId}`}
+                          disabled={
+                            proposingDecisionClaimId === assessment.claimId
+                          }
+                          onClick={() =>
+                            handleProposeDecision(assessment.claimId)
+                          }
+                          title="Propose this verified factual claim as a candidate constraint in Engineering Decision Memory"
+                          style={{
+                            padding: "0.45rem 0.9rem",
+                            borderRadius: "6px",
+                            border: "1px solid var(--color-primary)",
+                            backgroundColor: "transparent",
+                            color: "var(--color-primary)",
+                            fontSize: "0.825rem",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            marginLeft: "auto",
+                            transition: "all 0.15s ease",
+                          }}
+                        >
+                          {proposingDecisionClaimId === assessment.claimId
+                            ? "Proposing..."
+                            : "🏛️ Propose Decision Candidate"}
+                        </button>
+                      )}
                     </div>
 
                     {/* Audit Trail Drawer */}

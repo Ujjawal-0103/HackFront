@@ -91,11 +91,20 @@ export const configuration = (): { app: AppConfig; github: GitHubConfig } => {
     try {
       const fs = require("fs");
       const path = require("path");
-      const resolvedPath = path.isAbsolute(githubPrivateKeyPath)
-        ? githubPrivateKeyPath
-        : path.resolve(process.cwd(), githubPrivateKeyPath);
-      if (fs.existsSync(resolvedPath)) {
-        githubPrivateKey = fs.readFileSync(resolvedPath, "utf8").trim();
+      const candidatePaths = path.isAbsolute(githubPrivateKeyPath)
+        ? [githubPrivateKeyPath]
+        : [
+            path.resolve(process.cwd(), githubPrivateKeyPath),
+            path.resolve(process.cwd(), "../..", githubPrivateKeyPath),
+            path.resolve(process.cwd(), "..", githubPrivateKeyPath),
+            path.resolve(__dirname, "../../..", githubPrivateKeyPath),
+            path.resolve(__dirname, "../../../..", githubPrivateKeyPath),
+          ];
+      for (const cand of candidatePaths) {
+        if (fs.existsSync(cand)) {
+          githubPrivateKey = fs.readFileSync(cand, "utf8").trim();
+          break;
+        }
       }
     } catch {
       // Ignored - validation happens in GitHubAppAuthService

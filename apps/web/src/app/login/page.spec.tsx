@@ -10,8 +10,11 @@ import {
 import LoginPage from "./page";
 
 const mockPush = jest.fn();
+let mockSearchParams = new URLSearchParams();
+
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
+  useSearchParams: () => mockSearchParams,
 }));
 
 const mockLogin = jest.fn();
@@ -27,6 +30,7 @@ jest.mock("../../context/AuthContext", () => ({
 describe("LoginPage Component (Sprint 2 & 6 Auth)", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockSearchParams = new URLSearchParams();
   });
 
   it("renders email and password inputs and sign-in button", () => {
@@ -43,7 +47,7 @@ describe("LoginPage Component (Sprint 2 & 6 Auth)", () => {
     ).toHaveAttribute("href", "/register");
   });
 
-  it("submits valid credentials and navigates on success", async () => {
+  it("submits valid credentials and navigates to / on success without returnTo", async () => {
     mockLogin.mockResolvedValueOnce(undefined);
 
     render(<LoginPage />);
@@ -64,6 +68,30 @@ describe("LoginPage Component (Sprint 2 & 6 Auth)", () => {
       password: "Password123!",
     });
     expect(mockPush).toHaveBeenCalledWith("/");
+  });
+
+  it("preserves returnTo query param and navigates to intended destination on success", async () => {
+    mockSearchParams = new URLSearchParams({ returnTo: "/repositories" });
+    mockLogin.mockResolvedValueOnce(undefined);
+
+    render(<LoginPage />);
+
+    expect(
+      screen.getByRole("link", { name: /register here/i }),
+    ).toHaveAttribute("href", "/register?returnTo=%2Frepositories");
+
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "developer@company.com" },
+    });
+    fireEvent.change(screen.getByLabelText(/^password$/i), {
+      target: { value: "Password123!" },
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /sign in/i }));
+    });
+
+    expect(mockPush).toHaveBeenCalledWith("/repositories");
   });
 
   it("displays error message on invalid credentials", async () => {

@@ -1,12 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../../context/AuthContext";
+import { PasswordInput } from "../../components/PasswordInput";
+import {
+  PasswordStrengthIndicator,
+  evaluatePasswordStrength,
+} from "../../components/PasswordStrengthIndicator";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { register } = useAuth();
 
   const [name, setName] = useState("");
@@ -16,15 +22,28 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Validate returnTo to prevent open redirects (must start with / and not //)
+  const rawReturnTo = searchParams.get("returnTo");
+  const returnTo =
+    rawReturnTo &&
+    rawReturnTo.startsWith("/") &&
+    !rawReturnTo.startsWith("//") &&
+    !rawReturnTo.startsWith("/\\")
+      ? rawReturnTo
+      : null;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
-    if (!name.trim()) {
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+
+    if (!trimmedName) {
       setErrorMessage("Full name is required");
       return;
     }
-    if (!email.trim()) {
+    if (!trimmedEmail) {
       setErrorMessage("Email address is required");
       return;
     }
@@ -44,12 +63,12 @@ export default function RegisterPage() {
     try {
       setIsLoading(true);
       await register({
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
+        name: trimmedName,
+        email: trimmedEmail.toLowerCase(),
         password,
         passwordConfirmation,
       });
-      router.push("/");
+      router.push(returnTo || "/");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Registration failed";
       setErrorMessage(msg);
@@ -57,6 +76,10 @@ export default function RegisterPage() {
       setIsLoading(false);
     }
   };
+
+  const loginHref = returnTo
+    ? `/login?returnTo=${encodeURIComponent(returnTo)}`
+    : "/login";
 
   return (
     <main
@@ -193,26 +216,16 @@ export default function RegisterPage() {
           >
             Password
           </label>
-          <input
+          <PasswordInput
             id="register-password"
-            type="password"
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Minimum 8 characters (letters + numbers)"
             disabled={isLoading}
             required
-            style={{
-              width: "100%",
-              padding: "0.6rem 0.85rem",
-              borderRadius: "6px",
-              border: "1px solid var(--color-border)",
-              backgroundColor: "var(--color-background)",
-              color: "var(--color-text)",
-              fontSize: "0.9rem",
-              outline: "none",
-              boxSizing: "border-box",
-            }}
           />
+          <PasswordStrengthIndicator password={password} />
         </div>
 
         <div style={{ marginBottom: "1.5rem" }}>
@@ -228,25 +241,14 @@ export default function RegisterPage() {
           >
             Confirm Password
           </label>
-          <input
+          <PasswordInput
             id="register-password-confirm"
-            type="password"
+            autoComplete="new-password"
             value={passwordConfirmation}
             onChange={(e) => setPasswordConfirmation(e.target.value)}
             placeholder="Repeat password"
             disabled={isLoading}
             required
-            style={{
-              width: "100%",
-              padding: "0.6rem 0.85rem",
-              borderRadius: "6px",
-              border: "1px solid var(--color-border)",
-              backgroundColor: "var(--color-background)",
-              color: "var(--color-text)",
-              fontSize: "0.9rem",
-              outline: "none",
-              boxSizing: "border-box",
-            }}
           />
         </div>
 
@@ -284,7 +286,8 @@ export default function RegisterPage() {
       >
         Already have an account?{" "}
         <Link
-          href="/login"
+          id="register-login-link"
+          href={loginHref}
           style={{
             color: "var(--color-primary)",
             fontWeight: 600,
@@ -295,5 +298,19 @@ export default function RegisterPage() {
         </Link>
       </div>
     </main>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div style={{ textAlign: "center", padding: "3rem" }}>
+          Loading registration...
+        </div>
+      }
+    >
+      <RegisterForm />
+    </Suspense>
   );
 }

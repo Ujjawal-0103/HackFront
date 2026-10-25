@@ -5,6 +5,7 @@ import {
   ForbiddenException,
   ServiceUnavailableException,
   BadRequestException,
+  Optional,
 } from "@nestjs/common";
 import { InjectQueue } from "@nestjs/bullmq";
 import { Queue } from "bullmq";
@@ -16,6 +17,7 @@ import {
   DEFAULT_INGESTION_JOB_OPTIONS,
 } from "./ingestion.constants";
 import { IngestionJobPayload } from "./ingestion.types";
+import { IngestionOrchestratorService } from "./ingestion-orchestrator.service";
 import {
   SyncTrigger,
   TriggerSyncResponse,
@@ -33,6 +35,8 @@ export class IngestionSyncService {
     private readonly workspacesService: WorkspacesService,
     @InjectQueue(INGESTION_QUEUE_NAME)
     private readonly ingestionQueue: Queue<IngestionJobPayload>,
+    @Optional()
+    private readonly orchestrator?: IngestionOrchestratorService,
   ) {}
 
   /**
@@ -66,6 +70,9 @@ export class IngestionSyncService {
       workspaceIdParam,
       repositoryId,
     );
+
+    // Clean up any stale/orphaned jobs for this repository before starting a fresh sync
+    await this.cleanupStaleSyncJobs(repository.id);
 
     // Verify that the repository's workspace has an associated GitHub App installation
     const installation = await this.prisma.gitHubInstallation.findFirst({
@@ -129,9 +136,32 @@ export class IngestionSyncService {
         queueErr instanceof Error ? queueErr.message : String(queueErr),
       );
 
-      this.logger.error(
-        `Failed to enqueue sync job ${syncJob.id}: ${sanitizedError}`,
+      this.logger.warn(
+        `Failed to enqueue sync job ${syncJob.id} to Redis queue: ${sanitizedError}`,
       );
+
+      // In development mode when Redis is not running, run directly via orchestrator
+      if (this.orchestrator && process.env.NODE_ENV !== "production") {
+        this.logger.warn(
+          `Redis queue offline in development mode. Executing sync directly via orchestrator fallback for ${repository.fullName}.`,
+        );
+
+        // Run direct sync asynchronously
+        this.orchestrator
+          .orchestrateSync(payload)
+          .catch((err) =>
+            this.logger.error(
+              `Direct fallback sync failed for ${repository.fullName}: ${err.message}`,
+            ),
+          );
+
+        return {
+          jobId: syncJob.id,
+          repositoryId: repository.id,
+          status: "PENDING",
+          message: `Sync job initiated directly (development mode fallback) for ${repository.fullName}`,
+        };
+      }
 
       // Transition job to FAILED so it does not remain permanently PENDING in the database
       await this.prisma.repositorySyncJob.update({
@@ -150,6 +180,42 @@ export class IngestionSyncService {
   }
 
   /**
+   * Reaps any stale PENDING or SYNCING jobs older than 15 minutes to prevent the UI from remaining stuck indefinitely.
+   */
+  async cleanupStaleSyncJobs(repositoryId?: string): Promise<void> {
+    const STALE_TIMEOUT_MS = 15 * 60 * 1000;
+    const thresholdDate = new Date(Date.now() - STALE_TIMEOUT_MS);
+
+    try {
+      const staleJobs = await this.prisma.repositorySyncJob.findMany({
+        where: {
+          ...(repositoryId ? { repositoryId } : {}),
+          status: { in: ["PENDING", "SYNCING"] },
+          createdAt: { lt: thresholdDate },
+        },
+      });
+
+      for (const stale of staleJobs) {
+        this.logger.warn(
+          `Reaping stale sync job ${stale.id} (created at ${stale.createdAt.toISOString()}) stuck in ${stale.status}`,
+        );
+        await this.prisma.repositorySyncJob.update({
+          where: { id: stale.id },
+          data: {
+            status: "FAILED",
+            errorMessage: stale.errorMessage
+              ? `${stale.errorMessage} (Sync timed out or was interrupted)`
+              : "Sync operation timed out or was interrupted. Status reset for retry.",
+            completedAt: new Date(),
+          },
+        });
+      }
+    } catch (reapErr: any) {
+      this.logger.warn(`Failed to reap stale sync jobs: ${reapErr.message}`);
+    }
+  }
+
+  /**
    * Returns current sync status, active job (if running), and history of recent sync jobs.
    */
   async getSyncStatus(
@@ -164,6 +230,8 @@ export class IngestionSyncService {
     ) {
       throw new BadRequestException("Repository ID is required");
     }
+
+    await this.cleanupStaleSyncJobs(repositoryId.trim());
 
     const repository = await this.prisma.repository.findUnique({
       where: { id: repositoryId.trim() },

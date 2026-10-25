@@ -15,6 +15,7 @@
     "test": "turbo run test",
     "test:unit": "turbo run test:unit",
     "test:integration": "turbo run test:integration",
+    "test:benchmark": "ts-node tools/benchmark/runner.ts",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
     "prisma:generate": "npm run prisma:generate --workspace=@traceback/api",

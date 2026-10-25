@@ -46,3 +46,30 @@ export class CheckChangeAgainstDecisionsDto implements CheckChangeAgainstDecisio
   @Max(1000000)
   pullRequestNumber?: number;
 }
+
+export class RunHistoricalIntentCheckDto {
+  @IsString()
+  @MaxLength(25000, {
+    message: "Diff length exceeds maximum limit of 25,000 characters",
+  })
+  diff: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  filePath?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(5000)
+  changeDescription?: string;
+}
+
+export class RecordIntentDispositionDto {
+  @IsString()
+  disposition: "APPROVED" | "REJECTED" | "NEEDS_DISCUSSION";
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+}

@@ -1,0 +1,262 @@
+{
+  "version": "1.0.0",
+  "name": "Traceback Historical Intent & Claim Verification Benchmark",
+  "description": "Standardized evaluation dataset for testing AI explanation verification against repository engineering history across 10 distinct epistemological categories.",
+  "scenarios": [
+    {
+      "id": "TB-BENCH-001",
+      "category": "DIRECT_SUPPORT",
+      "title": "Payment Guard Callback Idempotency",
+      "explanation": "The payment guard in checkout.service.ts was introduced to handle duplicate webhook callbacks from the payment gateway and prevent duplicate customer charges.",
+      "proposedDiff": null,
+      "repositoryEvidence": [
+        {
+          "type": "COMMIT",
+          "referenceKey": "c4d8e12",
+          "title": "fix(checkout): add idempotent guard to payment webhook handler",
+          "body": "Resolves duplicate callback race condition observed during gateway retries where customers were double charged.",
+          "author": "alex",
+          "url": "https://github.com/example/repo/commit/c4d8e12"
+        },
+        {
+          "type": "PULL_REQUEST",
+          "referenceKey": "#412",
+          "title": "Prevent duplicate payment webhook execution",
+          "body": "Closes #410. Adds a Redis-backed mutex guard on transactionId to ensure payment callbacks are executed exactly once.",
+          "author": "alex",
+          "url": "https://github.com/example/repo/pull/412"
+        }
+      ],
+      "activeDecisions": [],
+      "groundTruth": {
+        "claimOutcome": "SUPPORTED",
+        "hasDirectCitation": true,
+        "shouldAbstain": false,
+        "acceptableRationale": "Commit c4d8e12 and PR #412 explicitly state the guard prevents duplicate charges caused by repeated gateway callbacks."
+      }
+    },
+    {
+      "id": "TB-BENCH-002",
+      "category": "CONTRADICTED",
+      "title": "Database Connection Pool Sizing Rationale",
+      "explanation": "The connection pool was decreased from 50 to 10 connections because the database server was running out of RAM.",
+      "proposedDiff": null,
+      "repositoryEvidence": [
+        {
+          "type": "COMMIT",
+          "referenceKey": "7f1b90a",
+          "title": "perf(db): decrease maximum pool size to 10 connections",
+          "body": "Postgres backend connection limit was exceeded due to multiplexing across 12 worker pods, causing connection starvation on the RDS cluster. Not a RAM issue.",
+          "author": "jordan",
+          "url": "https://github.com/example/repo/commit/7f1b90a"
+        }
+      ],
+      "activeDecisions": [],
+      "groundTruth": {
+        "claimOutcome": "CONTRADICTED",
+        "hasDirectCitation": true,
+        "shouldAbstain": false,
+        "acceptableRationale": "Commit 7f1b90a explicitly refutes the RAM claim; the reduction was driven by worker pod multiplexing connection limits."
+      }
+    },
+    {
+      "id": "TB-BENCH-003",
+      "category": "INDIRECT_CONTEXT",
+      "title": "JWT Expiration Window Reduction",
+      "explanation": "JWT session duration was reduced to 15 minutes as part of the SOC2 compliance hardening cycle.",
+      "proposedDiff": null,
+      "repositoryEvidence": [
+        {
+          "type": "PULL_REQUEST",
+          "referenceKey": "#280",
+          "title": "chore(auth): set default accessToken lifetime to 15m",
+          "body": "Align session lifetimes with standard security posture recommendations.",
+          "author": "sarah",
+          "url": "https://github.com/example/repo/pull/280"
+        }
+      ],
+      "activeDecisions": [],
+      "groundTruth": {
+        "claimOutcome": "INSUFFICIENT_EVIDENCE",
+        "hasDirectCitation": false,
+        "shouldAbstain": true,
+        "acceptableRationale": "PR #280 establishes the 15m lifetime change, but does not mention SOC2 compliance. System must not endorse the unverified motivation."
+      }
+    },
+    {
+      "id": "TB-BENCH-004",
+      "category": "CODE_CHANGE_ONLY",
+      "title": "Buffer Pre-allocation in WebSocket Framing",
+      "explanation": "The 64KB buffer pre-allocation exists because benchmarking proved it eliminated GC pauses during real-time streaming.",
+      "proposedDiff": null,
+      "repositoryEvidence": [
+        {
+          "type": "COMMIT",
+          "referenceKey": "a901ff2",
+          "title": "refactor(ws): preallocate 64KB framing buffer",
+          "body": "Initial buffer sizing set to 64 * 1024.",
+          "author": "dev",
+          "url": "https://github.com/example/repo/commit/a901ff2"
+        }
+      ],
+      "activeDecisions": [],
+      "groundTruth": {
+        "claimOutcome": "INSUFFICIENT_EVIDENCE",
+        "hasDirectCitation": false,
+        "shouldAbstain": true,
+        "acceptableRationale": "The commit proves the 64KB buffer was introduced, but provides zero benchmark or GC rationale. Pure code change presence != rationale proof."
+      }
+    },
+    {
+      "id": "TB-BENCH-005",
+      "category": "PARTIALLY_SUPPORTED",
+      "title": "Rate Limiting IP Extraction Compound Claim",
+      "explanation": "The X-Forwarded-For parser was added in release 2.4 because AWS ALB strips client IPs, and it supports IPv6 dual-stack parsing.",
+      "proposedDiff": null,
+      "repositoryEvidence": [
+        {
+          "type": "COMMIT",
+          "referenceKey": "b304c11",
+          "title": "feat(proxy): parse X-Forwarded-For header behind AWS ALB",
+          "body": "Extracts first non-internal IP from X-Forwarded-For. IPv4 only.",
+          "author": "alex",
+          "url": "https://github.com/example/repo/commit/b304c11"
+        }
+      ],
+      "activeDecisions": [],
+      "groundTruth": {
+        "claimOutcome": "INSUFFICIENT_EVIDENCE",
+        "hasDirectCitation": true,
+        "shouldAbstain": true,
+        "acceptableRationale": "The first half (ALB proxy header) is supported by b304c11, but the IPv6 claim is contradicted by commit body stating IPv4 only."
+      }
+    },
+    {
+      "id": "TB-BENCH-006",
+      "category": "CONFLICTING_HISTORICAL_RECORDS",
+      "title": "Query Cache Removal and Subsequent Reintroduction",
+      "explanation": "Repository policy prohibits local in-memory query caching across all services.",
+      "proposedDiff": null,
+      "repositoryEvidence": [
+        {
+          "type": "PULL_REQUEST",
+          "referenceKey": "#104",
+          "title": "Remove in-memory query cache",
+          "body": "Removed due to memory leak under sustained load.",
+          "author": "jordan",
+          "url": "https://github.com/example/repo/pull/104"
+        },
+        {
+          "type": "PULL_REQUEST",
+          "referenceKey": "#250",
+          "title": "Reintroduce bounded LRU query cache with TTL",
+          "body": "Restores query caching using bounded LRU with 60s TTL to protect slow catalog queries.",
+          "author": "alex",
+          "url": "https://github.com/example/repo/pull/250"
+        }
+      ],
+      "activeDecisions": [],
+      "groundTruth": {
+        "claimOutcome": "CONTRADICTED",
+        "hasDirectCitation": true,
+        "shouldAbstain": false,
+        "acceptableRationale": "PR #250 explicitly re-introduced query caching with bounded TTL, refuting the claim that caching is prohibited."
+      }
+    },
+    {
+      "id": "TB-BENCH-007",
+      "category": "SUPERSEDED_DECISION",
+      "title": "Monolithic Database Invariant Superseded by Eventual Consistency",
+      "explanation": "All user balance mutations must execute within a single ACID transaction block on the primary Postgres database.",
+      "proposedDiff": null,
+      "repositoryEvidence": [
+        {
+          "type": "ADR",
+          "referenceKey": "ADR-004",
+          "title": "ADR-004: ACID transactions for billing",
+          "body": "All billing mutations require synchronous Postgres transactions.",
+          "author": "arch-lead",
+          "url": "https://github.com/example/repo/docs/adr/004.md"
+        }
+      ],
+      "activeDecisions": [
+        {
+          "id": "dec-009",
+          "title": "Distributed Ledger with Sagas",
+          "status": "ACCEPTED",
+          "supersedesId": "dec-004",
+          "decision": "Migrated billing mutations to distributed Saga orchestrator with idempotency keys.",
+          "rationale": "Microservice split required removing single-database transactional dependencies."
+        }
+      ],
+      "groundTruth": {
+        "claimOutcome": "CONTRADICTED",
+        "hasDirectCitation": true,
+        "shouldAbstain": false,
+        "acceptableRationale": "Engineering Decision dec-009 supersedes the older ADR-004 single-transaction rule in favor of distributed Sagas."
+      }
+    },
+    {
+      "id": "TB-BENCH-008",
+      "category": "LEXICALLY_SIMILAR_UNRELATED",
+      "title": "OAuth Token Refresh vs Redis Cache Token",
+      "explanation": "The token eviction cron job was created to purge expired user OAuth refresh tokens from the system.",
+      "proposedDiff": null,
+      "repositoryEvidence": [
+        {
+          "type": "COMMIT",
+          "referenceKey": "e812d44",
+          "title": "chore(cache): add token bucket eviction for rate limiting",
+          "body": "Cleans up expired sliding window tokens in Redis memory store.",
+          "author": "infra",
+          "url": "https://github.com/example/repo/commit/e812d44"
+        }
+      ],
+      "activeDecisions": [],
+      "groundTruth": {
+        "claimOutcome": "INSUFFICIENT_EVIDENCE",
+        "hasDirectCitation": false,
+        "shouldAbstain": true,
+        "acceptableRationale": "Lexical overlap on 'token' does not establish OAuth functionality; the commit relates purely to rate limiting token buckets."
+      }
+    },
+    {
+      "id": "TB-BENCH-009",
+      "category": "MISSING_EVIDENCE",
+      "title": "Unrecorded Customer Meeting Justification",
+      "explanation": "The webhook retry interval was set to 42 seconds following an emergency architecture meeting with Enterprise Customer Acme Corp.",
+      "proposedDiff": null,
+      "repositoryEvidence": [],
+      "activeDecisions": [],
+      "groundTruth": {
+        "claimOutcome": "INSUFFICIENT_EVIDENCE",
+        "hasDirectCitation": false,
+        "shouldAbstain": true,
+        "acceptableRationale": "No records exist regarding Acme Corp or an emergency meeting. System must abstain rather than hallucinate verification."
+      }
+    },
+    {
+      "id": "TB-BENCH-010",
+      "category": "PROPOSED_DIFF_CONFLICT",
+      "title": "Removal of Mutex Lock in Transaction Settlement",
+      "explanation": "Checking if proposed code change removing mutex locking conflicts with historical invariants.",
+      "proposedDiff": "--- a/src/settlement.ts\n+++ b/src/settlement.ts\n@@ -24,3 +24,2 @@\n-  await this.settlementMutex.acquire();\n   try {\n-  } finally { this.settlementMutex.release(); }",
+      "repositoryEvidence": [],
+      "activeDecisions": [
+        {
+          "id": "dec-014",
+          "title": "Strict Mutex Requirement on Financial Settlement",
+          "status": "ACCEPTED",
+          "decision": "All settlement executions must acquire settlementMutex to prevent double-spend race conditions.",
+          "rationale": "High-volume bank webhook retries caused concurrent execution without mutex.",
+          "targetFilePath": "src/settlement.ts"
+        }
+      ],
+      "groundTruth": {
+        "intentOutcome": "DOCUMENTED_CONFLICT",
+        "shouldFlagConflict": true,
+        "acceptableRationale": "Proposed diff removes this.settlementMutex.acquire() which directly violates accepted engineering decision dec-014."
+      }
+    }
+  ]
+}

@@ -3,6 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "../context/ThemeContext";
 import { AuthProvider } from "../context/AuthContext";
 import { Navbar } from "../components/Navbar";
+import { RouteGuard } from "../components/RouteGuard";
 
 export const metadata: Metadata = {
   title: "Traceback — Code Rationale Verification",
@@ -42,7 +43,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <Navbar />
-            {children}
+            <RouteGuard>{children}</RouteGuard>
           </AuthProvider>
         </ThemeProvider>
       </body>

@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../../context/AuthContext";
+import { PasswordInput } from "../../components/PasswordInput";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -14,11 +16,22 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Validate returnTo to prevent open redirects (must start with / and not //)
+  const rawReturnTo = searchParams.get("returnTo");
+  const returnTo =
+    rawReturnTo &&
+    rawReturnTo.startsWith("/") &&
+    !rawReturnTo.startsWith("//") &&
+    !rawReturnTo.startsWith("/\\")
+      ? rawReturnTo
+      : null;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
-    if (!email.trim()) {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
       setErrorMessage("Email is required");
       return;
     }
@@ -29,8 +42,8 @@ export default function LoginPage() {
 
     try {
       setIsLoading(true);
-      await login({ email: email.trim(), password });
-      router.push("/");
+      await login({ email: trimmedEmail, password });
+      router.push(returnTo || "/");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to sign in";
       setErrorMessage(msg);
@@ -38,6 +51,10 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  const registerHref = returnTo
+    ? `/register?returnTo=${encodeURIComponent(returnTo)}`
+    : "/register";
 
   return (
     <main
@@ -128,38 +145,45 @@ export default function LoginPage() {
         </div>
 
         <div style={{ marginBottom: "1.5rem" }}>
-          <label
-            htmlFor="login-password"
+          <div
             style={{
-              display: "block",
-              fontSize: "0.825rem",
-              fontWeight: 600,
-              color: "var(--color-text)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
               marginBottom: "0.35rem",
             }}
           >
-            Password
-          </label>
-          <input
+            <label
+              htmlFor="login-password"
+              style={{
+                display: "block",
+                fontSize: "0.825rem",
+                fontWeight: 600,
+                color: "var(--color-text)",
+              }}
+            >
+              Password
+            </label>
+            <Link
+              id="login-forgot-password-link"
+              href="/forgot-password"
+              style={{
+                fontSize: "0.8rem",
+                color: "var(--color-primary)",
+                fontWeight: 500,
+                textDecoration: "none",
+              }}
+            >
+              Forgot password?
+            </Link>
+          </div>
+          <PasswordInput
             id="login-password"
-            type="password"
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
             disabled={isLoading}
             required
-            style={{
-              width: "100%",
-              padding: "0.6rem 0.85rem",
-              borderRadius: "6px",
-              border: "1px solid var(--color-border)",
-              backgroundColor: "var(--color-background)",
-              color: "var(--color-text)",
-              fontSize: "0.9rem",
-              outline: "none",
-              boxSizing: "border-box",
-            }}
           />
         </div>
 
@@ -197,7 +221,8 @@ export default function LoginPage() {
       >
         Don&apos;t have an account?{" "}
         <Link
-          href="/register"
+          id="login-register-link"
+          href={registerHref}
           style={{
             color: "var(--color-primary)",
             fontWeight: 600,
@@ -208,5 +233,19 @@ export default function LoginPage() {
         </Link>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div style={{ textAlign: "center", padding: "3rem" }}>
+          Loading sign in...
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

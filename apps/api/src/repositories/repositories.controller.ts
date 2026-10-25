@@ -16,7 +16,11 @@ import {
   RepositoryDetailsDto,
   RepositoryActivityDto,
 } from "./repositories.service";
-import { CreateRepositoryDto } from "@traceback/shared-types";
+import {
+  CreateRepositoryDto,
+  ImportRepositoryByUrlDto,
+  ImportRepositoryByUrlResponse,
+} from "./repositories.dto";
 
 @Controller("workspaces/:workspaceId/repositories")
 @UseGuards(AuthGuard, WorkspaceGuard)
@@ -37,6 +41,15 @@ export class RepositoriesController {
     @Body() dto: CreateRepositoryDto,
   ): Promise<RepositoryDetailsDto> {
     return this.repositoriesService.createRepository(workspaceId, dto);
+  }
+
+  @Post("import-url")
+  @HttpCode(HttpStatus.OK)
+  async importRepositoryByUrl(
+    @Param("workspaceId") workspaceId: string,
+    @Body() dto: ImportRepositoryByUrlDto,
+  ): Promise<ImportRepositoryByUrlResponse> {
+    return this.repositoriesService.importRepositoryByUrl(workspaceId, dto.url);
   }
 
   @Get(":repositoryId")

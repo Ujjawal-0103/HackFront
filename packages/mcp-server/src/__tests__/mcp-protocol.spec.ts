@@ -154,14 +154,16 @@ describe("Traceback MCP Protocol Integration", () => {
   // Protocol Discovery & Schema Security
   // ==========================================================================
   describe("Tool Discovery", () => {
-    it("should discover all three official Traceback MCP tools with input schemas", async () => {
+    it("should discover all official Traceback MCP tools with input schemas", async () => {
       const response = await mcpClient.listTools();
       const toolNames = response.tools.map((t) => t.name);
 
       expect(toolNames).toContain("verify_explanation");
       expect(toolNames).toContain("find_historical_context");
       expect(toolNames).toContain("check_change_against_decisions");
-      expect(response.tools).toHaveLength(3);
+      expect(toolNames).toContain("get_engineering_decisions");
+      expect(toolNames).toContain("propose_engineering_decision");
+      expect(response.tools).toHaveLength(5);
 
       const verifyTool = response.tools.find(
         (t) => t.name === "verify_explanation",

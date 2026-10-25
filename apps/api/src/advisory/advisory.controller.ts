@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Get,
   Body,
   Param,
   UseGuards,
@@ -10,8 +11,15 @@ import {
 import { AuthGuard } from "../auth/auth.guard";
 import { WorkspaceGuard } from "../workspaces/workspace.guard";
 import { AdvisoryService } from "./advisory.service";
-import { CheckChangeAgainstDecisionsDto } from "./advisory.dto";
-import { CheckChangeAgainstDecisionsResponse } from "@traceback/shared-types";
+import {
+  CheckChangeAgainstDecisionsDto,
+  RunHistoricalIntentCheckDto,
+  RecordIntentDispositionDto,
+} from "./advisory.dto";
+import {
+  CheckChangeAgainstDecisionsResponse,
+  HistoricalIntentCheckSessionDto,
+} from "@traceback/shared-types";
 
 @Controller("workspaces/:workspaceId/repositories/:repositoryId/advisory")
 @UseGuards(AuthGuard, WorkspaceGuard)
@@ -34,5 +42,65 @@ export class AdvisoryController {
       workspaceId,
       repositoryId,
     });
+  }
+
+  /**
+   * Flagship Feature: Run and persist a Historical Intent Check session.
+   */
+  @Post("intent-check")
+  @HttpCode(HttpStatus.CREATED)
+  async runIntentCheck(
+    @Param("workspaceId") workspaceId: string,
+    @Param("repositoryId") repositoryId: string,
+    @Body() dto: RunHistoricalIntentCheckDto,
+  ): Promise<HistoricalIntentCheckSessionDto> {
+    return this.advisoryService.runHistoricalIntentCheck({
+      workspaceId,
+      repositoryId,
+      diff: dto.diff,
+      filePath: dto.filePath,
+      changeDescription: dto.changeDescription,
+    });
+  }
+
+  @Get("intent-checks")
+  async listIntentChecks(
+    @Param("workspaceId") workspaceId: string,
+    @Param("repositoryId") repositoryId: string,
+  ): Promise<HistoricalIntentCheckSessionDto[]> {
+    return this.advisoryService.listIntentCheckSessions(
+      workspaceId,
+      repositoryId,
+    );
+  }
+
+  @Get("intent-checks/:sessionId")
+  async getIntentCheck(
+    @Param("workspaceId") workspaceId: string,
+    @Param("repositoryId") repositoryId: string,
+    @Param("sessionId") sessionId: string,
+  ): Promise<HistoricalIntentCheckSessionDto> {
+    return this.advisoryService.getIntentCheckSession(
+      workspaceId,
+      repositoryId,
+      sessionId,
+    );
+  }
+
+  @Post("intent-checks/:sessionId/disposition")
+  @HttpCode(HttpStatus.OK)
+  async recordDisposition(
+    @Param("workspaceId") workspaceId: string,
+    @Param("repositoryId") repositoryId: string,
+    @Param("sessionId") sessionId: string,
+    @Body() dto: RecordIntentDispositionDto,
+  ): Promise<HistoricalIntentCheckSessionDto> {
+    return this.advisoryService.recordIntentDisposition(
+      workspaceId,
+      repositoryId,
+      sessionId,
+      dto.disposition,
+      dto.notes,
+    );
   }
 }

@@ -13,7 +13,7 @@ This document expands upon the foundational requirements in [`PROJECT_SPEC.md`](
 - **Profile:** 7+ years of experience; maintains a 5-year-old TypeScript monorepo with 40+ active contributors.
 - **Workflow:** Reviews PRs, triages complex regressions, and mentors engineers. Frequently uses AI assistants (GitHub Copilot, Claude Code) to inspect legacy modules.
 - **Pain Point:** AI often generates authoritative explanations like _"This mutex exists because of a race condition in Node v14 cluster mode,"_ but Alex cannot tell if that was an actual production bug or AI speculation without spending 30 minutes searching git log and closed PRs.
-- **Traceback Value:** Verifies or refutes the claim in 60 seconds with direct links to the relevant 2022 PR and commit.
+- **Traceback Value:** Verifies 1or refutes the claim in 60 seconds with direct links to the relevant 2022 PR and commit.
 
 ### Secondary Persona: Onboarding Engineer ("Jordan")
 

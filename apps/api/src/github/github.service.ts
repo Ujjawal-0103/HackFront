@@ -37,9 +37,6 @@ export class GitHubService {
     const privateKey =
       this.configService.get<string>("GITHUB_APP_PRIVATE_KEY") ||
       this.configService.get<string>("github.privateKey");
-    this.appSlug =
-      this.configService.get<string>("GITHUB_APP_SLUG") ||
-      this.configService.get<string>("github.appSlug");
 
     const rawSecret =
       this.configService.get<string>("GITHUB_WEBHOOK_SECRET") ||
@@ -58,6 +55,11 @@ export class GitHubService {
     }
 
     const isLiveReady = Boolean(appId && this.authService.isConfigured());
+
+    this.appSlug =
+      this.configService.get<string>("GITHUB_APP_SLUG") ||
+      this.configService.get<string>("github.appSlug") ||
+      (isLiveReady ? "traceback-code-verification" : undefined);
 
     if (isLiveReady) {
       this.isLiveConfigured = true;
@@ -255,6 +257,14 @@ export class GitHubService {
     }
 
     return access;
+  }
+
+  async getRepository(
+    installationId: number,
+    owner: string,
+    repo: string,
+  ): Promise<GitHubRepositoryMetadata> {
+    return this.client.getRepository(installationId, owner, repo);
   }
 
   async listAuthorizedRepositories(

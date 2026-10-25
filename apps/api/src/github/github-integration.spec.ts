@@ -18,8 +18,12 @@ import {
   GitHubAuthError,
   GitHubNotFoundError,
   GitHubRateLimitError,
+  GitHubValidationError,
 } from "./github.errors";
 import { PrismaService } from "../prisma/prisma.service";
+import { GitHubIngestionAdapter } from "./github-ingestion.adapter";
+import { MockGitHubIngestionAdapter } from "./mock-github-ingestion.adapter";
+import { DelegatingGitHubIngestionAdapter } from "./delegating-github-ingestion.adapter";
 
 describe("GitHub App Live vs Mock Integration & Hardening Verification (Section 10)", () => {
   let testKeyPair: { publicKey: string; privateKey: string };
@@ -214,6 +218,131 @@ describe("GitHub App Live vs Mock Integration & Hardening Verification (Section 
       const jsonStr = JSON.stringify(service);
       expect(jsonStr).not.toContain(testKeyPair.privateKey);
       expect(jsonStr).not.toContain("BEGIN RSA PRIVATE KEY");
+    });
+  });
+
+  describe("4. Delegating Ingestion Adapter & Mock Sandbox Isolation", () => {
+    let mockService: any;
+    let liveAdapter: any;
+    let mockAdapter: any;
+    let delegatingAdapter: DelegatingGitHubIngestionAdapter;
+
+    beforeEach(() => {
+      mockService = {
+        isConfigured: jest.fn().mockReturnValue(false),
+        isMock: jest.fn().mockReturnValue(true),
+      };
+      liveAdapter = {
+        getRepository: jest
+          .fn()
+          .mockResolvedValue({ id: 1, fullName: "live/repo" }),
+        getCommits: jest.fn().mockResolvedValue({ items: [] }),
+        clearRateLimitState: jest.fn(),
+      };
+      mockAdapter = {
+        getRepository: jest
+          .fn()
+          .mockResolvedValue({ id: 98765, fullName: "Ujjawal-0103/HackFront" }),
+        getCommits: jest.fn().mockResolvedValue({ items: [] }),
+      };
+      delegatingAdapter = new DelegatingGitHubIngestionAdapter(
+        mockService,
+        liveAdapter as any,
+        mockAdapter as any,
+      );
+    });
+
+    it("should route to MockGitHubIngestionAdapter when in mock mode without calling live adapter", async () => {
+      const result = await delegatingAdapter.getRepository(
+        "Ujjawal-0103",
+        "HackFront",
+      );
+      expect(result.id).toBe(98765);
+      expect(mockAdapter.getRepository).toHaveBeenCalledWith(
+        "Ujjawal-0103",
+        "HackFront",
+        undefined,
+      );
+      expect(liveAdapter.getRepository).not.toHaveBeenCalled();
+    });
+
+    it("should route mock installation 1001 to MockGitHubIngestionAdapter even if live configured", async () => {
+      mockService.isConfigured.mockReturnValue(true);
+      mockService.isMock.mockReturnValue(false);
+
+      const result = await delegatingAdapter.getRepository(
+        "Ujjawal-0103",
+        "HackFront",
+        { installationId: 1001 },
+      );
+      expect(result.id).toBe(98765);
+      expect(mockAdapter.getRepository).toHaveBeenCalledWith(
+        "Ujjawal-0103",
+        "HackFront",
+        { installationId: 1001 },
+      );
+      expect(liveAdapter.getRepository).not.toHaveBeenCalled();
+    });
+
+    it("should route real installation ID to live adapter when live configured", async () => {
+      mockService.isConfigured.mockReturnValue(true);
+      mockService.isMock.mockReturnValue(false);
+
+      const result = await delegatingAdapter.getRepository(
+        "Ujjawal-0103",
+        "HackFront",
+        { installationId: 173390166 },
+      );
+      expect(result.id).toBe(1);
+      expect(liveAdapter.getRepository).toHaveBeenCalledWith(
+        "Ujjawal-0103",
+        "HackFront",
+        { installationId: 173390166 },
+      );
+      expect(mockAdapter.getRepository).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("5. Live Ingestion Adapter Mock Fixture Protection", () => {
+    it("should explicitly reject requests for mock installation 1001 with GitHubValidationError", async () => {
+      const liveAdapter = new GitHubIngestionAdapter(
+        undefined,
+        "https://mock.api.github.test",
+      );
+      await expect(
+        liveAdapter.getRepository("Ujjawal-0103", "HackFront", {
+          installationId: 1001,
+        }),
+      ).rejects.toThrow(GitHubValidationError);
+    });
+  });
+
+  describe("6. Installation Association in Live Mode", () => {
+    it("should reject connecting mock fixture installation 1001 when live mode is configured", async () => {
+      const mockPrisma: any = {
+        gitHubInstallation: {
+          upsert: jest.fn(),
+          deleteMany: jest.fn(),
+        },
+      };
+      const config = {
+        get: jest.fn((key: string) => {
+          if (key === "GITHUB_APP_ID") return "5366665";
+          if (key === "GITHUB_APP_PRIVATE_KEY") return testKeyPair.privateKey;
+          return null;
+        }),
+      } as unknown as ConfigService;
+      const liveService = new GitHubService(config);
+      const controller = new GitHubController(liveService, mockPrisma);
+
+      const req: any = {
+        workspaceContext: { role: "OWNER" },
+        user: { id: "user-123" },
+      };
+
+      await expect(
+        controller.connectInstallation("ws-1", req, { installationId: 1001 }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

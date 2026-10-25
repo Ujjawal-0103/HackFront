@@ -13,6 +13,10 @@ import {
   LoginResponse,
   AuthSessionResponse,
   RegisterRequest,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
 } from "@traceback/shared-types";
 import { AuthService } from "./auth.service";
 import { AuthGuard } from "./auth.guard";
@@ -53,5 +57,21 @@ export class AuthController {
         ? authHeader.substring(7).trim()
         : "";
     return this.authService.logout(token);
+  }
+
+  @Post("forgot-password")
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(
+    @Body() body: ForgotPasswordRequest,
+  ): Promise<ForgotPasswordResponse> {
+    return this.authService.forgotPassword(body);
+  }
+
+  @Post("reset-password")
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(
+    @Body() body: ResetPasswordRequest,
+  ): Promise<ResetPasswordResponse> {
+    return this.authService.resetPassword(body);
   }
 }

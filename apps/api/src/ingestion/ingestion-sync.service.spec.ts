@@ -390,4 +390,80 @@ describe("IngestionSyncService (Sprint 3 Part 6)", () => {
       ).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe("cleanupStaleSyncJobs", () => {
+    it("should reap jobs stuck in SYNCING older than 15 minutes and mark as FAILED", async () => {
+      const staleDate = new Date(Date.now() - 20 * 60 * 1000); // 20 mins ago
+      const staleJob = {
+        id: "stale-job-1",
+        repositoryId: mockRepositoryId,
+        status: "SYNCING",
+        errorMessage:
+          "[Attempt 0] GitHub rate limit low quota safety threshold reached: 59 remaining (< 100)",
+        createdAt: staleDate,
+      };
+
+      mockPrisma.repositorySyncJob.findMany.mockResolvedValue([staleJob]);
+      mockPrisma.repositorySyncJob.update.mockResolvedValue({
+        ...staleJob,
+        status: "FAILED",
+      });
+
+      await service.cleanupStaleSyncJobs(mockRepositoryId);
+
+      expect(mockPrisma.repositorySyncJob.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "stale-job-1" },
+          data: expect.objectContaining({
+            status: "FAILED",
+            errorMessage: expect.stringContaining(
+              "Sync timed out or was interrupted",
+            ),
+          }),
+        }),
+      );
+    });
+
+    it("should trigger orchestrator fallback in development when Redis queue is unavailable", async () => {
+      const mockOrchestrator = {
+        orchestrateSync: jest.fn().mockResolvedValue({ status: "COMPLETED" }),
+      };
+
+      const devService = new IngestionSyncService(
+        mockPrisma,
+        mockWorkspacesService,
+        mockQueue,
+        mockOrchestrator as any,
+      );
+
+      mockPrisma.repository.findUnique.mockResolvedValue(mockRepository);
+      mockWorkspacesService.getMembership.mockResolvedValue({
+        workspaceId: mockWorkspaceId,
+        userId: mockUserId,
+        role: "OWNER",
+      });
+      mockPrisma.gitHubInstallation.findFirst.mockResolvedValue(
+        mockInstallation,
+      );
+      mockPrisma.repositorySyncJob.create.mockResolvedValue(mockCreatedJob);
+      mockPrisma.repositorySyncJob.findMany.mockResolvedValue([]); // No stale jobs
+      mockQueue.add.mockRejectedValue(
+        new Error("connect ECONNREFUSED 127.0.0.1:6379"),
+      );
+
+      const originalNodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = "development";
+      try {
+        const response = await devService.triggerManualSync(
+          mockRepositoryId,
+          mockUserId,
+        );
+        expect(response.status).toBe("PENDING");
+        expect(response.message).toContain("development mode fallback");
+        expect(mockOrchestrator.orchestrateSync).toHaveBeenCalled();
+      } finally {
+        process.env.NODE_ENV = originalNodeEnv;
+      }
+    });
+  });
 });

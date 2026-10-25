@@ -156,11 +156,20 @@ export class GitHubAppAuthService {
         try {
           const fs = require("fs");
           const path = require("path");
-          const resolved = path.isAbsolute(keyPath)
-            ? keyPath
-            : path.resolve(process.cwd(), keyPath);
-          if (fs.existsSync(resolved)) {
-            rawPrivateKey = fs.readFileSync(resolved, "utf8");
+          const candidatePaths = path.isAbsolute(keyPath)
+            ? [keyPath]
+            : [
+                path.resolve(process.cwd(), keyPath),
+                path.resolve(process.cwd(), "../..", keyPath),
+                path.resolve(process.cwd(), "..", keyPath),
+                path.resolve(__dirname, "../../..", keyPath),
+                path.resolve(__dirname, "../../../..", keyPath),
+              ];
+          for (const cand of candidatePaths) {
+            if (fs.existsSync(cand)) {
+              rawPrivateKey = fs.readFileSync(cand, "utf8");
+              break;
+            }
           }
         } catch (readErr: any) {
           this.logger.warn(

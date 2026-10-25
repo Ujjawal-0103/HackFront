@@ -14,9 +14,14 @@ import {
   LoginResponse,
   AuthSessionResponse,
   RegisterRequest,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
 } from "@traceback/shared-types";
 import { PrismaService } from "../prisma/prisma.service";
 import { WorkspacesService } from "../workspaces/workspaces.service";
+import { EmailService } from "./email.service";
 import { AuthenticatedUser } from "./auth.types";
 import { hashPassword, verifyPassword } from "./password.util";
 
@@ -38,6 +43,11 @@ export class AuthService {
   private readonly activeSessions = new Map<string, SessionData>();
   private readonly revokedTokens = new Set<string>();
   private readonly loginAttempts = new Map<string, RateLimitAttempt>();
+  private readonly forgotPasswordAttempts = new Map<string, RateLimitAttempt>();
+  private readonly mockResetTokens = new Map<
+    string,
+    { tokenHash: string; userId: string; expiresAt: Date; usedAt?: Date }
+  >();
 
   // Default seeded password hash for Password123!
   public static readonly DEFAULT_DEV_HASH =
@@ -76,6 +86,7 @@ export class AuthService {
   constructor(
     private readonly workspacesService: WorkspacesService,
     @Optional() private readonly prisma?: PrismaService,
+    @Optional() private readonly emailService?: EmailService,
   ) {}
 
   /**
@@ -535,7 +546,284 @@ export class AuthService {
     };
   }
 
+  /**
+   * Generates a secure, unpredictable reset token and dispatches reset instructions.
+   * Employs generic responses to prevent user account enumeration.
+   */
+  async forgotPassword(
+    request: ForgotPasswordRequest,
+  ): Promise<ForgotPasswordResponse> {
+    const rawEmail = (request?.email || "").trim().toLowerCase();
+    const genericResponse: ForgotPasswordResponse = {
+      success: true,
+      message:
+        "If an account exists for that email, password-reset instructions will be sent.",
+    };
+
+    if (!rawEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)) {
+      return genericResponse;
+    }
+
+    this.checkForgotPasswordRateLimit(rawEmail);
+    this.recordForgotPasswordAttempt(rawEmail);
+
+    let user: { id: string; email: string } | null = null;
+
+    if (this.prisma) {
+      try {
+        const dbUser = await this.prisma.user.findUnique({
+          where: { email: rawEmail },
+          select: { id: true, email: true },
+        });
+        if (dbUser) {
+          user = dbUser;
+        }
+      } catch (err) {
+        this.logger.warn(
+          `Prisma error in forgotPassword: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+    }
+
+    if (!user && process.env.NODE_ENV !== "production") {
+      const mock = Object.values(this.mockUsers).find(
+        (u) => u.email.toLowerCase() === rawEmail,
+      );
+      if (mock) {
+        user = { id: mock.id, email: mock.email };
+      }
+    }
+
+    if (!user) {
+      // Account does not exist, return generic response without leaking existence
+      return genericResponse;
+    }
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(rawToken)
+      .digest("hex");
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    if (this.prisma) {
+      try {
+        // Invalidate older unused reset tokens for this user
+        await this.prisma.passwordResetToken.updateMany({
+          where: { userId: user.id, usedAt: null },
+          data: { usedAt: new Date() },
+        });
+
+        await this.prisma.passwordResetToken.create({
+          data: {
+            tokenHash,
+            userId: user.id,
+            expiresAt,
+          },
+        });
+      } catch (err) {
+        this.logger.error(
+          `Failed to store password reset token: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+    } else {
+      // Memory fallback for tests
+      for (const [hash, record] of this.mockResetTokens.entries()) {
+        if (record.userId === user.id && !record.usedAt) {
+          record.usedAt = new Date();
+        }
+      }
+      this.mockResetTokens.set(tokenHash, {
+        tokenHash,
+        userId: user.id,
+        expiresAt,
+      });
+    }
+
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
+
+    if (this.emailService) {
+      await this.emailService.sendPasswordResetEmail(
+        rawEmail,
+        rawToken,
+        resetUrl,
+      );
+    }
+
+    return genericResponse;
+  }
+
+  /**
+   * Resets user password using a single-use cryptographically validated token.
+   * Atomically invalidates the token and revokes all active sessions for the user.
+   */
+  async resetPassword(
+    request: ResetPasswordRequest,
+  ): Promise<ResetPasswordResponse> {
+    if (!request.token || request.token.trim().length === 0) {
+      throw new BadRequestException("Reset token is required");
+    }
+
+    if (!request.newPassword || request.newPassword.length < 8) {
+      throw new BadRequestException(
+        "Password must be at least 8 characters long",
+      );
+    }
+
+    if (
+      !/[A-Za-z]/.test(request.newPassword) ||
+      !/[0-9]/.test(request.newPassword)
+    ) {
+      throw new BadRequestException(
+        "Password must contain both letters and numbers",
+      );
+    }
+
+    if (
+      request.confirmPassword &&
+      request.newPassword !== request.confirmPassword
+    ) {
+      throw new BadRequestException("Password confirmation does not match");
+    }
+
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(request.token.trim())
+      .digest("hex");
+    const newPasswordHash = hashPassword(request.newPassword);
+
+    let userId: string | null = null;
+
+    if (this.prisma) {
+      try {
+        const resetRecord = await this.prisma.passwordResetToken.findUnique({
+          where: { tokenHash },
+        });
+
+        if (!resetRecord) {
+          throw new BadRequestException(
+            "Invalid or expired password reset token",
+          );
+        }
+
+        if (resetRecord.usedAt !== null) {
+          throw new BadRequestException(
+            "This password reset token has already been used",
+          );
+        }
+
+        if (resetRecord.expiresAt < new Date()) {
+          throw new BadRequestException(
+            "This password reset token has expired",
+          );
+        }
+
+        userId = resetRecord.userId;
+
+        // Perform password update, token invalidation, and session purge atomically
+        await this.prisma.$transaction([
+          this.prisma.user.update({
+            where: { id: userId },
+            data: { passwordHash: newPasswordHash },
+          }),
+          this.prisma.passwordResetToken.update({
+            where: { id: resetRecord.id },
+            data: { usedAt: new Date() },
+          }),
+          this.prisma.passwordResetToken.updateMany({
+            where: { userId, usedAt: null },
+            data: { usedAt: new Date() },
+          }),
+          this.prisma.userSession.deleteMany({
+            where: { userId },
+          }),
+        ]);
+      } catch (err) {
+        if (err instanceof HttpException) {
+          throw err;
+        }
+        this.logger.error(
+          `Database error during password reset: ${err instanceof Error ? err.message : String(err)}`,
+        );
+        throw new HttpException(
+          "Failed to reset password due to an internal server error",
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    } else {
+      const mockRecord = this.mockResetTokens.get(tokenHash);
+      if (!mockRecord) {
+        throw new BadRequestException(
+          "Invalid or expired password reset token",
+        );
+      }
+      if (mockRecord.usedAt) {
+        throw new BadRequestException(
+          "This password reset token has already been used",
+        );
+      }
+      if (mockRecord.expiresAt < new Date()) {
+        throw new BadRequestException("This password reset token has expired");
+      }
+
+      mockRecord.usedAt = new Date();
+      userId = mockRecord.userId;
+
+      if (this.mockUsers[userId]) {
+        this.mockUsers[userId].passwordHash = newPasswordHash;
+      }
+    }
+
+    // Invalidate in-memory active sessions for this user
+    if (userId) {
+      for (const [hash, session] of this.activeSessions.entries()) {
+        if (session.userId === userId) {
+          this.activeSessions.delete(hash);
+          this.revokedTokens.add(hash);
+        }
+      }
+    }
+
+    return {
+      success: true,
+      message:
+        "Password has been reset successfully. Please sign in with your new password.",
+    };
+  }
+
   // --- Brute-force & Rate-limiting Helpers ---
+
+  private checkForgotPasswordRateLimit(email: string): void {
+    const attempt = this.forgotPasswordAttempts.get(email);
+    if (!attempt) return;
+
+    const windowMs = 15 * 60 * 1000; // 15 minutes
+    const now = Date.now();
+
+    if (now - attempt.firstAttemptAt > windowMs) {
+      this.forgotPasswordAttempts.delete(email);
+      return;
+    }
+
+    if (attempt.count >= 5) {
+      throw new HttpException(
+        "Too many password reset requests. Please wait 15 minutes before trying again.",
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+  }
+
+  private recordForgotPasswordAttempt(email: string): void {
+    const attempt = this.forgotPasswordAttempts.get(email);
+    const now = Date.now();
+
+    if (!attempt) {
+      this.forgotPasswordAttempts.set(email, { count: 1, firstAttemptAt: now });
+    } else {
+      attempt.count += 1;
+    }
+  }
 
   private checkRateLimit(key: string): void {
     const attempt = this.loginAttempts.get(key);

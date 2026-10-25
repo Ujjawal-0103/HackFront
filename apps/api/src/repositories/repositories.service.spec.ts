@@ -246,4 +246,131 @@ describe("RepositoriesService", () => {
       });
     });
   });
+
+  describe("importRepositoryByUrl", () => {
+    it("should return existing repository if already connected to workspace", async () => {
+      mockPrisma.repository.findUnique.mockResolvedValue({
+        id: "repo_existing",
+        workspaceId: "ws_alpha",
+        fullName: "Ujjawal-0103/HackFront",
+        defaultBranch: "main",
+        isPrivate: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        syncJobs: [],
+        _count: { commits: 10, pullRequests: 2, issues: 0, sourceRecords: 12 },
+      });
+
+      const res = await service.importRepositoryByUrl(
+        "ws_alpha",
+        "https://github.com/Ujjawal-0103/HackFront",
+      );
+
+      expect(res.isAlreadyConnected).toBe(true);
+      expect(res.repository.id).toBe("repo_existing");
+      expect(res.message).toContain("already connected");
+    });
+
+    it("should import fixture repository in mock mode", async () => {
+      mockPrisma.repository.findUnique.mockResolvedValue(null);
+      mockGitHubService.isMock.mockReturnValue(true);
+      mockGitHubService.verifyRepositoryAccess.mockResolvedValue({
+        authorized: true,
+      });
+      mockGitHubService.getRepository = jest.fn().mockResolvedValue({
+        id: 12345,
+        defaultBranch: "main",
+        isPrivate: false,
+      });
+      mockPrisma.repository.create = jest.fn().mockResolvedValue({
+        id: "repo_created",
+        workspaceId: "ws_alpha",
+        fullName: "Ujjawal-0103/HackFront",
+        defaultBranch: "main",
+        isPrivate: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        syncJobs: [],
+        _count: { commits: 0, pullRequests: 0, issues: 0, sourceRecords: 0 },
+      });
+
+      const res = await service.importRepositoryByUrl(
+        "ws_alpha",
+        "https://github.com/Ujjawal-0103/HackFront.git",
+      );
+
+      expect(res.isAlreadyConnected).toBe(false);
+      expect(res.repository.id).toBe("repo_created");
+      expect(mockGitHubService.verifyRepositoryAccess).toHaveBeenCalledWith(
+        1001,
+        "Ujjawal-0103",
+        "HackFront",
+      );
+    });
+
+    it("should reject non-fixture repository in mock mode", async () => {
+      mockPrisma.repository.findUnique.mockResolvedValue(null);
+      mockGitHubService.isMock.mockReturnValue(true);
+
+      await expect(
+        service.importRepositoryByUrl(
+          "ws_alpha",
+          "https://github.com/some-user/external-repo",
+        ),
+      ).rejects.toThrow("Development Mock Sandbox Mode");
+    });
+
+    it("should verify access and import in live mode", async () => {
+      mockPrisma.repository.findUnique.mockResolvedValue(null);
+      mockGitHubService.isMock.mockReturnValue(false);
+      mockPrisma.gitHubInstallation.findFirst.mockResolvedValue({
+        installationId: 173390166,
+      });
+      mockGitHubService.verifyRepositoryAccess.mockResolvedValue({
+        authorized: true,
+      });
+      mockGitHubService.getRepository = jest.fn().mockResolvedValue({
+        id: 99999,
+        defaultBranch: "main",
+        isPrivate: true,
+      });
+      mockPrisma.repository.create = jest.fn().mockResolvedValue({
+        id: "repo_live",
+        workspaceId: "ws_alpha",
+        fullName: "org/private-repo",
+        defaultBranch: "main",
+        isPrivate: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        syncJobs: [],
+        _count: { commits: 0, pullRequests: 0, issues: 0, sourceRecords: 0 },
+      });
+
+      const res = await service.importRepositoryByUrl(
+        "ws_alpha",
+        "https://github.com/org/private-repo",
+      );
+
+      expect(res.isAlreadyConnected).toBe(false);
+      expect(res.repository.fullName).toBe("org/private-repo");
+      expect(mockGitHubService.verifyRepositoryAccess).toHaveBeenCalledWith(
+        173390166,
+        "org",
+        "private-repo",
+      );
+    });
+
+    it("should reject when workspace lacks an active installation in live mode", async () => {
+      mockPrisma.repository.findUnique.mockResolvedValue(null);
+      mockGitHubService.isMock.mockReturnValue(false);
+      mockPrisma.gitHubInstallation.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.importRepositoryByUrl(
+          "ws_alpha",
+          "https://github.com/org/repo",
+        ),
+      ).rejects.toThrow("has no active GitHub App installation");
+    });
+  });
 });

@@ -9,6 +9,8 @@ import { MockGitHubIngestionAdapter } from "./mock-github-ingestion.adapter";
 import { GITHUB_INGESTION_ADAPTER_TOKEN } from "./github-adapter.interface";
 import { WorkspacesModule } from "../workspaces/workspaces.module";
 
+import { DelegatingGitHubIngestionAdapter } from "./delegating-github-ingestion.adapter";
+
 @Module({
   imports: [WorkspacesModule],
   controllers: [GitHubController],
@@ -19,20 +21,10 @@ import { WorkspacesModule } from "../workspaces/workspaces.module";
     MockGitHubClient,
     GitHubIngestionAdapter,
     MockGitHubIngestionAdapter,
+    DelegatingGitHubIngestionAdapter,
     {
       provide: GITHUB_INGESTION_ADAPTER_TOKEN,
-      useFactory: (
-        gitHubService: GitHubService,
-        liveAdapter: GitHubIngestionAdapter,
-        mockAdapter: MockGitHubIngestionAdapter,
-      ) => {
-        return gitHubService.isConfigured() ? liveAdapter : mockAdapter;
-      },
-      inject: [
-        GitHubService,
-        GitHubIngestionAdapter,
-        MockGitHubIngestionAdapter,
-      ],
+      useClass: DelegatingGitHubIngestionAdapter,
     },
   ],
   exports: [
@@ -41,6 +33,7 @@ import { WorkspacesModule } from "../workspaces/workspaces.module";
     GitHubService,
     GitHubIngestionAdapter,
     MockGitHubIngestionAdapter,
+    DelegatingGitHubIngestionAdapter,
     GITHUB_INGESTION_ADAPTER_TOKEN,
   ],
 })

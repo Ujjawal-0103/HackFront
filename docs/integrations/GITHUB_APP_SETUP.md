@@ -177,3 +177,65 @@ Traceback includes a built-in development sandbox (`MockGitHubClient`) to facili
   - Direct live communication with `https://api.github.com/app/installations/:id/access_tokens`.
   - Ingestion of live proprietary Git trees and pull request discussions.
   - Live GitHub webhook delivery signature validation.
+
+---
+
+## 9. Restored Authentication Routes & Navigation
+
+Traceback features verified authentication routes and session lifecycle controls:
+
+### Public Routes
+
+- `/login`: Email and password authentication with client-side validation, loading states, server error handling, and redirection to `returnTo` destination (or `/` default).
+- `/register`: Full name, work email, password (minimum 8 characters, letters + numbers), and password confirmation validation. Prevents duplicate email registration and redirects to `returnTo` on success.
+
+### Navigation Behavior
+
+- **Unauthenticated Users**:
+  - Navbar renders **Sign In** and **Register** actions linking to `/login?returnTo=${encodeURIComponent(pathname)}` and `/register?returnTo=${encodeURIComponent(pathname)}`.
+  - Protected routes (e.g. `/repositories`, `/verify`) display an authentication prompt preserving the return destination.
+- **Authenticated Users**:
+  - Navbar displays the user account button (`👤 <User Name> ▼`).
+  - Account menu provides **Switch Account** (`/login`), **Register New Account** (`/register`), and **Sign Out**.
+- **Logout & Session Revocation**:
+  - Clicking **Sign Out** revokes the session on the backend (`POST /api/auth/logout`), invalidates in-memory and `localStorage` session state (`traceback_auth_token`, `traceback_active_workspace`, `traceback_user_id`), and navigates to `/login`.
+  - Refreshing the browser cannot restore a revoked session.
+
+---
+
+## 10. Connect Repository by GitHub URL Workflow
+
+In addition to selecting repositories from the GitHub App installation picker, users can connect repositories directly by pasting their browser URL.
+
+### Endpoint Specification
+
+- `POST /api/workspaces/:workspaceId/repositories/import-url`
+- **Request Body**: `{ "url": "https://github.com/owner/repository" }`
+- **Response**: `{ "repository": RepositoryDetailsDto, "isAlreadyConnected": boolean, "message": string }`
+
+### Supported URL Formats & Normalization
+
+The backend strictly validates repository URLs via `apps/api/src/repositories/github-url-parser.util.ts`:
+
+- Standard HTTPS: `https://github.com/owner/repository`
+- Trailing slashes: `https://github.com/owner/repository/` (normalized)
+- `.git` suffix: `https://github.com/owner/repository.git` (normalized)
+- Branch / Tree paths: `https://github.com/owner/repository/tree/main` (extracts base owner and repository)
+- Host enforcement: Only official `github.com` and `www.github.com` are accepted.
+
+### Security & Validation Controls
+
+- **Reject Embedded Credentials**: Any URL containing `@` (e.g. `https://user:pass@github.com/...`) is rejected with HTTP 400.
+- **Reject Non-Repository Paths**: Reserved GitHub paths (`settings`, `orgs`, `explore`, `login`, `features`, `pricing`) are rejected.
+- **No Blind Fetching**: User-supplied URLs are never passed directly to `fetch()` or external HTTP clients. They are parsed into canonical `owner` and `repo` identifiers and queried strictly through the authenticated GitHub App installation API.
+- **Installation Authorization**: The repository URL is a locator, not an authorization grant. The backend resolves the workspace's active GitHub App installation and verifies that the installation has read permissions for the repository.
+
+### Duplicate Repository Handling
+
+- If a repository with the same normalized `fullName` is already connected to the current workspace, the backend returns HTTP 200 with `{ isAlreadyConnected: true, message: "Repository is already connected...", repository }`.
+- The frontend displays an informative banner and provides a **"Sync Repository Now"** action without creating duplicate database records.
+
+### Development Mock Mode Behavior
+
+- If the system is in development mock mode (`gitHubStatus.isMockMode === true`), live GitHub API calls are never dispatched.
+- Only mock fixture repositories (`Ujjawal-0103/HackFront` and `acme-corp/payment-service`) can be connected. Any other repository URL is rejected with an explicit explanation that live credentials are required.

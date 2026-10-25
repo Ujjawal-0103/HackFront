@@ -4,6 +4,7 @@ import React, { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../../context/AuthContext";
+import { PasswordInput } from "../../components/PasswordInput";
 
 function LoginForm() {
   const router = useRouter();
@@ -144,38 +145,45 @@ function LoginForm() {
         </div>
 
         <div style={{ marginBottom: "1.5rem" }}>
-          <label
-            htmlFor="login-password"
+          <div
             style={{
-              display: "block",
-              fontSize: "0.825rem",
-              fontWeight: 600,
-              color: "var(--color-text)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
               marginBottom: "0.35rem",
             }}
           >
-            Password
-          </label>
-          <input
+            <label
+              htmlFor="login-password"
+              style={{
+                display: "block",
+                fontSize: "0.825rem",
+                fontWeight: 600,
+                color: "var(--color-text)",
+              }}
+            >
+              Password
+            </label>
+            <Link
+              id="login-forgot-password-link"
+              href="/forgot-password"
+              style={{
+                fontSize: "0.8rem",
+                color: "var(--color-primary)",
+                fontWeight: 500,
+                textDecoration: "none",
+              }}
+            >
+              Forgot password?
+            </Link>
+          </div>
+          <PasswordInput
             id="login-password"
-            type="password"
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
             disabled={isLoading}
             required
-            style={{
-              width: "100%",
-              padding: "0.6rem 0.85rem",
-              borderRadius: "6px",
-              border: "1px solid var(--color-border)",
-              backgroundColor: "var(--color-background)",
-              color: "var(--color-text)",
-              fontSize: "0.9rem",
-              outline: "none",
-              boxSizing: "border-box",
-            }}
           />
         </div>
 

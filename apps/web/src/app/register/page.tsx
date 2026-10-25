@@ -4,6 +4,8 @@ import React, { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../../context/AuthContext";
+import { PasswordInput } from "../../components/PasswordInput";
+import { PasswordStrengthIndicator, evaluatePasswordStrength } from "../../components/PasswordStrengthIndicator";
 
 function RegisterForm() {
   const router = useRouter();
@@ -211,26 +213,16 @@ function RegisterForm() {
           >
             Password
           </label>
-          <input
+          <PasswordInput
             id="register-password"
-            type="password"
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Minimum 8 characters (letters + numbers)"
             disabled={isLoading}
             required
-            style={{
-              width: "100%",
-              padding: "0.6rem 0.85rem",
-              borderRadius: "6px",
-              border: "1px solid var(--color-border)",
-              backgroundColor: "var(--color-background)",
-              color: "var(--color-text)",
-              fontSize: "0.9rem",
-              outline: "none",
-              boxSizing: "border-box",
-            }}
           />
+          <PasswordStrengthIndicator password={password} />
         </div>
 
         <div style={{ marginBottom: "1.5rem" }}>
@@ -246,25 +238,14 @@ function RegisterForm() {
           >
             Confirm Password
           </label>
-          <input
+          <PasswordInput
             id="register-password-confirm"
-            type="password"
+            autoComplete="new-password"
             value={passwordConfirmation}
             onChange={(e) => setPasswordConfirmation(e.target.value)}
             placeholder="Repeat password"
             disabled={isLoading}
             required
-            style={{
-              width: "100%",
-              padding: "0.6rem 0.85rem",
-              borderRadius: "6px",
-              border: "1px solid var(--color-border)",
-              backgroundColor: "var(--color-background)",
-              color: "var(--color-text)",
-              fontSize: "0.9rem",
-              outline: "none",
-              boxSizing: "border-box",
-            }}
           />
         </div>
 

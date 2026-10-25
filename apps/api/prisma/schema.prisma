@@ -20,6 +20,7 @@ model User {
   verdicts             HumanVerdictRecord[]
   sessions             UserSession[]
   verificationSessions VerificationSession[]
+  passwordResetTokens  PasswordResetToken[]
 
   @@map("users")
 }
@@ -36,6 +37,21 @@ model UserSession {
   @@index([userId])
   @@index([tokenHash])
   @@map("user_sessions")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  tokenHash String    @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("password_reset_tokens")
 }
 
 enum WorkspaceRole {

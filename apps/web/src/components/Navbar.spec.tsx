@@ -107,6 +107,14 @@ describe("Navbar Component", () => {
 
     expect(registerLink).toBeInTheDocument();
     expect(registerLink).toHaveAttribute("href", "/register?returnTo=%2Frepositories");
+
+    // Must NOT leak protected workspace navigation or workspace selector
+    expect(screen.queryByRole("link", { name: /^overview$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /^verify$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /^history & reports$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /^repositories$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /^evidence$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /select workspace/i })).not.toBeInTheDocument();
   });
 
   it("renders navigation links to Overview, Verify, History, Repositories, and Evidence", () => {

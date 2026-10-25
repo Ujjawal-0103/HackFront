@@ -17,6 +17,10 @@ import {
   LoginResponse,
   AuthSessionResponse,
   RegisterRequest,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
   VerifyExplanationRequest,
   VerificationSession,
   SubmitHumanVerdictRequest,
@@ -159,6 +163,24 @@ export const api = {
   async logout(): Promise<{ success: boolean; message: string }> {
     return request<{ success: boolean; message: string }>("/auth/logout", {
       method: "POST",
+    });
+  },
+
+  async forgotPassword(
+    payload: ForgotPasswordRequest,
+  ): Promise<ForgotPasswordResponse> {
+    return request<ForgotPasswordResponse>("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async resetPassword(
+    payload: ResetPasswordRequest,
+  ): Promise<ResetPasswordResponse> {
+    return request<ResetPasswordResponse>("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify(payload),
     });
   },
 

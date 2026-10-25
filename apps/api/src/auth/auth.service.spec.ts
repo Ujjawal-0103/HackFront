@@ -1,5 +1,6 @@
 import { AuthService } from "./auth.service";
 import { WorkspacesService } from "../workspaces/workspaces.service";
+import { EmailService } from "./email.service";
 import {
   BadRequestException,
   ConflictException,
@@ -10,10 +11,12 @@ import {
 describe("AuthService (Authentication, Registration & Session Management)", () => {
   let authService: AuthService;
   let workspacesService: WorkspacesService;
+  let emailService: EmailService;
 
   beforeEach(() => {
     workspacesService = new WorkspacesService();
-    authService = new AuthService(workspacesService);
+    emailService = new EmailService();
+    authService = new AuthService(workspacesService, undefined, emailService);
   });
 
   describe("Registration", () => {
@@ -248,6 +251,150 @@ describe("AuthService (Authentication, Registration & Session Management)", () =
       } finally {
         process.env.NODE_ENV = originalEnv;
       }
+    });
+  });
+
+  describe("Password Recovery (Forgot Password & Reset Password)", () => {
+    beforeEach(async () => {
+      await authService.register({
+        name: "Recovery User",
+        email: "recovery.user@company.com",
+        password: "OldPassword123!",
+        passwordConfirmation: "OldPassword123!",
+      });
+    });
+
+    it("should return identical generic message for both existing and non-existent accounts", async () => {
+      const existingRes = await authService.forgotPassword({
+        email: "recovery.user@company.com",
+      });
+      expect(existingRes.success).toBe(true);
+      expect(existingRes.message).toBe(
+        "If an account exists for that email, password-reset instructions will be sent.",
+      );
+
+      const nonExistentRes = await authService.forgotPassword({
+        email: "ghost@nowhere.com",
+      });
+      expect(nonExistentRes.success).toBe(true);
+      expect(nonExistentRes.message).toBe(
+        "If an account exists for that email, password-reset instructions will be sent.",
+      );
+    });
+
+    it("should rate limit password reset requests after 5 attempts", async () => {
+      const testEmail = "ratelimit@example.com";
+      for (let i = 0; i < 5; i++) {
+        await authService.forgotPassword({ email: testEmail });
+      }
+
+      await expect(
+        authService.forgotPassword({ email: testEmail }),
+      ).rejects.toThrow(HttpException);
+    });
+
+    it("should successfully reset password with valid token and revoke previous sessions", async () => {
+      // 1. Log in and get active session token
+      const loginRes = await authService.login({
+        email: "recovery.user@company.com",
+        password: "OldPassword123!",
+      });
+      const activeSessionToken = loginRes.token;
+
+      // Verify session is valid before reset
+      const validatedBefore = await authService.validateToken(activeSessionToken);
+      expect(validatedBefore).toBeDefined();
+
+      // 2. Request forgot password
+      await authService.forgotPassword({ email: "recovery.user@company.com" });
+      const resetToken = emailService.getLatestResetTokenForTest("recovery.user@company.com");
+      expect(resetToken).toBeDefined();
+
+      // 3. Reset password using token
+      const resetRes = await authService.resetPassword({
+        token: resetToken!,
+        newPassword: "BrandNewPassword456!",
+        confirmPassword: "BrandNewPassword456!",
+      });
+      expect(resetRes.success).toBe(true);
+
+      // 4. Verify previous active session has been revoked!
+      const validatedAfter = await authService.validateToken(activeSessionToken);
+      expect(validatedAfter).toBeNull();
+
+      // 5. Verify old password fails and new password works
+      await expect(
+        authService.login({
+          email: "recovery.user@company.com",
+          password: "OldPassword123!",
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+
+      const newLoginRes = await authService.login({
+        email: "recovery.user@company.com",
+        password: "BrandNewPassword456!",
+      });
+      expect(newLoginRes).toBeDefined();
+      expect(newLoginRes.user.email).toBe("recovery.user@company.com");
+    });
+
+    it("should reject password reset when token has already been used", async () => {
+      await authService.forgotPassword({ email: "recovery.user@company.com" });
+      const resetToken = emailService.getLatestResetTokenForTest("recovery.user@company.com");
+      expect(resetToken).toBeDefined();
+
+      // First reset succeeds
+      await authService.resetPassword({
+        token: resetToken!,
+        newPassword: "FirstResetPass123!",
+      });
+
+      // Second attempt with same token must fail
+      await expect(
+        authService.resetPassword({
+          token: resetToken!,
+          newPassword: "SecondResetPass456!",
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it("should reject password reset with invalid or nonexistent token", async () => {
+      await expect(
+        authService.resetPassword({
+          token: "completely-bogus-token",
+          newPassword: "NewValidPassword123!",
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it("should reject password reset with weak password or mismatching confirmation", async () => {
+      await authService.forgotPassword({ email: "recovery.user@company.com" });
+      const resetToken = emailService.getLatestResetTokenForTest("recovery.user@company.com");
+
+      // Password too short (<8)
+      await expect(
+        authService.resetPassword({
+          token: resetToken!,
+          newPassword: "Short1",
+        }),
+      ).rejects.toThrow(BadRequestException);
+
+      // Password missing numbers
+      await expect(
+        authService.resetPassword({
+          token: resetToken!,
+          newPassword: "PasswordWithoutNumbers",
+        }),
+      ).rejects.toThrow(BadRequestException);
+
+      // Mismatched confirmation
+      await expect(
+        authService.resetPassword({
+          token: resetToken!,
+          newPassword: "ValidPassword123!",
+          confirmPassword: "MismatchPassword456!",
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

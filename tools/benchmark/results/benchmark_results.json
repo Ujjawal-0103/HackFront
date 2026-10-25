@@ -1,0 +1,116 @@
+{
+  "evaluatedAt": "2026-10-25T11:10:17.553Z",
+  "benchmarkVersion": "1.0.0",
+  "scenariosCount": 10,
+  "baselines": {
+    "Baseline A (Unanchored General LLM)": {
+      "totalScenarios": 10,
+      "correctAssessments": 1,
+      "accuracyPct": 10,
+      "falseSupportRatePct": 80,
+      "abstentionAccuracyPct": 0,
+      "citationValidityRatePct": 0,
+      "avgLatencyMs": 25
+    },
+    "Baseline B (Standard RAG / Search)": {
+      "totalScenarios": 10,
+      "correctAssessments": 4,
+      "accuracyPct": 40,
+      "falseSupportRatePct": 40,
+      "abstentionAccuracyPct": 40,
+      "citationValidityRatePct": 80,
+      "avgLatencyMs": 65
+    },
+    "System C (Traceback Full Decision Memory Pipeline)": {
+      "totalScenarios": 10,
+      "correctAssessments": 10,
+      "accuracyPct": 100,
+      "falseSupportRatePct": 0,
+      "abstentionAccuracyPct": 100,
+      "citationValidityRatePct": 100,
+      "avgLatencyMs": 48
+    }
+  },
+  "scenarioResults": [
+    {
+      "scenarioId": "TB-BENCH-001",
+      "category": "DIRECT_SUPPORT",
+      "groundTruth": "SUPPORTED",
+      "baselineA": "SUPPORTED",
+      "baselineB": "SUPPORTED",
+      "tracebackC": "SUPPORTED"
+    },
+    {
+      "scenarioId": "TB-BENCH-002",
+      "category": "CONTRADICTED",
+      "groundTruth": "CONTRADICTED",
+      "baselineA": "SUPPORTED",
+      "baselineB": "CONTRADICTED",
+      "tracebackC": "CONTRADICTED"
+    },
+    {
+      "scenarioId": "TB-BENCH-003",
+      "category": "INDIRECT_CONTEXT",
+      "groundTruth": "INSUFFICIENT_EVIDENCE",
+      "baselineA": "SUPPORTED",
+      "baselineB": "INSUFFICIENT_EVIDENCE",
+      "tracebackC": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "scenarioId": "TB-BENCH-004",
+      "category": "CODE_CHANGE_ONLY",
+      "groundTruth": "INSUFFICIENT_EVIDENCE",
+      "baselineA": "SUPPORTED",
+      "baselineB": "SUPPORTED",
+      "tracebackC": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "scenarioId": "TB-BENCH-005",
+      "category": "PARTIALLY_SUPPORTED",
+      "groundTruth": "INSUFFICIENT_EVIDENCE",
+      "baselineA": "SUPPORTED",
+      "baselineB": "SUPPORTED",
+      "tracebackC": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "scenarioId": "TB-BENCH-006",
+      "category": "CONFLICTING_HISTORICAL_RECORDS",
+      "groundTruth": "CONTRADICTED",
+      "baselineA": "SUPPORTED",
+      "baselineB": "INSUFFICIENT_EVIDENCE",
+      "tracebackC": "CONTRADICTED"
+    },
+    {
+      "scenarioId": "TB-BENCH-007",
+      "category": "SUPERSEDED_DECISION",
+      "groundTruth": "CONTRADICTED",
+      "baselineA": "SUPPORTED",
+      "baselineB": "SUPPORTED",
+      "tracebackC": "CONTRADICTED"
+    },
+    {
+      "scenarioId": "TB-BENCH-008",
+      "category": "LEXICALLY_SIMILAR_UNRELATED",
+      "groundTruth": "INSUFFICIENT_EVIDENCE",
+      "baselineA": "SUPPORTED",
+      "baselineB": "SUPPORTED",
+      "tracebackC": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "scenarioId": "TB-BENCH-009",
+      "category": "MISSING_EVIDENCE",
+      "groundTruth": "INSUFFICIENT_EVIDENCE",
+      "baselineA": "SUPPORTED",
+      "baselineB": "INSUFFICIENT_EVIDENCE",
+      "tracebackC": "INSUFFICIENT_EVIDENCE"
+    },
+    {
+      "scenarioId": "TB-BENCH-010",
+      "category": "PROPOSED_DIFF_CONFLICT",
+      "groundTruth": "DOCUMENTED_CONFLICT",
+      "baselineA": "NO_KNOWN_CONFLICT",
+      "baselineB": "NO_KNOWN_CONFLICT",
+      "tracebackC": "DOCUMENTED_CONFLICT"
+    }
+  ]
+}

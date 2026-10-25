@@ -305,4 +305,96 @@ describe("RepositoriesPage (Sprint 3 & GitHub Hardening)", () => {
       ).toBeInTheDocument();
     });
   });
+
+  it("opens Connect by URL modal, validates input, and connects repository successfully", async () => {
+    const newRepo = {
+      id: "repo-999",
+      workspaceId: "ws_alpha",
+      fullName: "facebook/react",
+      defaultBranch: "main",
+      isPrivate: false,
+      indexedAt: "2026-10-25T10:00:00Z",
+      createdAt: "2026-10-25T09:00:00Z",
+      updatedAt: "2026-10-25T10:00:00Z",
+      counts: { commits: 0, pullRequests: 0, issues: 0, sourceRecords: 0 },
+      latestSyncJob: null,
+    };
+
+    (api.importRepositoryByUrl as jest.Mock).mockResolvedValue({
+      repository: newRepo,
+      isAlreadyConnected: false,
+      message: "Repository successfully verified and connected",
+    });
+    (api.triggerSync as jest.Mock).mockResolvedValue({ jobId: "job-sync-1" });
+
+    render(<RepositoriesPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Ujjawal-0103/HackFront")).toBeInTheDocument();
+    });
+
+    const connectByUrlBtn = screen.getByRole("button", {
+      name: /connect repository by url/i,
+    });
+    fireEvent.click(connectByUrlBtn);
+
+    expect(
+      screen.getByText("Connect Repository by GitHub URL"),
+    ).toBeInTheDocument();
+
+    const urlInput = screen.getByLabelText(/github repository url/i);
+    fireEvent.change(urlInput, {
+      target: { value: "https://github.com/facebook/react" },
+    });
+
+    const submitBtn = screen.getByRole("button", {
+      name: /^connect repository$/i,
+    });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(api.importRepositoryByUrl).toHaveBeenCalledWith(
+        { url: "https://github.com/facebook/react" },
+        "ws_alpha",
+      );
+      expect(screen.getByText("✅ Repository Connected")).toBeInTheDocument();
+    });
+  });
+
+  it("handles duplicate repository URL by showing already connected message and sync action", async () => {
+    (api.importRepositoryByUrl as jest.Mock).mockResolvedValue({
+      repository: mockRepositories[0],
+      isAlreadyConnected: true,
+      message: "Repository is already connected to workspace ws_alpha.",
+    });
+
+    render(<RepositoriesPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Ujjawal-0103/HackFront")).toBeInTheDocument();
+    });
+
+    const connectByUrlBtn = screen.getByRole("button", {
+      name: /connect repository by url/i,
+    });
+    fireEvent.click(connectByUrlBtn);
+
+    const urlInput = screen.getByLabelText(/github repository url/i);
+    fireEvent.change(urlInput, {
+      target: { value: "https://github.com/Ujjawal-0103/HackFront" },
+    });
+
+    const submitBtn = screen.getByRole("button", {
+      name: /^connect repository$/i,
+    });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText("ℹ️ Already Connected")).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /sync repository now/i }),
+      ).toBeInTheDocument();
+    });
+  });
 });
+

@@ -199,6 +199,16 @@ export interface CreateRepositoryDto {
   installationId?: number;
 }
 
+export interface ImportRepositoryByUrlDto {
+  url: string;
+}
+
+export interface ImportRepositoryByUrlResponse {
+  repository: RepositoryDetailsDto;
+  isAlreadyConnected: boolean;
+  message: string;
+}
+
 export interface GitHubAuthorizedRepositoryDto {
   id: number;
   fullName: string;

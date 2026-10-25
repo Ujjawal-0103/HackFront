@@ -12,7 +12,9 @@ import {
   CreateRepositoryDto,
   RepositoryDetailsDto,
   RepositoryActivityDto,
+  ImportRepositoryByUrlResponse,
 } from "@traceback/shared-types";
+import { parseGitHubRepositoryUrl } from "./github-url-parser.util";
 
 export { RepositoryDetailsDto, RepositoryActivityDto };
 
@@ -368,4 +370,195 @@ export class RepositoriesService {
 
     return { success: true, id: repositoryId };
   }
+
+  /**
+   * Imports or connects a repository by pasting its GitHub URL.
+   * Enforces strict URL parsing, workspace authorization, and live GitHub App installation verification.
+   */
+  async importRepositoryByUrl(
+    workspaceId: string,
+    url: string,
+  ): Promise<ImportRepositoryByUrlResponse> {
+    const { owner, repo, fullName, canonicalUrl } =
+      parseGitHubRepositoryUrl(url);
+
+    await this.ensureWorkspaceExists(workspaceId);
+
+    // 1. Check if the repository is already connected to this workspace
+    const existing = await this.prisma.repository.findUnique({
+      where: {
+        workspaceId_fullName: {
+          workspaceId,
+          fullName,
+        },
+      },
+      include: {
+        syncJobs: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
+        _count: {
+          select: {
+            commits: true,
+            pullRequests: true,
+            issues: true,
+            sourceRecords: true,
+          },
+        },
+      },
+    });
+
+    if (existing) {
+      return {
+        repository: this.mapRepositoryDetails(existing),
+        isAlreadyConnected: true,
+        message: `Repository "${fullName}" is already connected to this workspace.`,
+      };
+    }
+
+    // 2. Resolve active GitHub installation for this workspace
+    let installationId: number | undefined;
+    if (this.prisma?.gitHubInstallation) {
+      const inst = await this.prisma.gitHubInstallation.findFirst({
+        where: { workspaceId },
+      });
+      if (inst) {
+        installationId = inst.installationId;
+      }
+    }
+
+    // 3. Mock mode safety rules
+    if (this.githubService.isMock()) {
+      const isFixture =
+        fullName.toLowerCase() === "ujjawal-0103/hackfront" ||
+        fullName.toLowerCase() === "acme-corp/payment-service";
+
+      if (!isFixture) {
+        throw new BadRequestException(
+          `Cannot connect "${fullName}" by URL in Development Mock Sandbox Mode. Only mock fixtures ("Ujjawal-0103/HackFront", "acme-corp/payment-service") are available without live GitHub App credentials. Please configure GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY for live repository integration.`,
+        );
+      }
+      installationId = 1001;
+    } else {
+      if (!installationId) {
+        throw new BadRequestException(
+          `Workspace "${workspaceId}" has no active GitHub App installation. Please connect a GitHub App installation before importing repositories by URL.`,
+        );
+      }
+    }
+
+    // 4. Verify repository access through the GitHub App installation
+    try {
+      await this.githubService.verifyRepositoryAccess(
+        installationId,
+        owner,
+        repo,
+      );
+    } catch (err: any) {
+      if (err instanceof ForbiddenException || err.status === 403) {
+        throw new ForbiddenException(
+          `Repository "${fullName}" is not authorized for GitHub App Installation #${installationId}. Please install the GitHub App on "${owner}" or grant access to "${repo}" in GitHub App installation settings.`,
+        );
+      }
+      if (err instanceof NotFoundException || err.status === 404) {
+        throw new NotFoundException(
+          `Repository "${fullName}" was not found or is not accessible to GitHub App Installation #${installationId}. Verify that the repository exists and access has been granted to the GitHub App.`,
+        );
+      }
+      throw err;
+    }
+
+    // 5. Fetch verified repository metadata
+    let defaultBranch = "main";
+    let isPrivate = false;
+    let githubRepoId: number | undefined;
+
+    try {
+      const meta = await this.githubService.getRepository(
+        installationId,
+        owner,
+        repo,
+      );
+      defaultBranch = meta.defaultBranch || "main";
+      isPrivate = Boolean(meta.isPrivate);
+      if (typeof meta.id === "number") {
+        githubRepoId = meta.id;
+      }
+    } catch (_err) {
+      // Non-fatal if metadata retrieval fails after access verification
+    }
+
+    // 6. Persist repository record in PostgreSQL
+    const created = await this.prisma.repository.create({
+      data: {
+        workspaceId,
+        fullName,
+        defaultBranch,
+        isPrivate,
+        githubRepoId: githubRepoId || undefined,
+      },
+      include: {
+        syncJobs: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
+        _count: {
+          select: {
+            commits: true,
+            pullRequests: true,
+            issues: true,
+            sourceRecords: true,
+          },
+        },
+      },
+    });
+
+    return {
+      repository: this.mapRepositoryDetails(created),
+      isAlreadyConnected: false,
+      message: `Repository "${fullName}" successfully connected to workspace.`,
+    };
+  }
+
+  /**
+   * Helper to transform Prisma repository entity into DTO contract.
+   */
+  private mapRepositoryDetails(repo: any): RepositoryDetailsDto {
+    const latestJob = repo.syncJobs?.[0] || null;
+    return {
+      id: repo.id,
+      workspaceId: repo.workspaceId,
+      fullName: repo.fullName,
+      defaultBranch: repo.defaultBranch,
+      isPrivate: repo.isPrivate,
+      indexedAt: repo.indexedAt ? repo.indexedAt.toISOString() : null,
+      createdAt: repo.createdAt.toISOString(),
+      updatedAt: repo.updatedAt.toISOString(),
+      counts: {
+        commits: repo._count?.commits ?? 0,
+        pullRequests: repo._count?.pullRequests ?? 0,
+        issues: repo._count?.issues ?? 0,
+        sourceRecords: repo._count?.sourceRecords ?? 0,
+      },
+      latestSyncJob: latestJob
+        ? {
+            id: latestJob.id,
+            status: latestJob.status,
+            trigger: latestJob.trigger,
+            commitsCount: latestJob.commitsCount,
+            pullRequestsCount: latestJob.pullRequestsCount,
+            issuesCount: latestJob.issuesCount,
+            errorMessage: latestJob.errorMessage,
+            startedAt: latestJob.startedAt
+              ? latestJob.startedAt.toISOString()
+              : null,
+            completedAt: latestJob.completedAt
+              ? latestJob.completedAt.toISOString()
+              : null,
+            createdAt: latestJob.createdAt.toISOString(),
+          }
+        : null,
+    };
+  }
 }
+

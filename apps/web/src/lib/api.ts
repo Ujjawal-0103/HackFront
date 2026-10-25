@@ -25,11 +25,13 @@ import {
   TracebackReportExport,
   CheckChangeAgainstDecisionsRequest,
   CheckChangeAgainstDecisionsResponse,
+  ImportRepositoryByUrlDto,
+  ImportRepositoryByUrlResponse,
 } from "@traceback/shared-types";
 
 // Ensure the API base URL targets the /api global prefix used by NestJS
 const rawBaseUrl =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001/api";
 const API_BASE_URL = rawBaseUrl.endsWith("/api")
   ? rawBaseUrl
   : `${rawBaseUrl.replace(/\/+$/, "")}/api`;
@@ -243,6 +245,19 @@ export const api = {
   ): Promise<RepositoryDetailsDto> {
     return request<RepositoryDetailsDto>(
       `/workspaces/${workspaceId}/repositories`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+    );
+  },
+
+  async importRepositoryByUrl(
+    payload: ImportRepositoryByUrlDto,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<ImportRepositoryByUrlResponse> {
+    return request<ImportRepositoryByUrlResponse>(
+      `/workspaces/${workspaceId}/repositories/import-url`,
       {
         method: "POST",
         body: JSON.stringify(payload),

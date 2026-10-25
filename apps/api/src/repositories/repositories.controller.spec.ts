@@ -14,6 +14,11 @@ describe("RepositoriesController", () => {
       createRepository: jest.fn().mockResolvedValue({ id: "repo_1" }),
       getRepository: jest.fn().mockResolvedValue({ id: "repo_1" }),
       getRepositoryActivity: jest.fn().mockResolvedValue({ commits: [] }),
+      importRepositoryByUrl: jest.fn().mockResolvedValue({
+        repository: { id: "repo_1", fullName: "owner/repo" },
+        isAlreadyConnected: false,
+        message: "Repository connected",
+      }),
       deleteRepository: jest
         .fn()
         .mockResolvedValue({ success: true, id: "repo_1" }),
@@ -49,6 +54,20 @@ describe("RepositoriesController", () => {
     const result = await controller.createRepository("ws_alpha", dto);
     expect(result).toEqual({ id: "repo_1" });
     expect(mockService.createRepository).toHaveBeenCalledWith("ws_alpha", dto);
+  });
+
+  it("should import a repository by URL in a workspace", async () => {
+    const dto = { url: "https://github.com/owner/repo" };
+    const result = await controller.importRepositoryByUrl("ws_alpha", dto);
+    expect(result).toEqual({
+      repository: { id: "repo_1", fullName: "owner/repo" },
+      isAlreadyConnected: false,
+      message: "Repository connected",
+    });
+    expect(mockService.importRepositoryByUrl).toHaveBeenCalledWith(
+      "ws_alpha",
+      dto.url,
+    );
   });
 
   it("should get repository details", async () => {

@@ -50,6 +50,17 @@ export default function RepositoriesPage() {
   const [isLinking, setIsLinking] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
 
+  // Connect repository by URL modal
+  const [showUrlModal, setShowUrlModal] = useState(false);
+  const [repoUrlInput, setRepoUrlInput] = useState("");
+  const [urlImportLoading, setUrlImportLoading] = useState(false);
+  const [urlImportError, setUrlImportError] = useState<string | null>(null);
+  const [urlImportResult, setUrlImportResult] = useState<{
+    message: string;
+    repository: RepositoryDetailsDto;
+    isAlreadyConnected?: boolean;
+  } | null>(null);
+
   const fetchRepositories = useCallback(async () => {
     if (!workspaceId) return;
     try {
@@ -137,9 +148,7 @@ export default function RepositoriesPage() {
       setAuthorizedRepos([]);
       await fetchStatus();
     } catch (err: any) {
-      alert(
-        `Failed to disconnect installation: ${err.message || String(err)}`,
-      );
+      alert(`Failed to disconnect installation: ${err.message || String(err)}`);
     } finally {
       setIsDisconnecting(false);
     }
@@ -217,6 +226,46 @@ export default function RepositoriesPage() {
       );
     } finally {
       setConnectingRepo(false);
+    }
+  };
+
+  const handleImportByUrl = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!workspaceId) return;
+
+    setUrlImportError(null);
+    setUrlImportResult(null);
+
+    const trimmed = repoUrlInput.trim();
+    if (!trimmed) {
+      setUrlImportError("Please enter a GitHub repository URL.");
+      return;
+    }
+
+    try {
+      setUrlImportLoading(true);
+      const res = await api.importRepositoryByUrl(
+        { url: trimmed },
+        workspaceId,
+      );
+      setUrlImportResult(res);
+      await fetchRepositories();
+
+      if (!res.isAlreadyConnected) {
+        // Automatically trigger initial ingestion sync
+        try {
+          await api.triggerSync(res.repository.id);
+          await fetchRepositories();
+        } catch {
+          // Ingestion queueing will be visible on repository card
+        }
+      }
+    } catch (err: any) {
+      const msg =
+        err instanceof ApiError ? err.message : err?.message || String(err);
+      setUrlImportError(msg);
+    } finally {
+      setUrlImportLoading(false);
     }
   };
 
@@ -316,8 +365,8 @@ export default function RepositoriesPage() {
               lineHeight: 1.5,
             }}
           >
-            You must be signed in to manage, synchronize, and connect repositories
-            for a workspace.
+            You must be signed in to manage, synchronize, and connect
+            repositories for a workspace.
           </p>
           <Link
             href="/login?returnTo=/repositories"
@@ -369,8 +418,8 @@ export default function RepositoriesPage() {
             No Active Workspace
           </h1>
           <p style={{ color: "var(--color-text-secondary)" }}>
-            Please select an active workspace from the navigation bar or settings
-            to manage repositories.
+            Please select an active workspace from the navigation bar or
+            settings to manage repositories.
           </p>
         </div>
       </main>
@@ -441,6 +490,30 @@ export default function RepositoriesPage() {
             Refresh
           </button>
           <button
+            id="connect-by-url-button"
+            onClick={() => {
+              setUrlImportError(null);
+              setUrlImportResult(null);
+              setRepoUrlInput("");
+              setShowUrlModal(true);
+            }}
+            style={{
+              padding: "0.5rem 1.15rem",
+              borderRadius: "6px",
+              backgroundColor: "var(--color-card-muted)",
+              border: "1px solid var(--color-border)",
+              color: "var(--color-text)",
+              fontSize: "0.875rem",
+              cursor: "pointer",
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: "0.4rem",
+            }}
+          >
+            <span>🔗</span> Connect Repository by URL
+          </button>
+          <button
             onClick={() => setShowConnectModal(true)}
             style={{
               padding: "0.5rem 1.25rem",
@@ -468,13 +541,16 @@ export default function RepositoriesPage() {
           alignItems: "center",
           justifyContent: "space-between",
           padding: "0.75rem 1.25rem",
-          backgroundColor: gitHubStatus?.isMockMode
-            ? "rgba(245, 158, 11, 0.08)"
-            : gitHubStatus?.installation
-              ? "rgba(34, 197, 94, 0.08)"
-              : "var(--color-card-muted)",
+          backgroundColor:
+            gitHubStatus?.isMockMode ||
+            gitHubStatus?.installation?.installationId === 1001
+              ? "rgba(245, 158, 11, 0.08)"
+              : gitHubStatus?.installation
+                ? "rgba(34, 197, 94, 0.08)"
+                : "var(--color-card-muted)",
           border: `1px solid ${
-            gitHubStatus?.isMockMode
+            gitHubStatus?.isMockMode ||
+            gitHubStatus?.installation?.installationId === 1001
               ? "var(--color-warning)"
               : gitHubStatus?.installation
                 ? "var(--color-success)"
@@ -489,7 +565,8 @@ export default function RepositoriesPage() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <span>
-            {gitHubStatus?.isMockMode
+            {gitHubStatus?.isMockMode ||
+            gitHubStatus?.installation?.installationId === 1001
               ? "🟡"
               : gitHubStatus?.installation
                 ? "🟢"
@@ -501,7 +578,9 @@ export default function RepositoriesPage() {
                 ? `Development Mock Sandbox Active (Mock Installation #${gitHubStatus.installation.installationId} - Fixtures Only)`
                 : "Development Mock Sandbox (Live credentials unconfigured)"
               : gitHubStatus?.installation
-                ? `Live GitHub App Connected: ${gitHubStatus.installation.accountLogin} (#${gitHubStatus.installation.installationId})`
+                ? gitHubStatus.installation.installationId === 1001
+                  ? "Development Mock Fixture Linked (#1001) — Disconnect to Link Verified GitHub Installation"
+                  : `Live GitHub App Connected: ${gitHubStatus.installation.accountLogin} (#${gitHubStatus.installation.installationId})`
                 : gitHubStatus?.isConfigured
                   ? "GitHub App Configured (No installation connected to this workspace)"
                   : "GitHub App Unconfigured (Live credentials missing in environment)"}
@@ -522,7 +601,11 @@ export default function RepositoriesPage() {
               cursor: isDisconnecting ? "default" : "pointer",
             }}
           >
-            {isDisconnecting ? "Disconnecting..." : "Disconnect Installation"}
+            {isDisconnecting
+              ? "Disconnecting..."
+              : gitHubStatus.installation.installationId === 1001
+                ? "Disconnect Mock Installation"
+                : "Disconnect Installation"}
           </button>
         )}
       </div>
@@ -661,9 +744,22 @@ export default function RepositoriesPage() {
         /* Repository Cards List */
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           {repositories.map((repo) => {
-            const badge = getStatusBadge(repo.latestSyncJob?.status);
+            const isJobStale = Boolean(
+              repo.latestSyncJob?.status === "SYNCING" &&
+              repo.latestSyncJob?.startedAt &&
+              Date.now() - new Date(repo.latestSyncJob.startedAt).getTime() >
+                10 * 60 * 1000,
+            );
+            const badge = isJobStale
+              ? {
+                  label: "Stale / Timed Out",
+                  color: "var(--color-error)",
+                  bg: "rgba(239, 68, 68, 0.12)",
+                }
+              : getStatusBadge(repo.latestSyncJob?.status);
             const isSyncing =
-              syncingMap[repo.id] || repo.latestSyncJob?.status === "SYNCING";
+              syncingMap[repo.id] ||
+              (repo.latestSyncJob?.status === "SYNCING" && !isJobStale);
             const isProjecting = projectingMap[repo.id];
             const isExpanded = selectedRepoId === repo.id;
 
@@ -760,6 +856,46 @@ export default function RepositoriesPage() {
                         ID: <code>{repo.id.slice(0, 8)}</code>
                       </span>
                     </div>
+
+                    {repo.latestSyncJob?.errorMessage && (
+                      <div
+                        style={{
+                          marginTop: "0.6rem",
+                          padding: "0.4rem 0.75rem",
+                          borderRadius: "6px",
+                          backgroundColor: "rgba(239, 68, 68, 0.08)",
+                          border: "1px solid rgba(239, 68, 68, 0.25)",
+                          color: "var(--color-error)",
+                          fontSize: "0.75rem",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: "0.75rem",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <span>
+                          <strong>Sync Diagnostic:</strong>{" "}
+                          {repo.latestSyncJob.errorMessage}
+                        </span>
+                        <button
+                          onClick={() => handleTriggerSync(repo.id)}
+                          disabled={isSyncing}
+                          style={{
+                            padding: "0.2rem 0.5rem",
+                            borderRadius: "4px",
+                            backgroundColor: "var(--color-error)",
+                            color: "#FFFFFF",
+                            border: "none",
+                            fontSize: "0.7rem",
+                            cursor: "pointer",
+                            fontWeight: 600,
+                          }}
+                        >
+                          Retry Sync
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Action Buttons */}
@@ -1395,16 +1531,48 @@ export default function RepositoriesPage() {
               </button>
             </div>
 
-            <p
+            <div
               style={{
-                fontSize: "0.875rem",
-                color: "var(--color-text-secondary)",
-                marginBottom: "1.25rem",
+                marginBottom: "1rem",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "0.5rem",
               }}
             >
-              Import repositories from an authorized GitHub App installation into
-              workspace <code>{workspaceId}</code>:
-            </p>
+              <p
+                style={{
+                  fontSize: "0.875rem",
+                  color: "var(--color-text-secondary)",
+                  margin: 0,
+                }}
+              >
+                Import repositories from an authorized GitHub App installation into workspace <code>{workspaceId}</code>:
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowConnectModal(false);
+                  setUrlImportError(null);
+                  setUrlImportResult(null);
+                  setRepoUrlInput("");
+                  setShowUrlModal(true);
+                }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "var(--color-primary)",
+                  fontSize: "0.825rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  padding: 0,
+                  textDecoration: "underline",
+                }}
+              >
+                Connect by GitHub URL instead ↗
+              </button>
+            </div>
 
             {/* Error in modal if fetching authorized repos failed */}
             {authorizedError && (
@@ -1466,7 +1634,8 @@ export default function RepositoriesPage() {
                   The system administrator has not configured live GitHub App
                   credentials (<code>GITHUB_APP_ID</code> and{" "}
                   <code>GITHUB_APP_PRIVATE_KEY</code>). Please refer to the
-                  setup guide in <code>docs/integrations/GITHUB_APP_SETUP.md</code>.
+                  setup guide in{" "}
+                  <code>docs/integrations/GITHUB_APP_SETUP.md</code>.
                 </p>
               </div>
             ) : !gitHubStatus?.installation && gitHubStatus?.isConfigured ? (
@@ -1734,6 +1903,304 @@ export default function RepositoriesPage() {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Connect Repository by URL Modal */}
+      {showUrlModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="url-modal-title"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "1rem",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "var(--color-surface)",
+              borderRadius: "12px",
+              padding: "1.75rem",
+              maxWidth: "540px",
+              width: "100%",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+              border: "1px solid var(--color-border)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "1rem",
+              }}
+            >
+              <h3
+                id="url-modal-title"
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: 700,
+                  color: "var(--color-text)",
+                  margin: 0,
+                }}
+              >
+                Connect Repository by GitHub URL
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowUrlModal(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: "1.25rem",
+                  cursor: "pointer",
+                  color: "var(--color-text-secondary)",
+                }}
+                aria-label="Close dialog"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p
+              style={{
+                fontSize: "0.875rem",
+                color: "var(--color-text-secondary)",
+                marginBottom: "1.25rem",
+                lineHeight: 1.45,
+              }}
+            >
+              Paste any GitHub repository URL (e.g.{" "}
+              <code>https://github.com/owner/repository</code>). The repository
+              will be verified against the active GitHub App installation for
+              workspace <code>{workspaceId}</code>.
+            </p>
+
+            {/* Mock Mode Notice */}
+            {gitHubStatus?.isMockMode && (
+              <div
+                style={{
+                  padding: "0.85rem 1rem",
+                  backgroundColor: "rgba(245, 158, 11, 0.08)",
+                  border: "1px solid var(--color-warning)",
+                  borderRadius: "8px",
+                  fontSize: "0.8125rem",
+                  color: "var(--color-text)",
+                  marginBottom: "1.25rem",
+                  lineHeight: 1.4,
+                }}
+              >
+                <strong>Development Mock Sandbox Active:</strong> Live GitHub
+                requests are disabled in sandbox mode. Fixture repositories (e.g.{" "}
+                <code>https://github.com/Ujjawal-0103/HackFront</code> or{" "}
+                <code>https://github.com/acme-corp/payment-service</code>) can be
+                connected for local testing.
+              </div>
+            )}
+
+            {/* Error Message */}
+            {urlImportError && (
+              <div
+                role="alert"
+                style={{
+                  padding: "0.85rem 1rem",
+                  backgroundColor: "rgba(239, 68, 68, 0.08)",
+                  border: "1px solid var(--color-error)",
+                  borderRadius: "8px",
+                  fontSize: "0.825rem",
+                  color: "var(--color-error)",
+                  marginBottom: "1.25rem",
+                  lineHeight: 1.45,
+                }}
+              >
+                <strong>Connection Error:</strong> {urlImportError}
+              </div>
+            )}
+
+            {/* Success / Duplicate Message */}
+            {urlImportResult && (
+              <div
+                style={{
+                  padding: "0.85rem 1rem",
+                  backgroundColor: urlImportResult.isAlreadyConnected
+                    ? "rgba(59, 130, 246, 0.08)"
+                    : "rgba(34, 197, 94, 0.08)",
+                  border: `1px solid ${
+                    urlImportResult.isAlreadyConnected
+                      ? "var(--color-primary)"
+                      : "var(--color-success)"
+                  }`,
+                  borderRadius: "8px",
+                  fontSize: "0.825rem",
+                  color: "var(--color-text)",
+                  marginBottom: "1.25rem",
+                  lineHeight: 1.45,
+                }}
+              >
+                <div style={{ fontWeight: 600, marginBottom: "0.25rem" }}>
+                  {urlImportResult.isAlreadyConnected
+                    ? "ℹ️ Already Connected"
+                    : "✅ Repository Connected"}
+                </div>
+                <div>{urlImportResult.message}</div>
+                <div style={{ marginTop: "0.5rem" }}>
+                  <strong>Repository:</strong> {urlImportResult.repository.fullName} (
+                  {urlImportResult.repository.defaultBranch})
+                </div>
+              </div>
+            )}
+
+            {!urlImportResult ? (
+              <form onSubmit={handleImportByUrl}>
+                <div style={{ marginBottom: "1.25rem" }}>
+                  <label
+                    htmlFor="repo-url-input"
+                    style={{
+                      display: "block",
+                      fontSize: "0.8125rem",
+                      fontWeight: 600,
+                      color: "var(--color-text)",
+                      marginBottom: "0.4rem",
+                    }}
+                  >
+                    GitHub Repository URL
+                  </label>
+                  <input
+                    id="repo-url-input"
+                    type="url"
+                    value={repoUrlInput}
+                    onChange={(e) => setRepoUrlInput(e.target.value)}
+                    placeholder="https://github.com/owner/repository"
+                    disabled={urlImportLoading}
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "0.6rem 0.85rem",
+                      borderRadius: "6px",
+                      border: "1px solid var(--color-border)",
+                      backgroundColor: "var(--color-background)",
+                      color: "var(--color-text)",
+                      fontSize: "0.875rem",
+                      outline: "none",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "var(--color-text-secondary)",
+                      display: "block",
+                      marginTop: "0.35rem",
+                    }}
+                  >
+                    Standard browser URLs supported (e.g. <code>https://github.com/owner/repo</code>). Trailing slashes and .git extensions are automatically normalized.
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    gap: "0.75rem",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setShowUrlModal(false)}
+                    disabled={urlImportLoading}
+                    style={{
+                      padding: "0.5rem 1rem",
+                      borderRadius: "6px",
+                      border: "1px solid var(--color-border)",
+                      backgroundColor: "var(--color-surface)",
+                      color: "var(--color-text)",
+                      fontSize: "0.875rem",
+                      cursor: urlImportLoading ? "default" : "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    id="repo-url-submit-button"
+                    type="submit"
+                    disabled={urlImportLoading || !repoUrlInput.trim()}
+                    style={{
+                      padding: "0.5rem 1.25rem",
+                      borderRadius: "6px",
+                      backgroundColor: "var(--color-primary)",
+                      color: "#FFFFFF",
+                      border: "none",
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      cursor:
+                        urlImportLoading || !repoUrlInput.trim()
+                          ? "default"
+                          : "pointer",
+                      opacity:
+                        urlImportLoading || !repoUrlInput.trim() ? 0.7 : 1,
+                    }}
+                  >
+                    {urlImportLoading ? "Verifying..." : "Connect Repository"}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "0.75rem",
+                }}
+              >
+                {urlImportResult.isAlreadyConnected && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleTriggerSync(urlImportResult.repository.id);
+                      setShowUrlModal(false);
+                    }}
+                    style={{
+                      padding: "0.5rem 1rem",
+                      borderRadius: "6px",
+                      backgroundColor: "var(--color-primary)",
+                      color: "#FFFFFF",
+                      border: "none",
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Sync Repository Now
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowUrlModal(false)}
+                  style={{
+                    padding: "0.5rem 1.25rem",
+                    borderRadius: "6px",
+                    border: "1px solid var(--color-border)",
+                    backgroundColor: "var(--color-surface)",
+                    color: "var(--color-text)",
+                    fontSize: "0.875rem",
+                    cursor: "pointer",
+                  }}
+                >
+                  Done
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

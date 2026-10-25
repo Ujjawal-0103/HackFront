@@ -51,9 +51,11 @@ export function Navbar() {
   const navLinks = [
     { href: "/", label: "Overview" },
     { href: "/verify", label: "Verify" },
+    { href: "/intent", label: "Historical Intent" },
+    { href: "/decisions", label: "Decision Memory" },
+    { href: "/evidence", label: "Evidence" },
     { href: "/history", label: "History & Reports" },
     { href: "/repositories", label: "Repositories" },
-    { href: "/evidence", label: "Evidence" },
   ];
 
   return (

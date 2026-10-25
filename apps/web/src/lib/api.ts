@@ -502,4 +502,189 @@ export const api = {
   async getReadiness(): Promise<ReadinessResponse> {
     return request<ReadinessResponse>("/health/readiness");
   },
+
+  // ============================================================================
+  // Sprint 10: Engineering Decision Memory
+  // ============================================================================
+
+  async getDecisions(
+    repositoryId: string,
+    status?: string,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<any[]> {
+    const qs = status ? `?status=${encodeURIComponent(status)}` : "";
+    return request<any[]>(
+      `/workspaces/${workspaceId}/repositories/${repositoryId}/decisions${qs}`,
+    );
+  },
+
+  async getDecision(
+    repositoryId: string,
+    id: string,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<any> {
+    return request<any>(
+      `/workspaces/${workspaceId}/repositories/${repositoryId}/decisions/${id}`,
+    );
+  },
+
+  async createDecision(
+    repositoryId: string,
+    payload: any,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<any> {
+    return request<any>(
+      `/workspaces/${workspaceId}/repositories/${repositoryId}/decisions`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+    );
+  },
+
+  async updateDecision(
+    repositoryId: string,
+    id: string,
+    payload: any,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<any> {
+    return request<any>(
+      `/workspaces/${workspaceId}/repositories/${repositoryId}/decisions/${id}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      },
+    );
+  },
+
+  async acceptDecision(
+    repositoryId: string,
+    id: string,
+    reviewNotes?: string,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<any> {
+    return request<any>(
+      `/workspaces/${workspaceId}/repositories/${repositoryId}/decisions/${id}/accept`,
+      {
+        method: "POST",
+        body: JSON.stringify({ reviewNotes }),
+      },
+    );
+  },
+
+  async rejectDecision(
+    repositoryId: string,
+    id: string,
+    reviewNotes?: string,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<any> {
+    return request<any>(
+      `/workspaces/${workspaceId}/repositories/${repositoryId}/decisions/${id}/reject`,
+      {
+        method: "POST",
+        body: JSON.stringify({ reviewNotes }),
+      },
+    );
+  },
+
+  async disputeDecision(
+    repositoryId: string,
+    id: string,
+    reviewNotes?: string,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<any> {
+    return request<any>(
+      `/workspaces/${workspaceId}/repositories/${repositoryId}/decisions/${id}/dispute`,
+      {
+        method: "POST",
+        body: JSON.stringify({ reviewNotes }),
+      },
+    );
+  },
+
+  async supersedeDecision(
+    repositoryId: string,
+    id: string,
+    supersedesId: string,
+    notes?: string,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<any> {
+    return request<any>(
+      `/workspaces/${workspaceId}/repositories/${repositoryId}/decisions/${id}/supersede`,
+      {
+        method: "POST",
+        body: JSON.stringify({ supersedesId, notes }),
+      },
+    );
+  },
+
+  async proposeDecisionFromClaim(
+    repositoryId: string,
+    claimId: string,
+    title?: string,
+    severity?: string,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<any> {
+    return request<any>(
+      `/workspaces/${workspaceId}/repositories/${repositoryId}/decisions/propose-from-claim`,
+      {
+        method: "POST",
+        body: JSON.stringify({ claimId, title, severity }),
+      },
+    );
+  },
+
+  // ============================================================================
+  // Sprint 10: Historical Intent Checks
+  // ============================================================================
+
+  async runIntentCheck(
+    repositoryId: string,
+    payload: { diff: string; filePath?: string; changeDescription?: string },
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<any> {
+    return request<any>(
+      `/workspaces/${workspaceId}/repositories/${repositoryId}/advisory/intent-check`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+    );
+  },
+
+  async getIntentChecks(
+    repositoryId: string,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<any[]> {
+    return request<any[]>(
+      `/workspaces/${workspaceId}/repositories/${repositoryId}/advisory/intent-checks`,
+    );
+  },
+
+  async getIntentCheck(
+    repositoryId: string,
+    sessionId: string,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<any> {
+    return request<any>(
+      `/workspaces/${workspaceId}/repositories/${repositoryId}/advisory/intent-checks/${sessionId}`,
+    );
+  },
+
+  async recordIntentDisposition(
+    repositoryId: string,
+    sessionId: string,
+    disposition: string,
+    notes?: string,
+    workspaceId: string = getApiActiveWorkspaceId(),
+  ): Promise<any> {
+    return request<any>(
+      `/workspaces/${workspaceId}/repositories/${repositoryId}/advisory/intent-checks/${sessionId}/disposition`,
+      {
+        method: "POST",
+        body: JSON.stringify({ disposition, notes }),
+      },
+    );
+  },
 };
+

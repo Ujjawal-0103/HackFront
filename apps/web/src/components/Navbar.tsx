@@ -311,9 +311,58 @@ export function Navbar() {
                     borderTop: "1px solid var(--color-border)",
                     marginTop: "0.35rem",
                     paddingTop: "0.35rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.25rem",
+                  }}
+                >
+                  <Link
+                    href="/login"
+                    onClick={() => setShowUserMenu(false)}
+                    style={{
+                      width: "100%",
+                      textAlign: "left",
+                      padding: "0.4rem 0.5rem",
+                      color: "var(--color-text)",
+                      fontSize: "0.8rem",
+                      fontWeight: 500,
+                      textDecoration: "none",
+                      borderRadius: "4px",
+                      display: "block",
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    Switch Account
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setShowUserMenu(false)}
+                    style={{
+                      width: "100%",
+                      textAlign: "left",
+                      padding: "0.4rem 0.5rem",
+                      color: "var(--color-text)",
+                      fontSize: "0.8rem",
+                      fontWeight: 500,
+                      textDecoration: "none",
+                      borderRadius: "4px",
+                      display: "block",
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    Register New Account
+                  </Link>
+                </div>
+
+                <div
+                  style={{
+                    borderTop: "1px solid var(--color-border)",
+                    marginTop: "0.35rem",
+                    paddingTop: "0.35rem",
                   }}
                 >
                   <button
+                    id="navbar-sign-out-button"
                     type="button"
                     onClick={async () => {
                       await logout();
@@ -342,7 +391,12 @@ export function Navbar() {
         ) : (
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <Link
-              href="/login"
+              id="navbar-sign-in-link"
+              href={
+                pathname && pathname !== "/login" && pathname !== "/register"
+                  ? `/login?returnTo=${encodeURIComponent(pathname)}`
+                  : "/login"
+              }
               style={{
                 fontSize: "0.8rem",
                 fontWeight: 600,
@@ -356,7 +410,12 @@ export function Navbar() {
               Sign In
             </Link>
             <Link
-              href="/register"
+              id="navbar-register-link"
+              href={
+                pathname && pathname !== "/login" && pathname !== "/register"
+                  ? `/register?returnTo=${encodeURIComponent(pathname)}`
+                  : "/register"
+              }
               style={{
                 fontSize: "0.8rem",
                 fontWeight: 600,

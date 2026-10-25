@@ -640,7 +640,6 @@ export interface VerificationSessionResult {
   estimatedTokensUsed: number;
   fallbackNotice?: string;
 }
-<<<<<<< HEAD
 
 // ============================================================================
 // Sprint 10: Engineering Decision Memory & Historical Intent Contracts
@@ -655,11 +654,7 @@ export type DecisionStatus =
   | "ARCHIVED";
 
 export type DecisionSeverity =
-  | "CRITICAL"
-  | "HIGH"
-  | "MEDIUM"
-  | "LOW"
-  | "ADVISORY";
+  "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "ADVISORY";
 
 export interface EngineeringDecisionDto {
   id: string;
@@ -773,8 +768,3 @@ export interface RecordIntentDispositionDto {
   disposition: HumanDisposition;
   notes?: string;
 }
-
-
-
-=======
->>>>>>> origin/main

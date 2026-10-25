@@ -764,9 +764,7 @@ export class AuthService {
         );
       }
       if (mockRecord.expiresAt < new Date()) {
-        throw new BadRequestException(
-          "This password reset token has expired",
-        );
+        throw new BadRequestException("This password reset token has expired");
       }
 
       mockRecord.usedAt = new Date();

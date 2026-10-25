@@ -18,10 +18,7 @@ import {
   GitHubAuthError,
   GitHubNotFoundError,
   GitHubRateLimitError,
-<<<<<<< HEAD
   GitHubValidationError,
-=======
->>>>>>> origin/main
 } from "./github.errors";
 import { PrismaService } from "../prisma/prisma.service";
 import { GitHubIngestionAdapter } from "./github-ingestion.adapter";

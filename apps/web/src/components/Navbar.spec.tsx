@@ -26,9 +26,18 @@ describe("Navbar Component — Design #2: Elevated with Workspace Selector", () 
 
   it("renders Traceback branding, problem statement, workspace badge, and user profile when authenticated", () => {
     (useAuth as jest.Mock).mockReturnValue({
-      user: { id: "user_1", email: "alex@company.com", name: "Alex Maintainer" },
+      user: {
+        id: "user_1",
+        email: "alex@company.com",
+        name: "Alex Maintainer",
+      },
       workspaces: [
-        { id: "ws_alpha", name: "Alpha Corp Engineering", slug: "alpha-corp", role: "OWNER" },
+        {
+          id: "ws_alpha",
+          name: "Alpha Corp Engineering",
+          slug: "alpha-corp",
+          role: "OWNER",
+        },
       ],
       activeWorkspace: {
         id: "ws_alpha",
@@ -58,9 +67,18 @@ describe("Navbar Component — Design #2: Elevated with Workspace Selector", () 
 
   it("renders Row 2 primary navigation with 7 links in the exact required order and styles active route", () => {
     (useAuth as jest.Mock).mockReturnValue({
-      user: { id: "user_1", email: "alex@company.com", name: "Alex Maintainer" },
+      user: {
+        id: "user_1",
+        email: "alex@company.com",
+        name: "Alex Maintainer",
+      },
       workspaces: [
-        { id: "ws_alpha", name: "Alpha Corp", slug: "alpha-corp", role: "OWNER" },
+        {
+          id: "ws_alpha",
+          name: "Alpha Corp",
+          slug: "alpha-corp",
+          role: "OWNER",
+        },
       ],
       activeWorkspace: {
         id: "ws_alpha",
@@ -77,7 +95,9 @@ describe("Navbar Component — Design #2: Elevated with Workspace Selector", () 
       </ThemeProvider>,
     );
 
-    const nav = screen.getByRole("navigation", { name: /main workspace navigation/i });
+    const nav = screen.getByRole("navigation", {
+      name: /main workspace navigation/i,
+    });
     expect(nav).toBeInTheDocument();
 
     const links = withinNav(nav);
@@ -108,9 +128,18 @@ describe("Navbar Component — Design #2: Elevated with Workspace Selector", () 
 
   it("renders wide Global Search input with placeholder and shortcut badge", () => {
     (useAuth as jest.Mock).mockReturnValue({
-      user: { id: "user_1", email: "alex@company.com", name: "Alex Maintainer" },
+      user: {
+        id: "user_1",
+        email: "alex@company.com",
+        name: "Alex Maintainer",
+      },
       workspaces: [
-        { id: "ws_alpha", name: "Alpha Corp", slug: "alpha-corp", role: "OWNER" },
+        {
+          id: "ws_alpha",
+          name: "Alpha Corp",
+          slug: "alpha-corp",
+          role: "OWNER",
+        },
       ],
       activeWorkspace: {
         id: "ws_alpha",
@@ -141,9 +170,18 @@ describe("Navbar Component — Design #2: Elevated with Workspace Selector", () 
 
   it("renders notification control without fabricated counts and toggles notification panel", () => {
     (useAuth as jest.Mock).mockReturnValue({
-      user: { id: "user_1", email: "alex@company.com", name: "Alex Maintainer" },
+      user: {
+        id: "user_1",
+        email: "alex@company.com",
+        name: "Alex Maintainer",
+      },
       workspaces: [
-        { id: "ws_alpha", name: "Alpha Corp", slug: "alpha-corp", role: "OWNER" },
+        {
+          id: "ws_alpha",
+          name: "Alpha Corp",
+          slug: "alpha-corp",
+          role: "OWNER",
+        },
       ],
       activeWorkspace: {
         id: "ws_alpha",
@@ -169,15 +207,26 @@ describe("Navbar Component — Design #2: Elevated with Workspace Selector", () 
     // Click toggles notification panel
     fireEvent.click(notifBtn);
     expect(
-      screen.getByText(/all repository sync tasks and background verification jobs/i),
+      screen.getByText(
+        /all repository sync tasks and background verification jobs/i,
+      ),
     ).toBeInTheDocument();
   });
 
   it("displays Switch Account, Register New Account, and Sign Out in user menu when authenticated", () => {
     (useAuth as jest.Mock).mockReturnValue({
-      user: { id: "user_1", email: "alex@company.com", name: "Alex Maintainer" },
+      user: {
+        id: "user_1",
+        email: "alex@company.com",
+        name: "Alex Maintainer",
+      },
       workspaces: [
-        { id: "ws_alpha", name: "Alpha Corp", slug: "alpha-corp", role: "OWNER" },
+        {
+          id: "ws_alpha",
+          name: "Alpha Corp",
+          slug: "alpha-corp",
+          role: "OWNER",
+        },
       ],
       activeWorkspace: {
         id: "ws_alpha",
@@ -195,12 +244,22 @@ describe("Navbar Component — Design #2: Elevated with Workspace Selector", () 
     );
 
     // Open user menu
-    const userButton = screen.getByRole("button", { name: /user account menu/i });
+    const userButton = screen.getByRole("button", {
+      name: /user account menu/i,
+    });
     fireEvent.click(userButton);
 
-    expect(screen.getByText("Switch Account")).toHaveAttribute("href", "/login");
-    expect(screen.getByText("Register New Account")).toHaveAttribute("href", "/register");
-    expect(screen.getByRole("button", { name: /sign out/i })).toBeInTheDocument();
+    expect(screen.getByText("Switch Account")).toHaveAttribute(
+      "href",
+      "/login",
+    );
+    expect(screen.getByText("Register New Account")).toHaveAttribute(
+      "href",
+      "/register",
+    );
+    expect(
+      screen.getByRole("button", { name: /sign out/i }),
+    ).toBeInTheDocument();
   });
 
   it("renders Sign In and Register links with returnTo destination when unauthenticated without leaking workspace/search/nav", () => {
@@ -221,24 +280,56 @@ describe("Navbar Component — Design #2: Elevated with Workspace Selector", () 
     const registerLink = screen.getByRole("link", { name: /register/i });
 
     expect(signInLink).toBeInTheDocument();
-    expect(signInLink).toHaveAttribute("href", "/login?returnTo=%2Frepositories");
+    expect(signInLink).toHaveAttribute(
+      "href",
+      "/login?returnTo=%2Frepositories",
+    );
 
     expect(registerLink).toBeInTheDocument();
-    expect(registerLink).toHaveAttribute("href", "/register?returnTo=%2Frepositories");
+    expect(registerLink).toHaveAttribute(
+      "href",
+      "/register?returnTo=%2Frepositories",
+    );
 
     // Must NOT leak protected workspace navigation, search, or workspace selector
-    expect(screen.queryByRole("navigation", { name: /main workspace navigation/i })).not.toBeInTheDocument();
-    expect(screen.queryByPlaceholderText("Search repositories, decisions, or evidence...")).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /^overview$/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /^verify$/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /^historical intent$/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /^decision memory$/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /^history & reports$/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /^repositories$/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /^evidence$/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /select workspace/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /user account menu/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /notifications/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("navigation", { name: /main workspace navigation/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByPlaceholderText(
+        "Search repositories, decisions, or evidence...",
+      ),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^overview$/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^verify$/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^historical intent$/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^decision memory$/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^history & reports$/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^repositories$/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^evidence$/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /select workspace/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /user account menu/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /notifications/i }),
+    ).not.toBeInTheDocument();
   });
 });
 

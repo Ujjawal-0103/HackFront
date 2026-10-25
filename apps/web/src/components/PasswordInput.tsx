@@ -28,7 +28,14 @@ export function PasswordInput({
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div style={{ position: "relative", width: "100%", display: "flex", alignItems: "center" }}>
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+      }}
+    >
       <input
         id={id}
         type={showPassword ? "text" : "password"}

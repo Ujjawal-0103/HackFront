@@ -1486,7 +1486,8 @@ function VerifyWorkspaceContent() {
                             gap: "0.4rem",
                             padding: "0.45rem 0.85rem",
                             borderRadius: "6px",
-                            backgroundColor: "var(--color-primary-light, rgba(37, 99, 235, 0.1))",
+                            backgroundColor:
+                              "var(--color-primary-light, rgba(37, 99, 235, 0.1))",
                             color: "var(--color-primary)",
                             fontSize: "0.825rem",
                             fontWeight: 600,
@@ -1500,8 +1501,12 @@ function VerifyWorkspaceContent() {
                         <button
                           type="button"
                           id={`btn-propose-decision-${assessment.claimId}`}
-                          disabled={proposingDecisionClaimId === assessment.claimId}
-                          onClick={() => handleProposeDecision(assessment.claimId)}
+                          disabled={
+                            proposingDecisionClaimId === assessment.claimId
+                          }
+                          onClick={() =>
+                            handleProposeDecision(assessment.claimId)
+                          }
                           title="Propose this verified factual claim as a candidate constraint in Engineering Decision Memory"
                           style={{
                             padding: "0.45rem 0.9rem",

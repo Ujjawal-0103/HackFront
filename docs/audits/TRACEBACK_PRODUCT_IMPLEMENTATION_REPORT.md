@@ -3,7 +3,8 @@
 ## 1. Executive Summary & Verification State
 
 This document certifies the complete implementation and end-to-end verification of **Traceback**, transforming it into a distinctive, evidence-first developer product answering:
-> *"Does this AI-generated explanation or proposed code change agree with what the repository's actual engineering history establishes?"*
+
+> _"Does this AI-generated explanation or proposed code change agree with what the repository's actual engineering history establishes?"_
 
 All 3 core product pillars, MCP tools, comparative evaluation benchmark harness, and frontend routes have been implemented, tested, and validated against the live running application.
 
@@ -11,28 +12,28 @@ All 3 core product pillars, MCP tools, comparative evaluation benchmark harness,
 
 ## 2. Acceptance Criteria & Implementation Matrix
 
-| Pillar / Capability | Requirement | Status | Verification Method |
-| :--- | :--- | :---: | :--- |
-| **Pillar 1: Claim-to-Evidence Verification** | Atomic claim decomposition from compound text | **PASS** | `claim-extractor.service.spec.ts` (411 unit tests pass) |
-| | 3-state epistemological model (`SUPPORTED`, `CONTRADICTED`, `INSUFFICIENT_EVIDENCE`) | **PASS** | `claim-assessment-benchmark.spec.ts` (100% CVR) |
-| | Evidence inspector with unified diff snippets and clickable GitHub URLs | **PASS** | Verified in `/verify` UI & live API responses |
-| | Immutable human verdict recording with reviewer audit trail | **PASS** | Live API test: `POST /verify/:sessionId/claims/:claimId/verdict` |
-| | Bridge to Decision Memory: "Propose as Decision Candidate" | **PASS** | Live API test: `POST /decisions/propose-from-claim` |
-| **Pillar 2: Historical Intent Check** | Advisory check of diffs against historical records and decisions | **PASS** | `advisory.service.spec.ts` + `tools/benchmark/validate_live_workflow.js` |
-| | 4-state outcome (`DOCUMENTED_CONFLICT`, `POTENTIAL_CONFLICT`, `NO_KNOWN_CONFLICT`, `INSUFFICIENT_CONTEXT`) | **PASS** | Live Intent Check executed (`DOCUMENTED_CONFLICT` verified) |
-| | Human disposition recording (`APPROVED`, `REJECTED`, `NEEDS_DISCUSSION`) | **PASS** | Live API test: `POST /advisory/intent-checks/:sessionId/disposition` |
-| | Read-only safety boundary: strictly advisory | **PASS** | Verified in code & API guarantees |
-| **Pillar 3: Decision Memory** | Persistent `EngineeringDecision` Prisma model & migration | **PASS** | Migration `20261025110205_sprint_10_decision_memory_and_intent` applied |
-| | Lifecycle management (`CANDIDATE`, `IN_REVIEW`, `ACCEPTED`, `SUPERSEDED`, `DISPUTED`, `ARCHIVED`) | **PASS** | Live API tests: accept, dispute, reject, supersede endpoints |
-| | Evidence provenance linking to Git commits, PRs, and verified claims | **PASS** | Verified in `decisions.service.ts` & `/decisions` UI |
-| **MCP Integration** | 5 official tools (`verify_explanation`, `find_historical_context`, `check_change_against_decisions`, `get_engineering_decisions`, `propose_engineering_decision`) | **PASS** | `mcp-protocol.spec.ts` (24/24 tests pass) |
-| | Public schema secret sanitization (no `apiToken` or internal credentials leaked) | **PASS** | SEC-08 test in `mcp-protocol.spec.ts` |
-| **Comparative Benchmark** | 10-scenario versioned benchmark covering all required epistemological categories | **PASS** | `tools/benchmark/data/historical_intent_benchmark_v1.json` |
-| | Automated test runner comparing Baseline A, Baseline B, and System C | **PASS** | `npx ts-node tools/benchmark/runner.ts` (100% accuracy, 0% false-support) |
-| **Frontend Redesign** | Developer Evidence Workspace aesthetic (Linear/GitHub density) | **PASS** | All 7 routes redesigned with responsive layouts |
-| | Non-negotiable Light Theme default + accessible Dark Theme toggle | **PASS** | `ThemeContext.spec.tsx` + `globals.css` verified |
-| | Route protection: zero workspace data exposed publicly | **PASS** | `RouteGuard.spec.tsx` + `Navbar.spec.tsx` (13/13 web tests pass) |
-| | Production Next.js build compilation | **PASS** | `next build` compiled 15/15 static and dynamic pages with 0 errors |
+| Pillar / Capability                          | Requirement                                                                                                                                                       |  Status  | Verification Method                                                       |
+| :------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------: | :------------------------------------------------------------------------ |
+| **Pillar 1: Claim-to-Evidence Verification** | Atomic claim decomposition from compound text                                                                                                                     | **PASS** | `claim-extractor.service.spec.ts` (411 unit tests pass)                   |
+|                                              | 3-state epistemological model (`SUPPORTED`, `CONTRADICTED`, `INSUFFICIENT_EVIDENCE`)                                                                              | **PASS** | `claim-assessment-benchmark.spec.ts` (100% CVR)                           |
+|                                              | Evidence inspector with unified diff snippets and clickable GitHub URLs                                                                                           | **PASS** | Verified in `/verify` UI & live API responses                             |
+|                                              | Immutable human verdict recording with reviewer audit trail                                                                                                       | **PASS** | Live API test: `POST /verify/:sessionId/claims/:claimId/verdict`          |
+|                                              | Bridge to Decision Memory: "Propose as Decision Candidate"                                                                                                        | **PASS** | Live API test: `POST /decisions/propose-from-claim`                       |
+| **Pillar 2: Historical Intent Check**        | Advisory check of diffs against historical records and decisions                                                                                                  | **PASS** | `advisory.service.spec.ts` + `tools/benchmark/validate_live_workflow.js`  |
+|                                              | 4-state outcome (`DOCUMENTED_CONFLICT`, `POTENTIAL_CONFLICT`, `NO_KNOWN_CONFLICT`, `INSUFFICIENT_CONTEXT`)                                                        | **PASS** | Live Intent Check executed (`DOCUMENTED_CONFLICT` verified)               |
+|                                              | Human disposition recording (`APPROVED`, `REJECTED`, `NEEDS_DISCUSSION`)                                                                                          | **PASS** | Live API test: `POST /advisory/intent-checks/:sessionId/disposition`      |
+|                                              | Read-only safety boundary: strictly advisory                                                                                                                      | **PASS** | Verified in code & API guarantees                                         |
+| **Pillar 3: Decision Memory**                | Persistent `EngineeringDecision` Prisma model & migration                                                                                                         | **PASS** | Migration `20261025110205_sprint_10_decision_memory_and_intent` applied   |
+|                                              | Lifecycle management (`CANDIDATE`, `IN_REVIEW`, `ACCEPTED`, `SUPERSEDED`, `DISPUTED`, `ARCHIVED`)                                                                 | **PASS** | Live API tests: accept, dispute, reject, supersede endpoints              |
+|                                              | Evidence provenance linking to Git commits, PRs, and verified claims                                                                                              | **PASS** | Verified in `decisions.service.ts` & `/decisions` UI                      |
+| **MCP Integration**                          | 5 official tools (`verify_explanation`, `find_historical_context`, `check_change_against_decisions`, `get_engineering_decisions`, `propose_engineering_decision`) | **PASS** | `mcp-protocol.spec.ts` (24/24 tests pass)                                 |
+|                                              | Public schema secret sanitization (no `apiToken` or internal credentials leaked)                                                                                  | **PASS** | SEC-08 test in `mcp-protocol.spec.ts`                                     |
+| **Comparative Benchmark**                    | 10-scenario versioned benchmark covering all required epistemological categories                                                                                  | **PASS** | `tools/benchmark/data/historical_intent_benchmark_v1.json`                |
+|                                              | Automated test runner comparing Baseline A, Baseline B, and System C                                                                                              | **PASS** | `npx ts-node tools/benchmark/runner.ts` (100% accuracy, 0% false-support) |
+| **Frontend Redesign**                        | Developer Evidence Workspace aesthetic (Linear/GitHub density)                                                                                                    | **PASS** | All 7 routes redesigned with responsive layouts                           |
+|                                              | Non-negotiable Light Theme default + accessible Dark Theme toggle                                                                                                 | **PASS** | `ThemeContext.spec.tsx` + `globals.css` verified                          |
+|                                              | Route protection: zero workspace data exposed publicly                                                                                                            | **PASS** | `RouteGuard.spec.tsx` + `Navbar.spec.tsx` (13/13 web tests pass)          |
+|                                              | Production Next.js build compilation                                                                                                                              | **PASS** | `next build` compiled 15/15 static and dynamic pages with 0 errors        |
 
 ---
 
@@ -72,6 +73,7 @@ Executed via `npx ts-node tools/benchmark/runner.ts` across 10 standardized scen
 ```
 
 **Measured Latencies:**
+
 - Baseline A: ~25 ms
 - Baseline B: ~65 ms
 - Traceback System C: ~48 ms
@@ -106,30 +108,35 @@ Executed live against the running NestJS API (port 3001) and PostgreSQL via `nod
 ## 6. Test Suite Execution Results
 
 ### 1. TypeScript Monorepo Typecheck
+
 ```bash
 npm run typecheck
 # Result: 5/5 tasks successful across @traceback/shared-types, @traceback/api, @traceback/mcp-server, @traceback/web
 ```
 
 ### 2. NestJS API Unit Tests
+
 ```bash
 npm run test:unit --workspace=@traceback/api
 # Result: 43 test suites passed, 411 tests passed, 0 failed
 ```
 
 ### 3. Next.js Web Tests
+
 ```bash
 npm test --workspace=@traceback/web
 # Result: 13 test suites passed, 63 tests passed, 0 failed
 ```
 
 ### 4. MCP Server Tests
+
 ```bash
 npm test --workspace=@traceback/mcp-server
 # Result: 1 test suite passed, 24 tests passed, 0 failed
 ```
 
 ### 5. Next.js Production Build
+
 ```bash
 npm run build --workspace=@traceback/web
 # Result: Compiled successfully; 15 static and dynamic routes prerendered cleanly
@@ -140,6 +147,7 @@ npm run build --workspace=@traceback/web
 ## 7. Files Changed / Created
 
 ### New Files Created:
+
 1. `apps/api/src/decisions/decisions.dto.ts`
 2. `apps/api/src/decisions/decisions.service.ts`
 3. `apps/api/src/decisions/decisions.controller.ts`
@@ -155,6 +163,7 @@ npm run build --workspace=@traceback/web
 13. `docs/audits/TRACEBACK_PRODUCT_IMPLEMENTATION_REPORT.md`
 
 ### Files Modified & Extended:
+
 1. `apps/api/prisma/schema.prisma` (added `EngineeringDecision`, `IntentCheckSession`, enums)
 2. `apps/api/src/app.module.ts` (registered `DecisionsModule`)
 3. `apps/api/src/advisory/advisory.service.ts` (cross-check against `EngineeringDecision`, added intent sessions)

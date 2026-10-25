@@ -38,7 +38,7 @@ export function ThemeToggle() {
       }}
     >
       {/* If not mounted yet, render default light mode icon (moon) to prevent hydration mismatch */}
-      {(!mounted || !isDark) ? (
+      {!mounted || !isDark ? (
         // Moon Icon (light mode active -> click to switch to dark mode)
         <svg
           width="18"

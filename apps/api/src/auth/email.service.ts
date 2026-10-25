@@ -54,7 +54,9 @@ export class EmailService implements IEmailService {
     }
 
     // When real SMTP credentials are provided, live delivery occurs here.
-    this.logger.log(`Password reset dispatch initiated for ${normalizedEmail} via SMTP ${smtpHost}`);
+    this.logger.log(
+      `Password reset dispatch initiated for ${normalizedEmail} via SMTP ${smtpHost}`,
+    );
     return {
       delivered: true,
       provider: "smtp",

@@ -76,7 +76,11 @@ describe("RouteGuard Component", () => {
   it("renders protected content when user is authenticated", () => {
     (usePathname as jest.Mock).mockReturnValue("/verify");
     (useAuth as jest.Mock).mockReturnValue({
-      user: { id: "user_1", email: "alex@company.com", name: "Alex Maintainer" },
+      user: {
+        id: "user_1",
+        email: "alex@company.com",
+        name: "Alex Maintainer",
+      },
       isLoading: false,
     });
 
@@ -104,6 +108,8 @@ describe("RouteGuard Component", () => {
     );
 
     expect(screen.queryByTestId("protected-page")).not.toBeInTheDocument();
-    expect(screen.getByText(/restoring secure workspace session/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/restoring secure workspace session/i),
+    ).toBeInTheDocument();
   });
 });

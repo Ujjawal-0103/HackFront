@@ -52,22 +52,13 @@ export function Navbar() {
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node;
-      if (
-        workspaceRef.current &&
-        !workspaceRef.current.contains(target)
-      ) {
+      if (workspaceRef.current && !workspaceRef.current.contains(target)) {
         setShowWorkspaceMenu(false);
       }
-      if (
-        userMenuRef.current &&
-        !userMenuRef.current.contains(target)
-      ) {
+      if (userMenuRef.current && !userMenuRef.current.contains(target)) {
         setShowUserMenu(false);
       }
-      if (
-        notifRef.current &&
-        !notifRef.current.contains(target)
-      ) {
+      if (notifRef.current && !notifRef.current.contains(target)) {
         setShowNotifications(false);
       }
       if (
@@ -132,15 +123,24 @@ export function Navbar() {
         if (repos.length > 0) {
           const decisionPromises = repos.slice(0, 3).map(async (r) => {
             try {
-              const decisions = await api.getDecisions(r.id, undefined, activeWorkspace.id);
+              const decisions = await api.getDecisions(
+                r.id,
+                undefined,
+                activeWorkspace.id,
+              );
               return decisions
                 .filter(
                   (d: any) =>
                     (d.title && d.title.toLowerCase().includes(trimmed)) ||
                     (d.summary && d.summary.toLowerCase().includes(trimmed)) ||
-                    (d.problemStatement && d.problemStatement.toLowerCase().includes(trimmed)),
+                    (d.problemStatement &&
+                      d.problemStatement.toLowerCase().includes(trimmed)),
                 )
-                .map((d: any) => ({ ...d, repositoryId: r.id, repositoryName: r.fullName }));
+                .map((d: any) => ({
+                  ...d,
+                  repositoryId: r.id,
+                  repositoryName: r.fullName,
+                }));
             } catch {
               return [];
             }
@@ -403,7 +403,9 @@ export function Navbar() {
           </Link>
 
           {/* Right Actions: Sign In, Register, Theme Toggle */}
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <div
+            style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
+          >
             <Link
               id="navbar-sign-in-link"
               href={
@@ -493,7 +495,14 @@ export function Navbar() {
         }}
       >
         {/* LEFT CLUSTER: Brand + Separator + Workspace Selector */}
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexShrink: 0 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "1rem",
+            flexShrink: 0,
+          }}
+        >
           {/* Traceback Branding */}
           <Link
             href="/"
@@ -642,7 +651,8 @@ export function Navbar() {
                   backgroundColor: "var(--color-surface, #FFFFFF)",
                   border: "1px solid var(--color-border, #E2E8F0)",
                   borderRadius: "10px",
-                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+                  boxShadow:
+                    "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
                   padding: "0.5rem",
                   minWidth: "260px",
                   zIndex: 100,
@@ -691,7 +701,13 @@ export function Navbar() {
                         transition: "background-color 0.1s ease",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                        }}
+                      >
                         {isCurrent && (
                           <span
                             style={{
@@ -833,7 +849,8 @@ export function Navbar() {
                 backgroundColor: "var(--color-surface, #FFFFFF)",
                 border: "1px solid var(--color-border, #E2E8F0)",
                 borderRadius: "10px",
-                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08)",
+                boxShadow:
+                  "0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08)",
                 maxHeight: "360px",
                 overflowY: "auto",
                 zIndex: 100,
@@ -865,7 +882,13 @@ export function Navbar() {
                   >
                     Quick Navigation
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.25rem",
+                    }}
+                  >
                     <Link
                       href="/repositories"
                       onClick={() => setIsSearchOpen(false)}
@@ -879,7 +902,10 @@ export function Navbar() {
                         gap: "0.5rem",
                       }}
                     >
-                      <span style={{ color: "var(--color-primary, #2563eb)" }}>📁</span> Browse Connected Repositories
+                      <span style={{ color: "var(--color-primary, #2563eb)" }}>
+                        📁
+                      </span>{" "}
+                      Browse Connected Repositories
                     </Link>
                     <Link
                       href="/decisions"
@@ -894,7 +920,10 @@ export function Navbar() {
                         gap: "0.5rem",
                       }}
                     >
-                      <span style={{ color: "var(--color-primary, #2563eb)" }}>📌</span> Search Engineering Decisions
+                      <span style={{ color: "var(--color-primary, #2563eb)" }}>
+                        📌
+                      </span>{" "}
+                      Search Engineering Decisions
                     </Link>
                     <Link
                       href="/evidence"
@@ -909,7 +938,10 @@ export function Navbar() {
                         gap: "0.5rem",
                       }}
                     >
-                      <span style={{ color: "var(--color-primary, #2563eb)" }}>🔍</span> Explore Git & PR Evidence
+                      <span style={{ color: "var(--color-primary, #2563eb)" }}>
+                        🔍
+                      </span>{" "}
+                      Explore Git & PR Evidence
                     </Link>
                   </div>
                 </div>
@@ -922,10 +954,17 @@ export function Navbar() {
                     color: "var(--color-text-secondary, #475569)",
                   }}
                 >
-                  No matching repositories or decisions found in &quot;{activeWorkspace?.name}&quot;.
+                  No matching repositories or decisions found in &quot;
+                  {activeWorkspace?.name}&quot;.
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.5rem",
+                  }}
+                >
                   {/* Repositories Results */}
                   {matchedRepos.length > 0 && (
                     <div>
@@ -958,9 +997,21 @@ export function Navbar() {
                             fontSize: "0.825rem",
                           }}
                         >
-                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                            <span style={{ color: "var(--color-primary, #2563eb)" }}>📁</span>
-                            <span style={{ fontWeight: 600 }}>{r.fullName}</span>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "0.5rem",
+                            }}
+                          >
+                            <span
+                              style={{ color: "var(--color-primary, #2563eb)" }}
+                            >
+                              📁
+                            </span>
+                            <span style={{ fontWeight: 600 }}>
+                              {r.fullName}
+                            </span>
                           </div>
                           <span
                             style={{
@@ -977,7 +1028,12 @@ export function Navbar() {
 
                   {/* Decisions Results */}
                   {matchedDecisions.length > 0 && (
-                    <div style={{ borderTop: "1px solid var(--color-border, #E2E8F0)", paddingTop: "0.4rem" }}>
+                    <div
+                      style={{
+                        borderTop: "1px solid var(--color-border, #E2E8F0)",
+                        paddingTop: "0.4rem",
+                      }}
+                    >
                       <div
                         style={{
                           fontSize: "0.7rem",
@@ -1004,7 +1060,12 @@ export function Navbar() {
                             fontSize: "0.825rem",
                           }}
                         >
-                          <div style={{ fontWeight: 600, color: "var(--color-primary, #2563eb)" }}>
+                          <div
+                            style={{
+                              fontWeight: 600,
+                              color: "var(--color-primary, #2563eb)",
+                            }}
+                          >
                             {d.title}
                           </div>
                           <div
@@ -1016,7 +1077,8 @@ export function Navbar() {
                               whiteSpace: "nowrap",
                             }}
                           >
-                            {d.repositoryName} &bull; {d.status} &bull; {d.summary}
+                            {d.repositoryName} &bull; {d.status} &bull;{" "}
+                            {d.summary}
                           </div>
                         </Link>
                       ))}
@@ -1024,7 +1086,12 @@ export function Navbar() {
                   )}
 
                   {/* Evidence Direct Link */}
-                  <div style={{ borderTop: "1px solid var(--color-border, #E2E8F0)", paddingTop: "0.4rem" }}>
+                  <div
+                    style={{
+                      borderTop: "1px solid var(--color-border, #E2E8F0)",
+                      paddingTop: "0.4rem",
+                    }}
+                  >
                     <Link
                       href={`/evidence?query=${encodeURIComponent(searchQuery)}`}
                       onClick={() => setIsSearchOpen(false)}
@@ -1040,7 +1107,8 @@ export function Navbar() {
                         textDecoration: "none",
                       }}
                     >
-                      <span>🔍</span> Search raw commits, PRs, and issues for &quot;{searchQuery}&quot; &rarr;
+                      <span>🔍</span> Search raw commits, PRs, and issues for
+                      &quot;{searchQuery}&quot; &rarr;
                     </Link>
                   </div>
                 </div>
@@ -1050,7 +1118,14 @@ export function Navbar() {
         </div>
 
         {/* RIGHT CLUSTER: Separator + Theme Switch + Notification + User Profile */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexShrink: 0 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            flexShrink: 0,
+          }}
+        >
           {/* Vertical Separator */}
           <div
             style={{
@@ -1117,7 +1192,8 @@ export function Navbar() {
                   backgroundColor: "var(--color-surface, #FFFFFF)",
                   border: "1px solid var(--color-border, #E2E8F0)",
                   borderRadius: "10px",
-                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+                  boxShadow:
+                    "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
                   padding: "0.75rem",
                   width: "280px",
                   zIndex: 100,
@@ -1143,7 +1219,10 @@ export function Navbar() {
                   }}
                 >
                   All repository sync tasks and background verification jobs in{" "}
-                  <strong>{activeWorkspace?.name || "current workspace"}</strong> are up to date.
+                  <strong>
+                    {activeWorkspace?.name || "current workspace"}
+                  </strong>{" "}
+                  are up to date.
                 </div>
               </div>
             )}
@@ -1253,7 +1332,8 @@ export function Navbar() {
                   backgroundColor: "var(--color-surface, #FFFFFF)",
                   border: "1px solid var(--color-border, #E2E8F0)",
                   borderRadius: "10px",
-                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+                  boxShadow:
+                    "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
                   padding: "0.5rem",
                   minWidth: "220px",
                   zIndex: 100,

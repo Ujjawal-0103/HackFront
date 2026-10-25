@@ -34,7 +34,9 @@ export default function HomePage() {
         setRecentVerifications(history.items || []);
 
         if (repos.length > 0) {
-          const decs = await api.getDecisions(repos[0].id, undefined, activeWorkspace.id).catch(() => []);
+          const decs = await api
+            .getDecisions(repos[0].id, undefined, activeWorkspace.id)
+            .catch(() => []);
           setDecisionsCount(decs.length);
         }
       } finally {
@@ -55,7 +57,9 @@ export default function HomePage() {
   );
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div
+      style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
+    >
       {/* Top Banner */}
       <div
         style={{
@@ -72,10 +76,18 @@ export default function HomePage() {
         }}
       >
         <span>
-          <strong>Traceback Evidence System:</strong> Verifying AI coding explanations and proposed code changes against repository engineering history.
+          <strong>Traceback Evidence System:</strong> Verifying AI coding
+          explanations and proposed code changes against repository engineering
+          history.
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <span style={{ fontSize: "0.75rem", color: "var(--color-success)", fontWeight: 600 }}>
+          <span
+            style={{
+              fontSize: "0.75rem",
+              color: "var(--color-success)",
+              fontWeight: 600,
+            }}
+          >
             ● System Operational
           </span>
         </div>
@@ -106,7 +118,14 @@ export default function HomePage() {
           }}
         >
           <div style={{ maxWidth: "800px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                marginBottom: "0.25rem",
+              }}
+            >
               <h1
                 style={{
                   fontSize: "1.65rem",
@@ -126,8 +145,11 @@ export default function HomePage() {
                 marginBottom: "1.25rem",
               }}
             >
-              Does this AI-generated explanation or proposed code change agree with what the repository&apos;s actual engineering history establishes?
-              Traceback evaluates technical claims, checks proposed diffs against documented constraints, and preserves engineering decision memory.
+              Does this AI-generated explanation or proposed code change agree
+              with what the repository&apos;s actual engineering history
+              establishes? Traceback evaluates technical claims, checks proposed
+              diffs against documented constraints, and preserves engineering
+              decision memory.
             </p>
 
             <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
@@ -216,14 +238,37 @@ export default function HomePage() {
             }}
           >
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  marginBottom: "0.5rem",
+                }}
+              >
                 <span style={{ fontSize: "1.25rem" }}>🔍</span>
-                <h2 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--color-text)", margin: 0 }}>
+                <h2
+                  style={{
+                    fontSize: "1rem",
+                    fontWeight: 700,
+                    color: "var(--color-text)",
+                    margin: 0,
+                  }}
+                >
                   Claim-to-Evidence Verification
                 </h2>
               </div>
-              <p style={{ fontSize: "0.825rem", color: "var(--color-text-secondary)", lineHeight: 1.5, marginBottom: "1rem" }}>
-                Decompose compound code explanations into factual claims and cross-check against repository commits, PRs, and ADRs with strict 3-state epistemological abstention.
+              <p
+                style={{
+                  fontSize: "0.825rem",
+                  color: "var(--color-text-secondary)",
+                  lineHeight: 1.5,
+                  marginBottom: "1rem",
+                }}
+              >
+                Decompose compound code explanations into factual claims and
+                cross-check against repository commits, PRs, and ADRs with
+                strict 3-state epistemological abstention.
               </p>
             </div>
             <Link
@@ -255,14 +300,37 @@ export default function HomePage() {
             }}
           >
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  marginBottom: "0.5rem",
+                }}
+              >
                 <span style={{ fontSize: "1.25rem" }}>⚡</span>
-                <h2 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--color-text)", margin: 0 }}>
+                <h2
+                  style={{
+                    fontSize: "1rem",
+                    fontWeight: 700,
+                    color: "var(--color-text)",
+                    margin: 0,
+                  }}
+                >
                   Historical Intent Check
                 </h2>
               </div>
-              <p style={{ fontSize: "0.825rem", color: "var(--color-text-secondary)", lineHeight: 1.5, marginBottom: "1rem" }}>
-                Evaluate proposed diffs against documented architectural decisions, security invariants, and past reverts before code is merged.
+              <p
+                style={{
+                  fontSize: "0.825rem",
+                  color: "var(--color-text-secondary)",
+                  lineHeight: 1.5,
+                  marginBottom: "1rem",
+                }}
+              >
+                Evaluate proposed diffs against documented architectural
+                decisions, security invariants, and past reverts before code is
+                merged.
               </p>
             </div>
             <Link
@@ -294,14 +362,37 @@ export default function HomePage() {
             }}
           >
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  marginBottom: "0.5rem",
+                }}
+              >
                 <span style={{ fontSize: "1.25rem" }}>🏛️</span>
-                <h2 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--color-text)", margin: 0 }}>
+                <h2
+                  style={{
+                    fontSize: "1rem",
+                    fontWeight: 700,
+                    color: "var(--color-text)",
+                    margin: 0,
+                  }}
+                >
                   Engineering Decision Memory
                 </h2>
               </div>
-              <p style={{ fontSize: "0.825rem", color: "var(--color-text-secondary)", lineHeight: 1.5, marginBottom: "1rem" }}>
-                Maintain a persistent library of human-reviewed engineering decisions linked to concrete Git evidence, tracking candidate, accepted, and superseded lifecycles.
+              <p
+                style={{
+                  fontSize: "0.825rem",
+                  color: "var(--color-text-secondary)",
+                  lineHeight: 1.5,
+                  marginBottom: "1rem",
+                }}
+              >
+                Maintain a persistent library of human-reviewed engineering
+                decisions linked to concrete Git evidence, tracking candidate,
+                accepted, and superseded lifecycles.
               </p>
             </div>
             <Link
@@ -338,31 +429,124 @@ export default function HomePage() {
               boxShadow: "var(--shadow-sm)",
             }}
           >
-            <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--color-text)", marginBottom: "1rem" }}>
+            <h3
+              style={{
+                fontSize: "0.9rem",
+                fontWeight: 700,
+                color: "var(--color-text)",
+                marginBottom: "1rem",
+              }}
+            >
               Workspace Engineering History
             </h3>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-              <div style={{ padding: "0.75rem", backgroundColor: "var(--color-card-muted)", borderRadius: "6px" }}>
-                <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>Connected Repositories</div>
-                <div style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--color-text)", marginTop: "0.2rem" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "1rem",
+              }}
+            >
+              <div
+                style={{
+                  padding: "0.75rem",
+                  backgroundColor: "var(--color-card-muted)",
+                  borderRadius: "6px",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "var(--color-text-muted)",
+                  }}
+                >
+                  Connected Repositories
+                </div>
+                <div
+                  style={{
+                    fontSize: "1.4rem",
+                    fontWeight: 700,
+                    color: "var(--color-text)",
+                    marginTop: "0.2rem",
+                  }}
+                >
                   {repositories.length}
                 </div>
               </div>
-              <div style={{ padding: "0.75rem", backgroundColor: "var(--color-card-muted)", borderRadius: "6px" }}>
-                <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>Decision Invariants</div>
-                <div style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--color-text)", marginTop: "0.2rem" }}>
+              <div
+                style={{
+                  padding: "0.75rem",
+                  backgroundColor: "var(--color-card-muted)",
+                  borderRadius: "6px",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "var(--color-text-muted)",
+                  }}
+                >
+                  Decision Invariants
+                </div>
+                <div
+                  style={{
+                    fontSize: "1.4rem",
+                    fontWeight: 700,
+                    color: "var(--color-text)",
+                    marginTop: "0.2rem",
+                  }}
+                >
                   {decisionsCount}
                 </div>
               </div>
-              <div style={{ padding: "0.75rem", backgroundColor: "var(--color-card-muted)", borderRadius: "6px" }}>
-                <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>Indexed Commits</div>
-                <div style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--color-text)", marginTop: "0.2rem" }}>
+              <div
+                style={{
+                  padding: "0.75rem",
+                  backgroundColor: "var(--color-card-muted)",
+                  borderRadius: "6px",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "var(--color-text-muted)",
+                  }}
+                >
+                  Indexed Commits
+                </div>
+                <div
+                  style={{
+                    fontSize: "1.4rem",
+                    fontWeight: 700,
+                    color: "var(--color-text)",
+                    marginTop: "0.2rem",
+                  }}
+                >
                   {totalCommits}
                 </div>
               </div>
-              <div style={{ padding: "0.75rem", backgroundColor: "var(--color-card-muted)", borderRadius: "6px" }}>
-                <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>Pull Requests</div>
-                <div style={{ fontSize: "1.4rem", fontWeight: 700, color: "var(--color-text)", marginTop: "0.2rem" }}>
+              <div
+                style={{
+                  padding: "0.75rem",
+                  backgroundColor: "var(--color-card-muted)",
+                  borderRadius: "6px",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    color: "var(--color-text-muted)",
+                  }}
+                >
+                  Pull Requests
+                </div>
+                <div
+                  style={{
+                    fontSize: "1.4rem",
+                    fontWeight: 700,
+                    color: "var(--color-text)",
+                    marginTop: "0.2rem",
+                  }}
+                >
                   {totalPRs}
                 </div>
               </div>
@@ -370,7 +554,11 @@ export default function HomePage() {
             <div style={{ marginTop: "1rem" }}>
               <Link
                 href="/repositories"
-                style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--color-primary)" }}
+                style={{
+                  fontSize: "0.8rem",
+                  fontWeight: 600,
+                  color: "var(--color-primary)",
+                }}
               >
                 Manage Repositories & Sync →
               </Link>
@@ -387,17 +575,45 @@ export default function HomePage() {
               boxShadow: "var(--shadow-sm)",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "var(--color-text)", margin: 0 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "1rem",
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "0.9rem",
+                  fontWeight: 700,
+                  color: "var(--color-text)",
+                  margin: 0,
+                }}
+              >
                 Recent Verification Sessions
               </h3>
-              <Link href="/history" style={{ fontSize: "0.75rem", color: "var(--color-primary)", fontWeight: 600 }}>
+              <Link
+                href="/history"
+                style={{
+                  fontSize: "0.75rem",
+                  color: "var(--color-primary)",
+                  fontWeight: 600,
+                }}
+              >
                 View All →
               </Link>
             </div>
 
             {isLoading ? (
-              <div style={{ padding: "1.5rem", textAlign: "center", fontSize: "0.85rem", color: "var(--color-text-muted)" }}>
+              <div
+                style={{
+                  padding: "1.5rem",
+                  textAlign: "center",
+                  fontSize: "0.85rem",
+                  color: "var(--color-text-muted)",
+                }}
+              >
                 Loading activity...
               </div>
             ) : recentVerifications.length === 0 ? (
@@ -413,13 +629,22 @@ export default function HomePage() {
               >
                 No verification sessions recorded yet.
                 <div style={{ marginTop: "0.5rem" }}>
-                  <Link href="/verify" style={{ color: "var(--color-primary)", fontWeight: 600 }}>
+                  <Link
+                    href="/verify"
+                    style={{ color: "var(--color-primary)", fontWeight: 600 }}
+                  >
                     Run your first verification →
                   </Link>
                 </div>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.6rem",
+                }}
+              >
                 {recentVerifications.slice(0, 4).map((v) => (
                   <Link
                     key={v.id}
@@ -435,8 +660,22 @@ export default function HomePage() {
                       transition: "border-color 0.15s ease",
                     }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", marginBottom: "0.2rem" }}>
-                      <span style={{ fontWeight: 600, color: "var(--color-primary)" }}>{v.repositoryFullName || "Repository"}</span>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        fontSize: "0.75rem",
+                        marginBottom: "0.2rem",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontWeight: 600,
+                          color: "var(--color-primary)",
+                        }}
+                      >
+                        {v.repositoryFullName || "Repository"}
+                      </span>
                       <span style={{ color: "var(--color-text-muted)" }}>
                         {new Date(v.createdAt).toLocaleDateString()}
                       </span>

@@ -1541,7 +1541,6 @@ export default function RepositoriesPage() {
                 gap: "0.5rem",
               }}
             >
-<<<<<<< HEAD
               <p
                 style={{
                   fontSize: "0.875rem",
@@ -1549,7 +1548,8 @@ export default function RepositoriesPage() {
                   margin: 0,
                 }}
               >
-                Import repositories from an authorized GitHub App installation into workspace <code>{workspaceId}</code>:
+                Import repositories from an authorized GitHub App installation
+                into workspace <code>{workspaceId}</code>:
               </p>
               <button
                 type="button"
@@ -1574,11 +1574,6 @@ export default function RepositoriesPage() {
                 Connect by GitHub URL instead ↗
               </button>
             </div>
-=======
-              Import repositories from an authorized GitHub App installation
-              into workspace <code>{workspaceId}</code>:
-            </p>
->>>>>>> origin/main
 
             {/* Error in modal if fetching authorized repos failed */}
             {authorizedError && (
@@ -2008,10 +2003,10 @@ export default function RepositoriesPage() {
                 }}
               >
                 <strong>Development Mock Sandbox Active:</strong> Live GitHub
-                requests are disabled in sandbox mode. Fixture repositories (e.g.{" "}
-                <code>https://github.com/Ujjawal-0103/HackFront</code> or{" "}
-                <code>https://github.com/acme-corp/payment-service</code>) can be
-                connected for local testing.
+                requests are disabled in sandbox mode. Fixture repositories
+                (e.g. <code>https://github.com/Ujjawal-0103/HackFront</code> or{" "}
+                <code>https://github.com/acme-corp/payment-service</code>) can
+                be connected for local testing.
               </div>
             )}
 
@@ -2061,7 +2056,8 @@ export default function RepositoriesPage() {
                 </div>
                 <div>{urlImportResult.message}</div>
                 <div style={{ marginTop: "0.5rem" }}>
-                  <strong>Repository:</strong> {urlImportResult.repository.fullName} (
+                  <strong>Repository:</strong>{" "}
+                  {urlImportResult.repository.fullName} (
                   {urlImportResult.repository.defaultBranch})
                 </div>
               </div>
@@ -2110,7 +2106,9 @@ export default function RepositoriesPage() {
                       marginTop: "0.35rem",
                     }}
                   >
-                    Standard browser URLs supported (e.g. <code>https://github.com/owner/repo</code>). Trailing slashes and .git extensions are automatically normalized.
+                    Standard browser URLs supported (e.g.{" "}
+                    <code>https://github.com/owner/repo</code>). Trailing
+                    slashes and .git extensions are automatically normalized.
                   </span>
                 </div>
 

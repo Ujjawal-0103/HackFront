@@ -302,12 +302,15 @@ describe("AuthService (Authentication, Registration & Session Management)", () =
       const activeSessionToken = loginRes.token;
 
       // Verify session is valid before reset
-      const validatedBefore = await authService.validateToken(activeSessionToken);
+      const validatedBefore =
+        await authService.validateToken(activeSessionToken);
       expect(validatedBefore).toBeDefined();
 
       // 2. Request forgot password
       await authService.forgotPassword({ email: "recovery.user@company.com" });
-      const resetToken = emailService.getLatestResetTokenForTest("recovery.user@company.com");
+      const resetToken = emailService.getLatestResetTokenForTest(
+        "recovery.user@company.com",
+      );
       expect(resetToken).toBeDefined();
 
       // 3. Reset password using token
@@ -319,7 +322,8 @@ describe("AuthService (Authentication, Registration & Session Management)", () =
       expect(resetRes.success).toBe(true);
 
       // 4. Verify previous active session has been revoked!
-      const validatedAfter = await authService.validateToken(activeSessionToken);
+      const validatedAfter =
+        await authService.validateToken(activeSessionToken);
       expect(validatedAfter).toBeNull();
 
       // 5. Verify old password fails and new password works
@@ -340,7 +344,9 @@ describe("AuthService (Authentication, Registration & Session Management)", () =
 
     it("should reject password reset when token has already been used", async () => {
       await authService.forgotPassword({ email: "recovery.user@company.com" });
-      const resetToken = emailService.getLatestResetTokenForTest("recovery.user@company.com");
+      const resetToken = emailService.getLatestResetTokenForTest(
+        "recovery.user@company.com",
+      );
       expect(resetToken).toBeDefined();
 
       // First reset succeeds
@@ -369,7 +375,9 @@ describe("AuthService (Authentication, Registration & Session Management)", () =
 
     it("should reject password reset with weak password or mismatching confirmation", async () => {
       await authService.forgotPassword({ email: "recovery.user@company.com" });
-      const resetToken = emailService.getLatestResetTokenForTest("recovery.user@company.com");
+      const resetToken = emailService.getLatestResetTokenForTest(
+        "recovery.user@company.com",
+      );
 
       // Password too short (<8)
       await expect(

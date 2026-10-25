@@ -241,14 +241,22 @@ export class AdvisoryService {
       : [];
 
     for (const dec of decisions) {
-      const pathMatch = dec.targetFilePath && targetFiles.some((f) => f.includes(dec.targetFilePath!) || dec.targetFilePath!.includes(f));
+      const pathMatch =
+        dec.targetFilePath &&
+        targetFiles.some(
+          (f) =>
+            f.includes(dec.targetFilePath!) || dec.targetFilePath!.includes(f),
+        );
       const keywordMatch = targetKeywords.some(
         (kw) =>
           dec.title.toLowerCase().includes(kw) ||
           dec.decision.toLowerCase().includes(kw) ||
           dec.rationale.toLowerCase().includes(kw),
       );
-      const symbolMatch = dec.targetSymbol && (sanitizedDiff.includes(dec.targetSymbol) || sanitizedDesc.includes(dec.targetSymbol));
+      const symbolMatch =
+        dec.targetSymbol &&
+        (sanitizedDiff.includes(dec.targetSymbol) ||
+          sanitizedDesc.includes(dec.targetSymbol));
 
       if (pathMatch || symbolMatch || keywordMatch) {
         const isAccepted = dec.status === "ACCEPTED";
@@ -260,17 +268,22 @@ export class AdvisoryService {
             ? `Change modifies a code area governed by an ACCEPTED engineering decision (${dec.id}).`
             : `Change touches a candidate engineering decision under review (${dec.id}).`,
           explanation: `Engineering Decision (${dec.status}): "${dec.decision}". Rationale: "${dec.rationale}". Target scope: ${dec.targetFilePath || dec.targetSymbol || "repository"}.`,
-          supportingEvidence: ((dec.supportingEvidence as any[]) || []).map((ev: any) => ({
-            id: ev.id || dec.id,
-            sourceType: ev.sourceType || "DOCUMENTATION",
-            referenceKey: ev.referenceKey || dec.relatedCommitSha || `DEC-${dec.id.slice(0, 8)}`,
-            title: ev.title || dec.title,
-            author: ev.author || dec.reviewerName || "Engineering Team",
-            timestamp: ev.timestamp || dec.createdAt.toISOString(),
-            url: ev.url || "",
-            snippet: ev.snippet || dec.decision,
-            filePath: ev.filePath || dec.targetFilePath || undefined,
-          })),
+          supportingEvidence: ((dec.supportingEvidence as any[]) || []).map(
+            (ev: any) => ({
+              id: ev.id || dec.id,
+              sourceType: ev.sourceType || "DOCUMENTATION",
+              referenceKey:
+                ev.referenceKey ||
+                dec.relatedCommitSha ||
+                `DEC-${dec.id.slice(0, 8)}`,
+              title: ev.title || dec.title,
+              author: ev.author || dec.reviewerName || "Engineering Team",
+              timestamp: ev.timestamp || dec.createdAt.toISOString(),
+              url: ev.url || "",
+              snippet: ev.snippet || dec.decision,
+              filePath: ev.filePath || dec.targetFilePath || undefined,
+            }),
+          ),
           recommendedFollowUp: `Review decision ${dec.id}. If this change intentionally alters the constraint, propose an updated or superseding decision record.`,
         });
       }
@@ -320,16 +333,15 @@ export class AdvisoryService {
    * Flagship Feature Two: Historical Intent Check
    * Runs advisory check against prospective code change and records an auditable session.
    */
-  async runHistoricalIntentCheck(
-    options: {
-      workspaceId: string;
-      repositoryId: string;
-      diff: string;
-      filePath?: string;
-      changeDescription?: string;
-    },
-  ): Promise<HistoricalIntentCheckSessionDto> {
-    const { workspaceId, repositoryId, diff, filePath, changeDescription } = options;
+  async runHistoricalIntentCheck(options: {
+    workspaceId: string;
+    repositoryId: string;
+    diff: string;
+    filePath?: string;
+    changeDescription?: string;
+  }): Promise<HistoricalIntentCheckSessionDto> {
+    const { workspaceId, repositoryId, diff, filePath, changeDescription } =
+      options;
     await this.verifyRepositoryAccess(workspaceId, repositoryId);
 
     const checkResult = await this.checkChangeAgainstDecisions({
@@ -346,21 +358,26 @@ export class AdvisoryService {
       outcome = "DOCUMENTED_CONFLICT";
     } else if (checkResult.advisoryStatus === "POTENTIAL_RISK") {
       outcome = "POTENTIAL_CONFLICT";
-    } else if (checkResult.advisoryStatus === "INSUFFICIENT_EVIDENCE" || (!diff.trim() && !changeDescription?.trim())) {
+    } else if (
+      checkResult.advisoryStatus === "INSUFFICIENT_EVIDENCE" ||
+      (!diff.trim() && !changeDescription?.trim())
+    ) {
       outcome = "INSUFFICIENT_CONTEXT";
     }
 
-    const intentConflicts: IntentConflictItem[] = checkResult.conflicts.map((c) => ({
-      id: c.conflictId,
-      title: c.historicalConstraint,
-      affectedCodeOrSymbol: filePath || undefined,
-      severity: c.severity,
-      outcome: outcome,
-      rationale: c.explanation,
-      unestablishedContext: c.severityBasis,
-      supportingEvidence: c.supportingEvidence,
-      recommendedReview: c.recommendedFollowUp,
-    }));
+    const intentConflicts: IntentConflictItem[] = checkResult.conflicts.map(
+      (c) => ({
+        id: c.conflictId,
+        title: c.historicalConstraint,
+        affectedCodeOrSymbol: filePath || undefined,
+        severity: c.severity,
+        outcome: outcome,
+        rationale: c.explanation,
+        unestablishedContext: c.severityBasis,
+        supportingEvidence: c.supportingEvidence,
+        recommendedReview: c.recommendedFollowUp,
+      }),
+    );
 
     let sessionId = `intent-${Date.now()}`;
     let createdAt = new Date();
@@ -387,7 +404,9 @@ export class AdvisoryService {
       dispositionNotes = session.dispositionNotes;
     }
 
-    this.logger.log(`Created intent check session ${sessionId} with outcome ${outcome}`);
+    this.logger.log(
+      `Created intent check session ${sessionId} with outcome ${outcome}`,
+    );
 
     return {
       id: sessionId,
@@ -434,7 +453,9 @@ export class AdvisoryService {
     });
 
     if (!record) {
-      throw new NotFoundException(`Intent check session ${sessionId} not found.`);
+      throw new NotFoundException(
+        `Intent check session ${sessionId} not found.`,
+      );
     }
 
     return this.mapIntentSessionToDto(record);
@@ -478,9 +499,10 @@ export class AdvisoryService {
       changeDescription: record.changeDescription,
       status: record.status,
       outcome,
-      summary: conflicts.length > 0
-        ? `Identified ${conflicts.length} conflict(s) or historical decision overlap(s).`
-        : "No direct conflicts with recorded historical decisions were detected.",
+      summary:
+        conflicts.length > 0
+          ? `Identified ${conflicts.length} conflict(s) or historical decision overlap(s).`
+          : "No direct conflicts with recorded historical decisions were detected.",
       conflicts,
       humanDisposition: (record.humanDisposition as any) || null,
       dispositionNotes: record.dispositionNotes || null,
@@ -488,7 +510,6 @@ export class AdvisoryService {
       updatedAt: record.updatedAt.toISOString(),
     };
   }
-
 
   private async verifyRepositoryAccess(
     workspaceId: string,

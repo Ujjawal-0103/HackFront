@@ -26,15 +26,21 @@ function HistoricalIntentContent() {
   const [isLoadingRepos, setIsLoadingRepos] = useState(true);
   const [isChecking, setIsChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentSession, setCurrentSession] = useState<HistoricalIntentCheckSessionDto | null>(null);
-  const [pastSessions, setPastSessions] = useState<HistoricalIntentCheckSessionDto[]>([]);
+  const [currentSession, setCurrentSession] =
+    useState<HistoricalIntentCheckSessionDto | null>(null);
+  const [pastSessions, setPastSessions] = useState<
+    HistoricalIntentCheckSessionDto[]
+  >([]);
   const [isLoadingPastSessions, setIsLoadingPastSessions] = useState(false);
 
   // Human disposition state
-  const [disposition, setDisposition] = useState<HumanDisposition>("NEEDS_DISCUSSION");
+  const [disposition, setDisposition] =
+    useState<HumanDisposition>("NEEDS_DISCUSSION");
   const [dispositionNotes, setDispositionNotes] = useState<string>("");
   const [isSavingDisposition, setIsSavingDisposition] = useState(false);
-  const [dispositionFeedback, setDispositionFeedback] = useState<string | null>(null);
+  const [dispositionFeedback, setDispositionFeedback] = useState<string | null>(
+    null,
+  );
 
   // Load repositories
   const loadRepositories = useCallback(async () => {
@@ -56,18 +62,21 @@ function HistoricalIntentContent() {
   }, [activeWorkspace?.id, selectedRepoId]);
 
   // Load past intent sessions
-  const loadPastSessions = useCallback(async (repoId: string) => {
-    if (!activeWorkspace?.id || !repoId) return;
-    try {
-      setIsLoadingPastSessions(true);
-      const sessions = await api.getIntentChecks(repoId, activeWorkspace.id);
-      setPastSessions(sessions);
-    } catch {
-      // Non-fatal if history is empty
-    } finally {
-      setIsLoadingPastSessions(false);
-    }
-  }, [activeWorkspace?.id]);
+  const loadPastSessions = useCallback(
+    async (repoId: string) => {
+      if (!activeWorkspace?.id || !repoId) return;
+      try {
+        setIsLoadingPastSessions(true);
+        const sessions = await api.getIntentChecks(repoId, activeWorkspace.id);
+        setPastSessions(sessions);
+      } catch {
+        // Non-fatal if history is empty
+      } finally {
+        setIsLoadingPastSessions(false);
+      }
+    },
+    [activeWorkspace?.id],
+  );
 
   useEffect(() => {
     loadRepositories();
@@ -136,7 +145,9 @@ function HistoricalIntentContent() {
         activeWorkspace?.id,
       );
       setCurrentSession(updated);
-      setDispositionFeedback(`Disposition "${disposition}" recorded successfully.`);
+      setDispositionFeedback(
+        `Disposition "${disposition}" recorded successfully.`,
+      );
       loadPastSessions(selectedRepoId);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -218,7 +229,14 @@ function HistoricalIntentContent() {
         }}
       >
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              marginBottom: "0.25rem",
+            }}
+          >
             <span style={{ fontSize: "1.25rem" }}>⚡</span>
             <h1
               style={{
@@ -244,8 +262,14 @@ function HistoricalIntentContent() {
               Core Pillar
             </span>
           </div>
-          <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
-            Evaluate prospective code changes against historical ADRs, past reversions, and reviewed engineering constraints.
+          <p
+            style={{
+              fontSize: "0.875rem",
+              color: "var(--color-text-secondary)",
+            }}
+          >
+            Evaluate prospective code changes against historical ADRs, past
+            reversions, and reviewed engineering constraints.
           </p>
         </div>
 
@@ -441,7 +465,10 @@ function HistoricalIntentContent() {
                     marginTop: "0.25rem",
                   }}
                 >
-                  <span>Evaluated against historical ADRs, reverts, and accepted decisions</span>
+                  <span>
+                    Evaluated against historical ADRs, reverts, and accepted
+                    decisions
+                  </span>
                   <span>{diff.length} / 25,000 chars</span>
                 </div>
               </div>
@@ -478,7 +505,13 @@ function HistoricalIntentContent() {
                 />
               </div>
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "0.75rem",
+                }}
+              >
                 {currentSession && (
                   <button
                     type="button"
@@ -520,7 +553,9 @@ function HistoricalIntentContent() {
                     boxShadow: "0 1px 2px rgba(37, 99, 235, 0.2)",
                   }}
                 >
-                  {isChecking ? "Checking Historical Intent..." : "⚡ Run Intent Check"}
+                  {isChecking
+                    ? "Checking Historical Intent..."
+                    : "⚡ Run Intent Check"}
                 </button>
               </div>
             </form>
@@ -528,7 +563,13 @@ function HistoricalIntentContent() {
 
           {/* Results Area */}
           {currentSession && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "1.25rem",
+              }}
+            >
               {/* Outcome Banner */}
               {(() => {
                 const badge = getOutcomeBadge(currentSession.outcome);
@@ -544,9 +585,18 @@ function HistoricalIntentContent() {
                       gap: "0.85rem",
                     }}
                   >
-                    <span style={{ fontSize: "1.5rem", lineHeight: 1 }}>{badge.icon}</span>
+                    <span style={{ fontSize: "1.5rem", lineHeight: 1 }}>
+                      {badge.icon}
+                    </span>
                     <div style={{ flex: 1 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.25rem" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.6rem",
+                          marginBottom: "0.25rem",
+                        }}
+                      >
                         <span
                           style={{
                             fontSize: "0.75rem",
@@ -558,11 +608,26 @@ function HistoricalIntentContent() {
                         >
                           {badge.label}
                         </span>
-                        <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
-                          Checked on {new Date(currentSession.createdAt).toLocaleTimeString()}
+                        <span
+                          style={{
+                            fontSize: "0.75rem",
+                            color: "var(--color-text-muted)",
+                          }}
+                        >
+                          Checked on{" "}
+                          {new Date(
+                            currentSession.createdAt,
+                          ).toLocaleTimeString()}
                         </span>
                       </div>
-                      <p style={{ fontSize: "0.9rem", fontWeight: 600, color: "var(--color-text)", margin: 0 }}>
+                      <p
+                        style={{
+                          fontSize: "0.9rem",
+                          fontWeight: 600,
+                          color: "var(--color-text)",
+                          margin: 0,
+                        }}
+                      >
                         {currentSession.summary}
                       </p>
                       <p
@@ -573,7 +638,8 @@ function HistoricalIntentContent() {
                           fontStyle: "italic",
                         }}
                       >
-                        Notice: Traceback analysis is purely advisory. Traceback does not block merges or alter repository source code.
+                        Notice: Traceback analysis is purely advisory. Traceback
+                        does not block merges or alter repository source code.
                       </p>
                     </div>
                   </div>
@@ -601,8 +667,17 @@ function HistoricalIntentContent() {
                     justifyContent: "space-between",
                   }}
                 >
-                  <span>Historical Constraints & Invariants ({currentSession.conflicts.length})</span>
-                  <span style={{ fontSize: "0.75rem", fontWeight: 400, color: "var(--color-text-muted)" }}>
+                  <span>
+                    Historical Constraints & Invariants (
+                    {currentSession.conflicts.length})
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "0.75rem",
+                      fontWeight: 400,
+                      color: "var(--color-text-muted)",
+                    }}
+                  >
                     Verified against Repository Engineering History
                   </span>
                 </h2>
@@ -618,13 +693,27 @@ function HistoricalIntentContent() {
                       fontSize: "0.85rem",
                     }}
                   >
-                    No documented historical conflicts or invariant violations detected for this scope.
-                    <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", marginTop: "0.25rem" }}>
-                      Absence of a recorded conflict does not prove that a code modification is free of defect.
+                    No documented historical conflicts or invariant violations
+                    detected for this scope.
+                    <div
+                      style={{
+                        fontSize: "0.75rem",
+                        color: "var(--color-text-muted)",
+                        marginTop: "0.25rem",
+                      }}
+                    >
+                      Absence of a recorded conflict does not prove that a code
+                      modification is free of defect.
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "1rem",
+                    }}
+                  >
                     {currentSession.conflicts.map((conflict, cIdx) => (
                       <div
                         key={cIdx}
@@ -643,7 +732,13 @@ function HistoricalIntentContent() {
                             marginBottom: "0.5rem",
                           }}
                         >
-                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "0.5rem",
+                            }}
+                          >
                             <span
                               style={{
                                 fontSize: "0.65rem",
@@ -654,18 +749,32 @@ function HistoricalIntentContent() {
                                   conflict.severity === "HIGH"
                                     ? "rgba(239, 68, 68, 0.15)"
                                     : "rgba(245, 158, 11, 0.15)",
-                                color: conflict.severity === "HIGH" ? "#DC2626" : "#D97706",
+                                color:
+                                  conflict.severity === "HIGH"
+                                    ? "#DC2626"
+                                    : "#D97706",
                               }}
                             >
                               {conflict.severity} SEVERITY
                             </span>
-                            <strong style={{ fontSize: "0.9rem", color: "var(--color-text)" }}>
+                            <strong
+                              style={{
+                                fontSize: "0.9rem",
+                                color: "var(--color-text)",
+                              }}
+                            >
                               {conflict.title}
                             </strong>
                           </div>
                         </div>
 
-                        <p style={{ fontSize: "0.85rem", color: "var(--color-text)", marginBottom: "0.5rem" }}>
+                        <p
+                          style={{
+                            fontSize: "0.85rem",
+                            color: "var(--color-text)",
+                            marginBottom: "0.5rem",
+                          }}
+                        >
                           {conflict.rationale}
                         </p>
 
@@ -692,64 +801,85 @@ function HistoricalIntentContent() {
                             marginBottom: "0.75rem",
                           }}
                         >
-                          <strong>Recommendation:</strong> {conflict.recommendedReview}
+                          <strong>Recommendation:</strong>{" "}
+                          {conflict.recommendedReview}
                         </div>
 
                         {/* Supporting Evidence Citations */}
-                        {conflict.supportingEvidence && conflict.supportingEvidence.length > 0 && (
-                          <div>
-                            <span
-                              style={{
-                                fontSize: "0.7rem",
-                                fontWeight: 700,
-                                textTransform: "uppercase",
-                                color: "var(--color-text-muted)",
-                              }}
-                            >
-                              Underlying Evidence Citations:
-                            </span>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", marginTop: "0.35rem" }}>
-                              {conflict.supportingEvidence.map((ev, evIdx) => (
-                                <div
-                                  key={evIdx}
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "0.5rem",
-                                    fontSize: "0.75rem",
-                                  }}
-                                >
-                                  <span
-                                    style={{
-                                      fontSize: "0.6rem",
-                                      fontWeight: 700,
-                                      padding: "1px 5px",
-                                      borderRadius: "3px",
-                                      backgroundColor: "var(--color-border)",
-                                    }}
-                                  >
-                                    {ev.sourceType}
-                                  </span>
-                                  {ev.url ? (
-                                    <a
-                                      href={ev.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      style={{ color: "var(--color-primary)", fontWeight: 600 }}
+                        {conflict.supportingEvidence &&
+                          conflict.supportingEvidence.length > 0 && (
+                            <div>
+                              <span
+                                style={{
+                                  fontSize: "0.7rem",
+                                  fontWeight: 700,
+                                  textTransform: "uppercase",
+                                  color: "var(--color-text-muted)",
+                                }}
+                              >
+                                Underlying Evidence Citations:
+                              </span>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: "0.35rem",
+                                  marginTop: "0.35rem",
+                                }}
+                              >
+                                {conflict.supportingEvidence.map(
+                                  (ev, evIdx) => (
+                                    <div
+                                      key={evIdx}
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "0.5rem",
+                                        fontSize: "0.75rem",
+                                      }}
                                     >
-                                      {ev.referenceKey}: {ev.title} ↗
-                                    </a>
-                                  ) : (
-                                    <span>
-                                      {ev.referenceKey}: {ev.title}
-                                    </span>
-                                  )}
-                                  <span style={{ color: "var(--color-text-muted)" }}>• By {ev.author}</span>
-                                </div>
-                              ))}
+                                      <span
+                                        style={{
+                                          fontSize: "0.6rem",
+                                          fontWeight: 700,
+                                          padding: "1px 5px",
+                                          borderRadius: "3px",
+                                          backgroundColor:
+                                            "var(--color-border)",
+                                        }}
+                                      >
+                                        {ev.sourceType}
+                                      </span>
+                                      {ev.url ? (
+                                        <a
+                                          href={ev.url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          style={{
+                                            color: "var(--color-primary)",
+                                            fontWeight: 600,
+                                          }}
+                                        >
+                                          {ev.referenceKey}: {ev.title} ↗
+                                        </a>
+                                      ) : (
+                                        <span>
+                                          {ev.referenceKey}: {ev.title}
+                                        </span>
+                                      )}
+                                      <span
+                                        style={{
+                                          color: "var(--color-text-muted)",
+                                        }}
+                                      >
+                                        • By {ev.author}
+                                      </span>
+                                    </div>
+                                  ),
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
                       </div>
                     ))}
                   </div>
@@ -766,9 +896,23 @@ function HistoricalIntentContent() {
                   boxShadow: "var(--shadow-sm)",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    marginBottom: "0.75rem",
+                  }}
+                >
                   <span style={{ fontSize: "1.1rem" }}>👤</span>
-                  <h3 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--color-text)", margin: 0 }}>
+                  <h3
+                    style={{
+                      fontSize: "0.95rem",
+                      fontWeight: 700,
+                      color: "var(--color-text)",
+                      margin: 0,
+                    }}
+                  >
                     Human Disposition & Review Decision
                   </h3>
                   {currentSession.humanDisposition && (
@@ -803,8 +947,20 @@ function HistoricalIntentContent() {
                   </div>
                 )}
 
-                <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem" }}>
-                  {(["APPROVED", "REJECTED", "NEEDS_DISCUSSION"] as HumanDisposition[]).map((disp) => (
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "0.5rem",
+                    marginBottom: "0.75rem",
+                  }}
+                >
+                  {(
+                    [
+                      "APPROVED",
+                      "REJECTED",
+                      "NEEDS_DISCUSSION",
+                    ] as HumanDisposition[]
+                  ).map((disp) => (
                     <button
                       key={disp}
                       type="button"
@@ -812,9 +968,18 @@ function HistoricalIntentContent() {
                       style={{
                         padding: "0.45rem 0.85rem",
                         borderRadius: "6px",
-                        border: disposition === disp ? "2px solid var(--color-primary)" : "1px solid var(--color-border)",
-                        backgroundColor: disposition === disp ? "var(--color-primary-light)" : "transparent",
-                        color: disposition === disp ? "var(--color-primary)" : "var(--color-text)",
+                        border:
+                          disposition === disp
+                            ? "2px solid var(--color-primary)"
+                            : "1px solid var(--color-border)",
+                        backgroundColor:
+                          disposition === disp
+                            ? "var(--color-primary-light)"
+                            : "transparent",
+                        color:
+                          disposition === disp
+                            ? "var(--color-primary)"
+                            : "var(--color-text)",
                         fontSize: "0.8rem",
                         fontWeight: 600,
                         cursor: "pointer",
@@ -888,24 +1053,55 @@ function HistoricalIntentContent() {
               paddingBottom: "0.5rem",
             }}
           >
-            <h3 style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--color-text)", margin: 0 }}>
+            <h3
+              style={{
+                fontSize: "0.85rem",
+                fontWeight: 700,
+                color: "var(--color-text)",
+                margin: 0,
+              }}
+            >
               Recent Intent Checks
             </h3>
-            <span style={{ fontSize: "0.7rem", color: "var(--color-text-muted)" }}>
+            <span
+              style={{ fontSize: "0.7rem", color: "var(--color-text-muted)" }}
+            >
               {pastSessions.length} sessions
             </span>
           </div>
 
           {isLoadingPastSessions ? (
-            <div style={{ padding: "1rem", textAlign: "center", fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
+            <div
+              style={{
+                padding: "1rem",
+                textAlign: "center",
+                fontSize: "0.8rem",
+                color: "var(--color-text-muted)",
+              }}
+            >
               Loading sessions...
             </div>
           ) : pastSessions.length === 0 ? (
-            <div style={{ padding: "1rem", textAlign: "center", fontSize: "0.8rem", color: "var(--color-text-muted)" }}>
+            <div
+              style={{
+                padding: "1rem",
+                textAlign: "center",
+                fontSize: "0.8rem",
+                color: "var(--color-text-muted)",
+              }}
+            >
               No previous intent checks recorded for this repository.
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxHeight: "500px", overflowY: "auto" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.5rem",
+                maxHeight: "500px",
+                overflowY: "auto",
+              }}
+            >
               {pastSessions.map((s) => {
                 const badge = getOutcomeBadge(s.outcome);
                 const isSelected = currentSession?.id === s.id;
@@ -918,13 +1114,23 @@ function HistoricalIntentContent() {
                       textAlign: "left",
                       padding: "0.6rem 0.75rem",
                       borderRadius: "6px",
-                      border: isSelected ? "1px solid var(--color-primary)" : "1px solid var(--color-border)",
-                      backgroundColor: isSelected ? "var(--color-primary-light)" : "var(--color-card-muted)",
+                      border: isSelected
+                        ? "1px solid var(--color-primary)"
+                        : "1px solid var(--color-border)",
+                      backgroundColor: isSelected
+                        ? "var(--color-primary-light)"
+                        : "var(--color-card-muted)",
                       cursor: "pointer",
                       transition: "all 0.15s ease",
                     }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.25rem" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        marginBottom: "0.25rem",
+                      }}
+                    >
                       <span
                         style={{
                           fontSize: "0.65rem",
@@ -934,7 +1140,12 @@ function HistoricalIntentContent() {
                       >
                         {badge.label}
                       </span>
-                      <span style={{ fontSize: "0.65rem", color: "var(--color-text-muted)" }}>
+                      <span
+                        style={{
+                          fontSize: "0.65rem",
+                          color: "var(--color-text-muted)",
+                        }}
+                      >
                         {new Date(s.createdAt).toLocaleDateString()}
                       </span>
                     </div>
@@ -948,10 +1159,19 @@ function HistoricalIntentContent() {
                         textOverflow: "ellipsis",
                       }}
                     >
-                      {s.filePath || (s.changeDescription ? s.changeDescription.slice(0, 30) : "Diff check")}
+                      {s.filePath ||
+                        (s.changeDescription
+                          ? s.changeDescription.slice(0, 30)
+                          : "Diff check")}
                     </div>
                     {s.humanDisposition && (
-                      <div style={{ fontSize: "0.65rem", color: "var(--color-primary)", marginTop: "0.2rem" }}>
+                      <div
+                        style={{
+                          fontSize: "0.65rem",
+                          color: "var(--color-primary)",
+                          marginTop: "0.2rem",
+                        }}
+                      >
                         Disposition: {s.humanDisposition}
                       </div>
                     )}
@@ -968,7 +1188,13 @@ function HistoricalIntentContent() {
 
 export default function HistoricalIntentPage() {
   return (
-    <Suspense fallback={<div style={{ padding: "2rem", textAlign: "center" }}>Loading Historical Intent Studio...</div>}>
+    <Suspense
+      fallback={
+        <div style={{ padding: "2rem", textAlign: "center" }}>
+          Loading Historical Intent Studio...
+        </div>
+      }
+    >
       <HistoricalIntentContent />
     </Suspense>
   );

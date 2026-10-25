@@ -127,14 +127,20 @@ export class DecisionsService {
     if (dto.title !== undefined) updateData.title = dto.title.trim();
     if (dto.summary !== undefined) updateData.summary = dto.summary.trim();
     if (dto.decision !== undefined) updateData.decision = dto.decision.trim();
-    if (dto.rationale !== undefined) updateData.rationale = dto.rationale.trim();
-    if (dto.targetFilePath !== undefined) updateData.targetFilePath = dto.targetFilePath?.trim() || null;
-    if (dto.targetSymbol !== undefined) updateData.targetSymbol = dto.targetSymbol?.trim() || null;
+    if (dto.rationale !== undefined)
+      updateData.rationale = dto.rationale.trim();
+    if (dto.targetFilePath !== undefined)
+      updateData.targetFilePath = dto.targetFilePath?.trim() || null;
+    if (dto.targetSymbol !== undefined)
+      updateData.targetSymbol = dto.targetSymbol?.trim() || null;
     if (dto.status !== undefined) updateData.status = dto.status;
     if (dto.severity !== undefined) updateData.severity = dto.severity;
-    if (dto.reviewNotes !== undefined) updateData.reviewNotes = dto.reviewNotes?.trim() || null;
-    if (dto.supersedesId !== undefined) updateData.supersedesId = dto.supersedesId;
-    if (dto.supersededById !== undefined) updateData.supersededById = dto.supersededById;
+    if (dto.reviewNotes !== undefined)
+      updateData.reviewNotes = dto.reviewNotes?.trim() || null;
+    if (dto.supersedesId !== undefined)
+      updateData.supersedesId = dto.supersedesId;
+    if (dto.supersededById !== undefined)
+      updateData.supersededById = dto.supersededById;
 
     const updated = await this.prisma.engineeringDecision.update({
       where: { id },
@@ -159,7 +165,8 @@ export class DecisionsService {
         status: "ACCEPTED",
         reviewerId: user?.id || null,
         reviewerName: user?.name || "Human Reviewer",
-        reviewNotes: dto.reviewNotes?.trim() || "Accepted as historical constraint.",
+        reviewNotes:
+          dto.reviewNotes?.trim() || "Accepted as historical constraint.",
         reviewedAt: new Date(),
       },
     });
@@ -206,7 +213,8 @@ export class DecisionsService {
         status: "DISPUTED",
         reviewerId: user?.id || null,
         reviewerName: user?.name || "Human Reviewer",
-        reviewNotes: dto.reviewNotes?.trim() || "Decision disputed by reviewer.",
+        reviewNotes:
+          dto.reviewNotes?.trim() || "Decision disputed by reviewer.",
         reviewedAt: new Date(),
       },
     });
@@ -233,7 +241,8 @@ export class DecisionsService {
       data: {
         status: "SUPERSEDED",
         supersededById: newDecisionId,
-        reviewNotes: `Superseded by decision ${newDecisionId}. ${dto.notes || ""}`.trim(),
+        reviewNotes:
+          `Superseded by decision ${newDecisionId}. ${dto.notes || ""}`.trim(),
       },
     });
 
@@ -272,7 +281,10 @@ export class DecisionsService {
       throw new NotFoundException(`Claim ${dto.claimId} not found.`);
     }
 
-    if (claim.session.workspaceId !== workspaceId || claim.session.repositoryId !== repositoryId) {
+    if (
+      claim.session.workspaceId !== workspaceId ||
+      claim.session.repositoryId !== repositoryId
+    ) {
       throw new ForbiddenException(
         "Claim does not belong to the specified workspace or repository.",
       );
@@ -289,7 +301,10 @@ export class DecisionsService {
       url: ev.url,
       snippet: ev.snippet || undefined,
       filePath: ev.filePath || undefined,
-      lineRange: ev.lineStart && ev.lineEnd ? { start: ev.lineStart, end: ev.lineEnd } : undefined,
+      lineRange:
+        ev.lineStart && ev.lineEnd
+          ? { start: ev.lineStart, end: ev.lineEnd }
+          : undefined,
     }));
 
     const title =
@@ -306,18 +321,22 @@ export class DecisionsService {
         summary: `Derived from verified claim: "${claim.text}"`,
         decision: `Preserve established architectural constraint: ${claim.text}`,
         rationale: `Verified historical evidence confirms this requirement was intentionally implemented. Original session explanation: "${claim.session.explanation.slice(0, 300)}"`,
-        targetFilePath: claim.session.targetFilePath || (evidenceItems[0]?.filePath ?? null),
+        targetFilePath:
+          claim.session.targetFilePath || (evidenceItems[0]?.filePath ?? null),
         targetSymbol: claim.targetSymbol || null,
         status: "CANDIDATE",
         severity: (dto.severity as any) || "HIGH",
         supportingEvidence: (evidenceItems as any) || [],
-        relatedCommitSha: evidenceItems.find((e) => e.sourceType === "COMMIT")?.referenceKey || null,
-        relatedPrNumber: parseInt(
-          evidenceItems
-            .find((e) => e.sourceType === "PULL_REQUEST")
-            ?.referenceKey.replace(/[^0-9]/g, "") || "0",
-          10,
-        ) || null,
+        relatedCommitSha:
+          evidenceItems.find((e) => e.sourceType === "COMMIT")?.referenceKey ||
+          null,
+        relatedPrNumber:
+          parseInt(
+            evidenceItems
+              .find((e) => e.sourceType === "PULL_REQUEST")
+              ?.referenceKey.replace(/[^0-9]/g, "") || "0",
+            10,
+          ) || null,
         createdFromClaimId: claim.id,
         reviewerId: user?.id || null,
         reviewerName: user?.name || null,
@@ -344,7 +363,8 @@ export class DecisionsService {
       targetSymbol: record.targetSymbol,
       status: record.status as DecisionStatus,
       severity: record.severity as DecisionSeverity,
-      supportingEvidence: (record.supportingEvidence as EvidenceReference[]) || [],
+      supportingEvidence:
+        (record.supportingEvidence as EvidenceReference[]) || [],
       relatedCommitSha: record.relatedCommitSha,
       relatedPrNumber: record.relatedPrNumber,
       reviewerId: record.reviewerId,

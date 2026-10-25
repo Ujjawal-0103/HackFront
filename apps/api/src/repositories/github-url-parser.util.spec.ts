@@ -14,13 +14,17 @@ describe("parseGitHubRepositoryUrl", () => {
     });
 
     it("should parse and normalize URL with trailing slash", () => {
-      const res = parseGitHubRepositoryUrl("https://github.com/facebook/react/");
+      const res = parseGitHubRepositoryUrl(
+        "https://github.com/facebook/react/",
+      );
       expect(res.fullName).toBe("facebook/react");
       expect(res.canonicalUrl).toBe("https://github.com/facebook/react");
     });
 
     it("should parse and strip .git suffix", () => {
-      const res = parseGitHubRepositoryUrl("https://github.com/Ujjawal-0103/HackFront.git");
+      const res = parseGitHubRepositoryUrl(
+        "https://github.com/Ujjawal-0103/HackFront.git",
+      );
       expect(res).toEqual({
         owner: "Ujjawal-0103",
         repo: "HackFront",
@@ -30,7 +34,9 @@ describe("parseGitHubRepositoryUrl", () => {
     });
 
     it("should parse URL with branch or subfolder fragments", () => {
-      const res = parseGitHubRepositoryUrl("https://github.com/torvalds/linux/tree/master/kernel");
+      const res = parseGitHubRepositoryUrl(
+        "https://github.com/torvalds/linux/tree/master/kernel",
+      );
       expect(res.owner).toBe("torvalds");
       expect(res.repo).toBe("linux");
       expect(res.fullName).toBe("torvalds/linux");
@@ -38,18 +44,26 @@ describe("parseGitHubRepositoryUrl", () => {
     });
 
     it("should accept www.github.com", () => {
-      const res = parseGitHubRepositoryUrl("https://www.github.com/vercel/next.js");
+      const res = parseGitHubRepositoryUrl(
+        "https://www.github.com/vercel/next.js",
+      );
       expect(res.fullName).toBe("vercel/next.js");
     });
 
     it("should accept URL without protocol prefix and prepend https", () => {
-      const res = parseGitHubRepositoryUrl("github.com/acme-corp/payment-service");
+      const res = parseGitHubRepositoryUrl(
+        "github.com/acme-corp/payment-service",
+      );
       expect(res.fullName).toBe("acme-corp/payment-service");
-      expect(res.canonicalUrl).toBe("https://github.com/acme-corp/payment-service");
+      expect(res.canonicalUrl).toBe(
+        "https://github.com/acme-corp/payment-service",
+      );
     });
 
     it("should allow hyphens, dots, and underscores in repository names", () => {
-      const res = parseGitHubRepositoryUrl("https://github.com/my-org/core_api.v2");
+      const res = parseGitHubRepositoryUrl(
+        "https://github.com/my-org/core_api.v2",
+      );
       expect(res.owner).toBe("my-org");
       expect(res.repo).toBe("core_api.v2");
     });
@@ -58,8 +72,12 @@ describe("parseGitHubRepositoryUrl", () => {
   describe("Security Rejections & Malformed URLs", () => {
     it("should reject empty or whitespace input", () => {
       expect(() => parseGitHubRepositoryUrl("")).toThrow(BadRequestException);
-      expect(() => parseGitHubRepositoryUrl("   ")).toThrow(BadRequestException);
-      expect(() => parseGitHubRepositoryUrl(null as any)).toThrow(BadRequestException);
+      expect(() => parseGitHubRepositoryUrl("   ")).toThrow(
+        BadRequestException,
+      );
+      expect(() => parseGitHubRepositoryUrl(null as any)).toThrow(
+        BadRequestException,
+      );
     });
 
     it("should reject embedded credentials in URL", () => {
@@ -90,9 +108,9 @@ describe("parseGitHubRepositoryUrl", () => {
     });
 
     it("should reject URL with missing repository name", () => {
-      expect(() => parseGitHubRepositoryUrl("https://github.com/owner")).toThrow(
-        BadRequestException,
-      );
+      expect(() =>
+        parseGitHubRepositoryUrl("https://github.com/owner"),
+      ).toThrow(BadRequestException);
       expect(() => parseGitHubRepositoryUrl("https://github.com/")).toThrow(
         BadRequestException,
       );

@@ -5,10 +5,12 @@
 **Positioning:** Historical Intent Verification for AI-Assisted Software Development.
 
 **Core Product Promise:**
-> *"Verify what AI says about your code against the engineering history that shaped it."*
+
+> _"Verify what AI says about your code against the engineering history that shaped it."_
 
 **Secondary Value Proposition:**
-> *"Understand not only what code does, but what the available evidence establishes about why it exists—and identify when proposed changes may conflict with that evidence."*
+
+> _"Understand not only what code does, but what the available evidence establishes about why it exists—and identify when proposed changes may conflict with that evidence."_
 
 Traceback is neither another code editor nor another general-purpose LLM chatbot. It is a **human-supervised verification and intent-checking layer** that complements AI coding assistants (GitHub Copilot, Claude Code, Cursor) and PR review bots (CodeRabbit).
 
@@ -44,15 +46,15 @@ Traceback is neither another code editor nor another general-purpose LLM chatbot
 
 ## 2. Competitive Differentiation Matrix
 
-| Capability | Generic AI Chatbot (ChatGPT / Claude) | Inline Assistant (GitHub Copilot) | Automated Reviewer (CodeRabbit) | **Traceback Evidence System** |
-| :--- | :--- | :--- | :--- | :--- |
-| **Primary Focus** | General knowledge generation | In-editor code autocompletion | Static PR linting & summary | **Evidence-grounded historical verification** |
-| **Historical Evidence** | None (only pre-trained weights) | In-file context window only | Recent git diff only | **Full repository history (commits, PRs, issues, ADRs, decisions)** |
-| **Epistemological Honesty** | High hallucination & sycophancy | Confabulated justifications | Synthetic nitpicks | **Strict 3-State Model (`SUPPORTED`, `CONTRADICTED`, `INSUFFICIENT_EVIDENCE`)** |
-| **Abstention Policy** | Almost never abstains | Guesses rationale | Comments regardless | **Explicit abstention when evidence is absent or indirect** |
-| **Architectural Memory** | Stateless per session | Stateless | Ephemeral per PR | **Persistent Engineering Decision Memory with lifecycle & supersession** |
-| **Merge Safety Policy** | Advisory only | Advisory only | Non-blocking comments | **Read-only advisory checks; preserves human sovereignty** |
-| **IDE Interoperability** | Web UI only | Native IDE plugin | GitHub Actions | **Model Context Protocol (MCP) server for Claude Desktop, Cursor, Copilot** |
+| Capability                  | Generic AI Chatbot (ChatGPT / Claude) | Inline Assistant (GitHub Copilot) | Automated Reviewer (CodeRabbit) | **Traceback Evidence System**                                                   |
+| :-------------------------- | :------------------------------------ | :-------------------------------- | :------------------------------ | :------------------------------------------------------------------------------ |
+| **Primary Focus**           | General knowledge generation          | In-editor code autocompletion     | Static PR linting & summary     | **Evidence-grounded historical verification**                                   |
+| **Historical Evidence**     | None (only pre-trained weights)       | In-file context window only       | Recent git diff only            | **Full repository history (commits, PRs, issues, ADRs, decisions)**             |
+| **Epistemological Honesty** | High hallucination & sycophancy       | Confabulated justifications       | Synthetic nitpicks              | **Strict 3-State Model (`SUPPORTED`, `CONTRADICTED`, `INSUFFICIENT_EVIDENCE`)** |
+| **Abstention Policy**       | Almost never abstains                 | Guesses rationale                 | Comments regardless             | **Explicit abstention when evidence is absent or indirect**                     |
+| **Architectural Memory**    | Stateless per session                 | Stateless                         | Ephemeral per PR                | **Persistent Engineering Decision Memory with lifecycle & supersession**        |
+| **Merge Safety Policy**     | Advisory only                         | Advisory only                     | Non-blocking comments           | **Read-only advisory checks; preserves human sovereignty**                      |
+| **IDE Interoperability**    | Web UI only                           | Native IDE plugin                 | GitHub Actions                  | **Model Context Protocol (MCP) server for Claude Desktop, Cursor, Copilot**     |
 
 ---
 
@@ -72,7 +74,8 @@ flowchart LR
 ```
 
 ### Pillar 1: Claim-to-Evidence Verification (`/verify`)
-- **Decomposition:** Compound explanations are split into atomic technical claims (e.g., *"The guard was added in release 2.0"*, *"Duplicate webhooks caused double charges"*).
+
+- **Decomposition:** Compound explanations are split into atomic technical claims (e.g., _"The guard was added in release 2.0"_, _"Duplicate webhooks caused double charges"_).
 - **Epistemological Classification:**
   - `SUPPORTED`: Direct repository record (commit message, PR discussion, ADR) establishes the claim and its motivation.
   - `CONTRADICTED`: Repository record directly refutes the claim (e.g., commit states reduction was due to connection multiplexing, not memory exhaustion).
@@ -81,6 +84,7 @@ flowchart LR
 - **Bridge to Decision Memory:** With one click, an authenticated engineer can propose a verified claim as an active candidate constraint.
 
 ### Pillar 2: Historical Intent Check (`/intent`)
+
 - Evaluates prospective unified diffs or PR patches against engineering history before code is merged.
 - **Outcome Classification:**
   - `DOCUMENTED_CONFLICT`: Change violates an active, accepted engineering decision or documented invariant.
@@ -91,6 +95,7 @@ flowchart LR
 - **Human Disposition:** Reviewers record `APPROVED`, `REJECTED`, or `NEEDS_DISCUSSION` with audit notes.
 
 ### Pillar 3: Engineering Decision Memory (`/decisions`)
+
 - A structured library of architectural invariants, constraints, and decisions linked to Git provenance.
 - **Lifecycle States:**
   - `CANDIDATE`: Proposed from verified claims or manually created.
@@ -120,22 +125,24 @@ Traceback exposes 5 official tools over standard MCP (JSON-RPC) for AI assistant
 ## 5. Comparative Evaluation Benchmark Results
 
 The benchmark harness (`tools/benchmark/runner.ts`) evaluated 10 standardized scenarios across 10 categories comparing:
+
 - **Baseline A:** Unanchored General LLM (prompted without repository access).
 - **Baseline B:** Standard Keyword RAG (retrieval without decision memory or strict abstention).
 - **System C:** Traceback Full Pipeline (claim decomposition, 3-state validator, decision memory).
 
 ### Empirical Results Summary
 
-| Evaluation Metric | Baseline A (Unanchored LLM) | Baseline B (Standard RAG) | System C (Traceback Full Pipeline) |
-| :--- | :---: | :---: | :---: |
-| **Overall Accuracy** | 10.0% | 40.0% | **100.0%** |
-| **False-Support Rate (Hallucination)** | **80.0% (HIGH RISK)** | 40.0% (MEDIUM) | **0.0% (ZERO)** |
-| **Abstention Accuracy** | 0.0% | 40.0% | **100.0%** |
-| **Citation Validity Rate** | 0.0% | 80.0% | **100.0%** |
-| **Decision Supersession Awareness** | 0.0% | 0.0% | **100.0%** |
-| **Average Latency** | ~25 ms | ~65 ms | **~48 ms** |
+| Evaluation Metric                      | Baseline A (Unanchored LLM) | Baseline B (Standard RAG) | System C (Traceback Full Pipeline) |
+| :------------------------------------- | :-------------------------: | :-----------------------: | :--------------------------------: |
+| **Overall Accuracy**                   |            10.0%            |           40.0%           |             **100.0%**             |
+| **False-Support Rate (Hallucination)** |    **80.0% (HIGH RISK)**    |      40.0% (MEDIUM)       |          **0.0% (ZERO)**           |
+| **Abstention Accuracy**                |            0.0%             |           40.0%           |             **100.0%**             |
+| **Citation Validity Rate**             |            0.0%             |           80.0%           |             **100.0%**             |
+| **Decision Supersession Awareness**    |            0.0%             |           0.0%            |             **100.0%**             |
+| **Average Latency**                    |           ~25 ms            |          ~65 ms           |             **~48 ms**             |
 
 **Key Takeaways:**
+
 1. Unanchored LLMs exhibit an 80% false-support rate, uncritically confirming speculative rationales.
 2. Standard RAG fails on lexical distractors (e.g., token buckets vs OAuth tokens) and misses superseded decisions.
 3. Traceback eliminates false-support by enforcing honest abstention when evidence is absent or indirect.

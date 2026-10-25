@@ -1,7 +1,7 @@
 # Traceback Local Development Runbook
 
 **Audience:** Developers, DevOps Engineers, and System Operators  
-**Updated:** 2026-10-25  
+**Updated:** 2026-10-25
 
 ---
 
@@ -17,7 +17,9 @@
 ## 2. Environment Configuration
 
 ### Root Configuration (`.env`)
+
 Create `.env` at the monorepo root:
+
 ```bash
 # Database Connection (authoritative)
 DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/traceback_dev?schema=public"
@@ -40,6 +42,7 @@ TRACEBACK_WORKSPACE_ID=ws_alpha
 ```
 
 ### Web Client Configuration (`apps/web/.env.local`)
+
 ```bash
 NEXT_PUBLIC_API_URL=http://127.0.0.1:3001/api
 ```
@@ -49,13 +52,17 @@ NEXT_PUBLIC_API_URL=http://127.0.0.1:3001/api
 ## 3. Starting the Application
 
 ### Option A: Standard Full-Stack Development
+
 ```bash
 npm run dev
 ```
+
 Starts Turborepo watching both `@traceback/api` (port 3001) and `@traceback/web` (port 3000).
 
 ### Option B: Isolated Service Development
+
 To run services independently:
+
 ```bash
 # Terminal 1 - Start API
 npm run build --workspace=@traceback/api
@@ -70,15 +77,19 @@ npm run dev --workspace=@traceback/web
 ## 4. Verification & Diagnostics
 
 ### Check API Health
+
 ```bash
 curl.exe http://127.0.0.1:3001/api/health
 ```
+
 Expected output:
+
 ```json
-{"status":"ok","service":"@traceback/api","version":"0.1.0"}
+{ "status": "ok", "service": "@traceback/api", "version": "0.1.0" }
 ```
 
 ### Check GitHub App Integration Status
+
 ```bash
 curl.exe http://127.0.0.1:3001/api/workspaces/ws_alpha/github/status \
   -H "Authorization: Bearer <token>" \
@@ -90,6 +101,7 @@ curl.exe http://127.0.0.1:3001/api/workspaces/ws_alpha/github/status \
 ## 5. Port Management & Conflict Resolution
 
 If port `3001` or `3000` is already in use:
+
 ```powershell
 # Identify process on port 3001
 Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue | Select-Object LocalAddress, LocalPort, OwningProcess, State
@@ -100,7 +112,8 @@ Get-CimInstance Win32_Process -Filter "ProcessId = <PID>" | Select-Object Proces
 # Gracefully terminate the specific process
 Stop-Process -Id <PID>
 ```
-*Note: Never kill unknown processes or unrelated Node.js applications.*
+
+_Note: Never kill unknown processes or unrelated Node.js applications._
 
 ---
 
@@ -108,19 +121,20 @@ Stop-Process -Id <PID>
 
 ### 6.1 Route Topology
 
-| Route | Classification | Description | Access Policy |
-|---|---|---|---|
-| `/login` | Public | User authentication form with password visibility toggle & forgot-password link | Unrestricted |
-| `/register` | Public | User onboarding form with live `PasswordStrengthIndicator` | Unrestricted |
-| `/forgot-password` | Public | Password recovery request form with generic safe response | Unrestricted |
-| `/reset-password` | Public | Password reset execution with token verification & strength indicator | Unrestricted |
-| `/` | Protected | Workspace Overview Dashboard | Authenticated Session Required |
-| `/verify` | Protected | Core Code Verification Studio & Human Verdict Review | Authenticated Session Required |
-| `/history` | Protected | Workspace Verification History & Audit Reports | Authenticated Session Required |
-| `/repositories` | Protected | Repository Management & GitHub Integration Status | Authenticated Session Required |
-| `/evidence` | Protected | Evidence Search & Historical Provenance Explorer | Authenticated Session Required |
+| Route              | Classification | Description                                                                     | Access Policy                  |
+| ------------------ | -------------- | ------------------------------------------------------------------------------- | ------------------------------ |
+| `/login`           | Public         | User authentication form with password visibility toggle & forgot-password link | Unrestricted                   |
+| `/register`        | Public         | User onboarding form with live `PasswordStrengthIndicator`                      | Unrestricted                   |
+| `/forgot-password` | Public         | Password recovery request form with generic safe response                       | Unrestricted                   |
+| `/reset-password`  | Public         | Password reset execution with token verification & strength indicator           | Unrestricted                   |
+| `/`                | Protected      | Workspace Overview Dashboard                                                    | Authenticated Session Required |
+| `/verify`          | Protected      | Core Code Verification Studio & Human Verdict Review                            | Authenticated Session Required |
+| `/history`         | Protected      | Workspace Verification History & Audit Reports                                  | Authenticated Session Required |
+| `/repositories`    | Protected      | Repository Management & GitHub Integration Status                               | Authenticated Session Required |
+| `/evidence`        | Protected      | Evidence Search & Historical Provenance Explorer                                | Authenticated Session Required |
 
 ### 6.2 Route Guarding (`RouteGuard.tsx`)
+
 - All application workspace pages (`/`, `/verify`, `/history`, `/repositories`, `/evidence`) are wrapped with `RouteGuard`.
 - Unauthenticated requests are intercepted prior to rendering protected workspace data or making authorized API calls, redirecting immediately to `/login?returnTo=<encoded-path>`.
 - Open-redirect protection: `returnTo` values are sanitized to ensure only relative application paths (beginning with `/` and not `//` or `/\`) are honored.
@@ -131,11 +145,13 @@ Stop-Process -Id <PID>
 ## 7. Header Navigation & Profile Controls
 
 ### 7.1 Unauthenticated State
+
 - **Left:** Traceback logo and branding link.
 - **Center:** Completely clear — zero workspace navigation links (Overview, Verify, History, Repositories, Evidence are hidden).
 - **Right:** "Sign In" link, "Register" button, and accessible icon-only `ThemeToggle`.
 
 ### 7.2 Authenticated State
+
 - **Left:** Traceback logo and branding link.
 - **Center:** Navigation tabs for all authorized workspace sections (Overview, Verify, History & Reports, Repositories, Evidence) with active route indicator.
 - **Right:**
@@ -151,10 +167,12 @@ Stop-Process -Id <PID>
 ## 8. Password Security, Visibility & Recovery
 
 ### 8.1 Password Input & Live Strength
+
 - **Password Visibility:** Handled by `PasswordInput.tsx` with interactive eye/eye-off toggle button (`type="button"`). Passwords default to hidden.
 - **Live Strength Indicator:** Handled by `PasswordStrengthIndicator.tsx` measuring length, character varieties, and backend criteria (min 8 chars, letters and numbers), presenting levels: `Too short`, `Weak`, `Fair`, `Strong`.
 
 ### 8.2 Password Recovery Flow
+
 1. **Request (`POST /api/auth/forgot-password`):**
    - User inputs email address.
    - Generic response prevents account enumeration: `"If an account exists for that email, password-reset instructions will be sent."`
@@ -169,6 +187,7 @@ Stop-Process -Id <PID>
    - User must sign in with their new credentials.
 
 ### 8.3 Email Provider Configuration
+
 - Configured via environment variables: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`.
 - When SMTP is not configured in local development, `EmailService` logs an honest advisory warning without failing requests, permitting automated testing through `getLatestResetTokenForTest()`.
 

@@ -44,9 +44,10 @@ describe("RegisterPage Component (Sprint 2 & 6 Registration)", () => {
     expect(
       screen.getByRole("button", { name: /create account/i }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: /sign in/i }),
-    ).toHaveAttribute("href", "/login");
+    expect(screen.getByRole("link", { name: /sign in/i })).toHaveAttribute(
+      "href",
+      "/login",
+    );
   });
 
   it("submits valid registration details and navigates to / on success", async () => {
@@ -86,9 +87,10 @@ describe("RegisterPage Component (Sprint 2 & 6 Registration)", () => {
 
     render(<RegisterPage />);
 
-    expect(
-      screen.getByRole("link", { name: /sign in/i }),
-    ).toHaveAttribute("href", "/login?returnTo=%2Frepositories");
+    expect(screen.getByRole("link", { name: /sign in/i })).toHaveAttribute(
+      "href",
+      "/login?returnTo=%2Frepositories",
+    );
 
     fireEvent.change(screen.getByLabelText(/full name/i), {
       target: { value: "Taylor Engineer" },

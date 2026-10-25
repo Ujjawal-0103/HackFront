@@ -7,7 +7,11 @@ import {
   IsInt,
   MaxLength,
 } from "class-validator";
-import { DecisionStatus, DecisionSeverity, EvidenceReference } from "@traceback/shared-types";
+import {
+  DecisionStatus,
+  DecisionSeverity,
+  EvidenceReference,
+} from "@traceback/shared-types";
 
 export class CreateDecisionDto {
   @IsString()

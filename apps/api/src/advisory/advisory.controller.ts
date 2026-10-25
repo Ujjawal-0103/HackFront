@@ -68,7 +68,10 @@ export class AdvisoryController {
     @Param("workspaceId") workspaceId: string,
     @Param("repositoryId") repositoryId: string,
   ): Promise<HistoricalIntentCheckSessionDto[]> {
-    return this.advisoryService.listIntentCheckSessions(workspaceId, repositoryId);
+    return this.advisoryService.listIntentCheckSessions(
+      workspaceId,
+      repositoryId,
+    );
   }
 
   @Get("intent-checks/:sessionId")

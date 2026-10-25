@@ -114,17 +114,32 @@ export function evaluatePasswordStrength(password: string): {
   }
 }
 
-export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicatorProps) {
-  const strength = useMemo(() => evaluatePasswordStrength(password), [password]);
+export function PasswordStrengthIndicator({
+  password,
+}: PasswordStrengthIndicatorProps) {
+  const strength = useMemo(
+    () => evaluatePasswordStrength(password),
+    [password],
+  );
 
   if (!password) {
     return null;
   }
 
   return (
-    <div style={{ marginTop: "0.5rem", marginBottom: "0.5rem" }} aria-live="polite">
+    <div
+      style={{ marginTop: "0.5rem", marginBottom: "0.5rem" }}
+      aria-live="polite"
+    >
       {/* Strength Bar */}
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.35rem" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          marginBottom: "0.35rem",
+        }}
+      >
         <div
           style={{
             flex: 1,
@@ -141,7 +156,8 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
               key={step}
               style={{
                 flex: 1,
-                backgroundColor: step <= strength.score ? strength.color : "transparent",
+                backgroundColor:
+                  step <= strength.score ? strength.color : "transparent",
                 transition: "background-color 0.2s ease",
               }}
             />
@@ -175,19 +191,39 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
         }}
       >
         <li style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-          <span style={{ color: strength.hasMinLength ? "var(--color-supported, #10b981)" : "inherit" }}>
+          <span
+            style={{
+              color: strength.hasMinLength
+                ? "var(--color-supported, #10b981)"
+                : "inherit",
+            }}
+          >
             {strength.hasMinLength ? "✓" : "○"}
           </span>
           <span>At least 8 characters</span>
         </li>
         <li style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-          <span style={{ color: strength.hasLetters && strength.hasNumbers ? "var(--color-supported, #10b981)" : "inherit" }}>
+          <span
+            style={{
+              color:
+                strength.hasLetters && strength.hasNumbers
+                  ? "var(--color-supported, #10b981)"
+                  : "inherit",
+            }}
+          >
             {strength.hasLetters && strength.hasNumbers ? "✓" : "○"}
           </span>
           <span>Contains letters and numbers</span>
         </li>
         <li style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-          <span style={{ color: strength.hasMixedCase || strength.hasSpecial ? "var(--color-supported, #10b981)" : "inherit" }}>
+          <span
+            style={{
+              color:
+                strength.hasMixedCase || strength.hasSpecial
+                  ? "var(--color-supported, #10b981)"
+                  : "inherit",
+            }}
+          >
             {strength.hasMixedCase || strength.hasSpecial ? "✓" : "○"}
           </span>
           <span>Mixed case or symbols (recommended for higher strength)</span>

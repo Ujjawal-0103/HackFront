@@ -248,7 +248,9 @@ export class TracebackApiClient {
     repositoryId: string;
     status?: any;
   }): Promise<any[]> {
-    const qs = params.status ? `?status=${encodeURIComponent(params.status)}` : "";
+    const qs = params.status
+      ? `?status=${encodeURIComponent(params.status)}`
+      : "";
     return this.request<any[]>(
       `workspaces/${encodeURIComponent(params.workspaceId)}/repositories/${encodeURIComponent(params.repositoryId)}/decisions${qs}`,
       {
@@ -293,4 +295,3 @@ export class TracebackApiClient {
     );
   }
 }
-

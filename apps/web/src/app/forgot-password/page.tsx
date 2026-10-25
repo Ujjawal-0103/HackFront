@@ -66,7 +66,8 @@ export default function ForgotPasswordPage() {
             lineHeight: 1.5,
           }}
         >
-          Enter your registered email address and we will dispatch recovery instructions.
+          Enter your registered email address and we will dispatch recovery
+          instructions.
         </p>
       </div>
 

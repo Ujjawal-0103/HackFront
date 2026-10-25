@@ -212,9 +212,9 @@ function ResetPasswordForm() {
               marginBottom: "1.75rem",
             }}
           >
-            Your password has been securely updated. Any existing active sessions
-            have been invalidated for security. Please sign in with your new
-            password.
+            Your password has been securely updated. Any existing active
+            sessions have been invalidated for security. Please sign in with
+            your new password.
           </p>
 
           <Link

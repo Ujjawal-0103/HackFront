@@ -39,7 +39,7 @@ const GITHUB_REPO_REGEX = /^[a-zA-Z0-9_.-]+$/;
 
 /**
  * Validates and parses an arbitrary user-supplied URL to extract a legitimate GitHub repository owner and name.
- * 
+ *
  * Strict security constraints:
  * - Only official github.com host permitted.
  * - Credential-bearing URLs (containing '@') are strictly rejected.

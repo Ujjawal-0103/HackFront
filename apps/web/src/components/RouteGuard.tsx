@@ -59,7 +59,9 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
             animation: "spin 0.8s linear infinite",
           }}
         />
-        <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
+        <p
+          style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}
+        >
           Restoring secure workspace session...
         </p>
         <style>{`
@@ -82,7 +84,9 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
           minHeight: "60vh",
         }}
       >
-        <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
+        <p
+          style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}
+        >
           Redirecting to authentication...
         </p>
       </div>

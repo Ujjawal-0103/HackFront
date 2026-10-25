@@ -39,13 +39,17 @@ describe("PasswordInput Component", () => {
     // Click to show password
     fireEvent.click(toggleButton);
     expect(input.type).toBe("text");
-    expect(screen.getByRole("button", { name: /hide password/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /hide password/i }),
+    ).toBeInTheDocument();
     expect(toggleButton).toHaveAttribute("aria-pressed", "true");
 
     // Click again to hide password
     fireEvent.click(toggleButton);
     expect(input.type).toBe("password");
-    expect(screen.getByRole("button", { name: /show password/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /show password/i }),
+    ).toBeInTheDocument();
     expect(toggleButton).toHaveAttribute("aria-pressed", "false");
   });
 

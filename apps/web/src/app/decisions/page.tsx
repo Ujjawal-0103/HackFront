@@ -34,8 +34,11 @@ function DecisionMemoryContent() {
 
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [reviewingDecision, setReviewingDecision] = useState<EngineeringDecisionDto | null>(null);
-  const [reviewAction, setReviewAction] = useState<"ACCEPT" | "REJECT" | "DISPUTE">("ACCEPT");
+  const [reviewingDecision, setReviewingDecision] =
+    useState<EngineeringDecisionDto | null>(null);
+  const [reviewAction, setReviewAction] = useState<
+    "ACCEPT" | "REJECT" | "DISPUTE"
+  >("ACCEPT");
   const [reviewNotes, setReviewNotes] = useState("");
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
@@ -69,21 +72,28 @@ function DecisionMemoryContent() {
   }, [activeWorkspace?.id, selectedRepoId]);
 
   // Load decisions
-  const loadDecisions = useCallback(async (repoId: string, status?: string) => {
-    if (!activeWorkspace?.id || !repoId) return;
-    try {
-      setIsLoadingDecisions(true);
-      setError(null);
-      const queryStatus = status && status !== "ALL" ? status : undefined;
-      const data = await api.getDecisions(repoId, queryStatus, activeWorkspace.id);
-      setDecisions(data);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setError(`Failed to load engineering decisions: ${msg}`);
-    } finally {
-      setIsLoadingDecisions(false);
-    }
-  }, [activeWorkspace?.id]);
+  const loadDecisions = useCallback(
+    async (repoId: string, status?: string) => {
+      if (!activeWorkspace?.id || !repoId) return;
+      try {
+        setIsLoadingDecisions(true);
+        setError(null);
+        const queryStatus = status && status !== "ALL" ? status : undefined;
+        const data = await api.getDecisions(
+          repoId,
+          queryStatus,
+          activeWorkspace.id,
+        );
+        setDecisions(data);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(`Failed to load engineering decisions: ${msg}`);
+      } finally {
+        setIsLoadingDecisions(false);
+      }
+    },
+    [activeWorkspace?.id],
+  );
 
   useEffect(() => {
     loadRepositories();
@@ -141,14 +151,35 @@ function DecisionMemoryContent() {
       setError(null);
 
       if (reviewAction === "ACCEPT") {
-        await api.acceptDecision(selectedRepoId, reviewingDecision.id, reviewNotes, activeWorkspace?.id);
-        setFeedback(`Decision "${reviewingDecision.title}" accepted as active constraint.`);
+        await api.acceptDecision(
+          selectedRepoId,
+          reviewingDecision.id,
+          reviewNotes,
+          activeWorkspace?.id,
+        );
+        setFeedback(
+          `Decision "${reviewingDecision.title}" accepted as active constraint.`,
+        );
       } else if (reviewAction === "REJECT") {
-        await api.rejectDecision(selectedRepoId, reviewingDecision.id, reviewNotes, activeWorkspace?.id);
-        setFeedback(`Decision "${reviewingDecision.title}" rejected and archived.`);
+        await api.rejectDecision(
+          selectedRepoId,
+          reviewingDecision.id,
+          reviewNotes,
+          activeWorkspace?.id,
+        );
+        setFeedback(
+          `Decision "${reviewingDecision.title}" rejected and archived.`,
+        );
       } else if (reviewAction === "DISPUTE") {
-        await api.disputeDecision(selectedRepoId, reviewingDecision.id, reviewNotes, activeWorkspace?.id);
-        setFeedback(`Decision "${reviewingDecision.title}" marked as disputed.`);
+        await api.disputeDecision(
+          selectedRepoId,
+          reviewingDecision.id,
+          reviewNotes,
+          activeWorkspace?.id,
+        );
+        setFeedback(
+          `Decision "${reviewingDecision.title}" marked as disputed.`,
+        );
       }
 
       setReviewingDecision(null);
@@ -165,18 +196,42 @@ function DecisionMemoryContent() {
   const getStatusBadge = (status: DecisionStatus) => {
     switch (status) {
       case "ACCEPTED":
-        return { label: "Accepted Invariant", bg: "rgba(16, 185, 129, 0.12)", color: "#059669" };
+        return {
+          label: "Accepted Invariant",
+          bg: "rgba(16, 185, 129, 0.12)",
+          color: "#059669",
+        };
       case "CANDIDATE":
-        return { label: "Candidate", bg: "rgba(59, 130, 246, 0.12)", color: "#2563EB" };
+        return {
+          label: "Candidate",
+          bg: "rgba(59, 130, 246, 0.12)",
+          color: "#2563EB",
+        };
       case "IN_REVIEW":
-        return { label: "In Review", bg: "rgba(245, 158, 11, 0.12)", color: "#D97706" };
+        return {
+          label: "In Review",
+          bg: "rgba(245, 158, 11, 0.12)",
+          color: "#D97706",
+        };
       case "SUPERSEDED":
-        return { label: "Superseded", bg: "rgba(107, 114, 128, 0.12)", color: "#4B5563" };
+        return {
+          label: "Superseded",
+          bg: "rgba(107, 114, 128, 0.12)",
+          color: "#4B5563",
+        };
       case "DISPUTED":
-        return { label: "Disputed", bg: "rgba(239, 68, 68, 0.12)", color: "#DC2626" };
+        return {
+          label: "Disputed",
+          bg: "rgba(239, 68, 68, 0.12)",
+          color: "#DC2626",
+        };
       case "ARCHIVED":
       default:
-        return { label: "Archived", bg: "rgba(156, 163, 175, 0.12)", color: "#6B7280" };
+        return {
+          label: "Archived",
+          bg: "rgba(156, 163, 175, 0.12)",
+          color: "#6B7280",
+        };
     }
   };
 
@@ -227,7 +282,14 @@ function DecisionMemoryContent() {
         }}
       >
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              marginBottom: "0.25rem",
+            }}
+          >
             <span style={{ fontSize: "1.25rem" }}>🏛️</span>
             <h1
               style={{
@@ -253,8 +315,14 @@ function DecisionMemoryContent() {
               Core Pillar
             </span>
           </div>
-          <p style={{ fontSize: "0.875rem", color: "var(--color-text-secondary)" }}>
-            Preserve human-reviewed engineering decisions and historical constraints to verify prospective code changes.
+          <p
+            style={{
+              fontSize: "0.875rem",
+              color: "var(--color-text-secondary)",
+            }}
+          >
+            Preserve human-reviewed engineering decisions and historical
+            constraints to verify prospective code changes.
           </p>
         </div>
 
@@ -317,7 +385,12 @@ function DecisionMemoryContent() {
           <button
             type="button"
             onClick={() => setFeedback(null)}
-            style={{ background: "none", border: "none", color: "inherit", cursor: "pointer" }}
+            style={{
+              background: "none",
+              border: "none",
+              color: "inherit",
+              cursor: "pointer",
+            }}
           >
             ✕
           </button>
@@ -357,7 +430,14 @@ function DecisionMemoryContent() {
           boxShadow: "var(--shadow-sm)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            flexWrap: "wrap",
+          }}
+        >
           <div>
             <select
               id="decisions-repo-select"
@@ -383,7 +463,14 @@ function DecisionMemoryContent() {
           </div>
 
           <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
-            {["ALL", "ACCEPTED", "CANDIDATE", "IN_REVIEW", "SUPERSEDED", "DISPUTED"].map((st) => (
+            {[
+              "ALL",
+              "ACCEPTED",
+              "CANDIDATE",
+              "IN_REVIEW",
+              "SUPERSEDED",
+              "DISPUTED",
+            ].map((st) => (
               <button
                 key={st}
                 type="button"
@@ -391,9 +478,18 @@ function DecisionMemoryContent() {
                 style={{
                   padding: "0.35rem 0.65rem",
                   borderRadius: "4px",
-                  border: statusFilter === st ? "1px solid var(--color-primary)" : "1px solid transparent",
-                  backgroundColor: statusFilter === st ? "var(--color-primary-light)" : "transparent",
-                  color: statusFilter === st ? "var(--color-primary)" : "var(--color-text-secondary)",
+                  border:
+                    statusFilter === st
+                      ? "1px solid var(--color-primary)"
+                      : "1px solid transparent",
+                  backgroundColor:
+                    statusFilter === st
+                      ? "var(--color-primary-light)"
+                      : "transparent",
+                  color:
+                    statusFilter === st
+                      ? "var(--color-primary)"
+                      : "var(--color-text-secondary)",
                   fontSize: "0.75rem",
                   fontWeight: 600,
                   cursor: "pointer",
@@ -426,7 +522,13 @@ function DecisionMemoryContent() {
 
       {/* Decision Cards List */}
       {isLoadingDecisions ? (
-        <div style={{ padding: "3rem", textAlign: "center", color: "var(--color-text-muted)" }}>
+        <div
+          style={{
+            padding: "3rem",
+            textAlign: "center",
+            color: "var(--color-text-muted)",
+          }}
+        >
           Loading engineering decisions...
         </div>
       ) : filteredDecisions.length === 0 ? (
@@ -440,11 +542,27 @@ function DecisionMemoryContent() {
           }}
         >
           <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>🏛️</div>
-          <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--color-text)", marginBottom: "0.25rem" }}>
+          <h3
+            style={{
+              fontSize: "1rem",
+              fontWeight: 700,
+              color: "var(--color-text)",
+              marginBottom: "0.25rem",
+            }}
+          >
             No engineering decisions found
           </h3>
-          <p style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)", maxWidth: "450px", margin: "0 auto 1rem auto" }}>
-            Engineering decisions represent human-reviewed architectural constraints. Propose a new decision manually or derive one from a verified claim.
+          <p
+            style={{
+              fontSize: "0.85rem",
+              color: "var(--color-text-secondary)",
+              maxWidth: "450px",
+              margin: "0 auto 1rem auto",
+            }}
+          >
+            Engineering decisions represent human-reviewed architectural
+            constraints. Propose a new decision manually or derive one from a
+            verified claim.
           </p>
           <button
             type="button"
@@ -476,7 +594,9 @@ function DecisionMemoryContent() {
                 id={`decision-card-${dec.id}`}
                 style={{
                   backgroundColor: "var(--color-surface)",
-                  border: isTargeted ? "2px solid var(--color-primary)" : "1px solid var(--color-border)",
+                  border: isTargeted
+                    ? "2px solid var(--color-primary)"
+                    : "1px solid var(--color-border)",
                   borderRadius: "8px",
                   padding: "1.25rem",
                   boxShadow: "var(--shadow-sm)",
@@ -494,7 +614,14 @@ function DecisionMemoryContent() {
                     gap: "0.5rem",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      flexWrap: "wrap",
+                    }}
+                  >
                     <span
                       style={{
                         fontSize: "0.65rem",
@@ -521,96 +648,169 @@ function DecisionMemoryContent() {
                     >
                       {dec.severity}
                     </span>
-                    <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--color-text)", margin: 0 }}>
+                    <h3
+                      style={{
+                        fontSize: "1rem",
+                        fontWeight: 700,
+                        color: "var(--color-text)",
+                        margin: 0,
+                      }}
+                    >
                       {dec.title}
                     </h3>
                   </div>
 
-                  <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                  <span
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "var(--color-text-muted)",
+                    }}
+                  >
                     Created {new Date(dec.createdAt).toLocaleDateString()}
                   </span>
                 </div>
 
                 {/* Constraint & Rationale */}
                 <div style={{ marginBottom: "0.75rem" }}>
-                  <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--color-text)", marginBottom: "0.25rem" }}>
+                  <div
+                    style={{
+                      fontSize: "0.85rem",
+                      fontWeight: 600,
+                      color: "var(--color-text)",
+                      marginBottom: "0.25rem",
+                    }}
+                  >
                     Invariant / Decision:
                   </div>
-                  <p style={{ fontSize: "0.85rem", color: "var(--color-text)", margin: 0 }}>
+                  <p
+                    style={{
+                      fontSize: "0.85rem",
+                      color: "var(--color-text)",
+                      margin: 0,
+                    }}
+                  >
                     {dec.decision}
                   </p>
                 </div>
 
                 <div style={{ marginBottom: "0.75rem" }}>
-                  <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--color-text-muted)", marginBottom: "0.15rem" }}>
+                  <div
+                    style={{
+                      fontSize: "0.75rem",
+                      fontWeight: 600,
+                      color: "var(--color-text-muted)",
+                      marginBottom: "0.15rem",
+                    }}
+                  >
                     Technical Rationale:
                   </div>
-                  <p style={{ fontSize: "0.8rem", color: "var(--color-text-secondary)", margin: 0 }}>
+                  <p
+                    style={{
+                      fontSize: "0.8rem",
+                      color: "var(--color-text-secondary)",
+                      margin: 0,
+                    }}
+                  >
                     {dec.rationale}
                   </p>
                 </div>
 
                 {/* Target Scope */}
                 {(dec.targetFilePath || dec.targetSymbol) && (
-                  <div style={{ display: "flex", gap: "0.75rem", fontSize: "0.75rem", marginBottom: "0.75rem" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "0.75rem",
+                      fontSize: "0.75rem",
+                      marginBottom: "0.75rem",
+                    }}
+                  >
                     {dec.targetFilePath && (
                       <span style={{ color: "var(--color-text-muted)" }}>
-                        File: <code style={{ color: "var(--color-text)" }}>{dec.targetFilePath}</code>
+                        File:{" "}
+                        <code style={{ color: "var(--color-text)" }}>
+                          {dec.targetFilePath}
+                        </code>
                       </span>
                     )}
                     {dec.targetSymbol && (
                       <span style={{ color: "var(--color-text-muted)" }}>
-                        Symbol: <code style={{ color: "var(--color-text)" }}>{dec.targetSymbol}</code>
+                        Symbol:{" "}
+                        <code style={{ color: "var(--color-text)" }}>
+                          {dec.targetSymbol}
+                        </code>
                       </span>
                     )}
                   </div>
                 )}
 
                 {/* Provenance & Supporting Evidence Citations */}
-                {dec.supportingEvidence && dec.supportingEvidence.length > 0 && (
-                  <div
-                    style={{
-                      borderTop: "1px solid var(--color-border)",
-                      paddingTop: "0.5rem",
-                      marginTop: "0.5rem",
-                      fontSize: "0.75rem",
-                    }}
-                  >
-                    <span style={{ fontWeight: 700, color: "var(--color-text-muted)", textTransform: "uppercase" }}>
-                      Historical Evidence Provenance ({dec.supportingEvidence.length}):
-                    </span>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginTop: "0.35rem" }}>
-                      {dec.supportingEvidence.map((ev, evIdx) => (
-                        <span
-                          key={evIdx}
-                          style={{
-                            padding: "2px 6px",
-                            borderRadius: "4px",
-                            backgroundColor: "var(--color-card-muted)",
-                            border: "1px solid var(--color-border)",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "0.35rem",
-                          }}
-                        >
-                          <span style={{ fontWeight: 700, fontSize: "0.65rem" }}>{ev.sourceType}</span>
-                          {ev.url ? (
-                            <a
-                              href={ev.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ color: "var(--color-primary)", textDecoration: "none" }}
+                {dec.supportingEvidence &&
+                  dec.supportingEvidence.length > 0 && (
+                    <div
+                      style={{
+                        borderTop: "1px solid var(--color-border)",
+                        paddingTop: "0.5rem",
+                        marginTop: "0.5rem",
+                        fontSize: "0.75rem",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          color: "var(--color-text-muted)",
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        Historical Evidence Provenance (
+                        {dec.supportingEvidence.length}):
+                      </span>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: "0.4rem",
+                          marginTop: "0.35rem",
+                        }}
+                      >
+                        {dec.supportingEvidence.map((ev, evIdx) => (
+                          <span
+                            key={evIdx}
+                            style={{
+                              padding: "2px 6px",
+                              borderRadius: "4px",
+                              backgroundColor: "var(--color-card-muted)",
+                              border: "1px solid var(--color-border)",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "0.35rem",
+                            }}
+                          >
+                            <span
+                              style={{ fontWeight: 700, fontSize: "0.65rem" }}
                             >
-                              {ev.referenceKey} ↗
-                            </a>
-                          ) : (
-                            <span>{ev.referenceKey}</span>
-                          )}
-                        </span>
-                      ))}
+                              {ev.sourceType}
+                            </span>
+                            {ev.url ? (
+                              <a
+                                href={ev.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  color: "var(--color-primary)",
+                                  textDecoration: "none",
+                                }}
+                              >
+                                {ev.referenceKey} ↗
+                              </a>
+                            ) : (
+                              <span>{ev.referenceKey}</span>
+                            )}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Reviewer & Lifecycle Footer */}
                 <div
@@ -625,19 +825,32 @@ function DecisionMemoryContent() {
                     gap: "0.5rem",
                   }}
                 >
-                  <div style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
+                  <div
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "var(--color-text-muted)",
+                    }}
+                  >
                     {dec.reviewerName && (
                       <span>
                         Reviewed by <strong>{dec.reviewerName}</strong>
-                        {dec.reviewedAt && ` on ${new Date(dec.reviewedAt).toLocaleDateString()}`}
+                        {dec.reviewedAt &&
+                          ` on ${new Date(dec.reviewedAt).toLocaleDateString()}`}
                       </span>
                     )}
-                    {dec.reviewNotes && <span style={{ marginLeft: "0.5rem", fontStyle: "italic" }}>• &quot;{dec.reviewNotes}&quot;</span>}
+                    {dec.reviewNotes && (
+                      <span
+                        style={{ marginLeft: "0.5rem", fontStyle: "italic" }}
+                      >
+                        • &quot;{dec.reviewNotes}&quot;
+                      </span>
+                    )}
                   </div>
 
                   {/* Lifecycle Action Buttons */}
                   <div style={{ display: "flex", gap: "0.4rem" }}>
-                    {(dec.status === "CANDIDATE" || dec.status === "IN_REVIEW") && (
+                    {(dec.status === "CANDIDATE" ||
+                      dec.status === "IN_REVIEW") && (
                       <>
                         <button
                           type="button"
@@ -737,12 +950,25 @@ function DecisionMemoryContent() {
               boxShadow: "var(--shadow-md)",
             }}
           >
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--color-text)", marginBottom: "0.5rem" }}>
+            <h3
+              style={{
+                fontSize: "1.1rem",
+                fontWeight: 700,
+                color: "var(--color-text)",
+                marginBottom: "0.5rem",
+              }}
+            >
               {reviewAction === "ACCEPT" && "Accept Engineering Decision"}
               {reviewAction === "REJECT" && "Reject Candidate Decision"}
               {reviewAction === "DISPUTE" && "Dispute Engineering Decision"}
             </h3>
-            <p style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)", marginBottom: "1rem" }}>
+            <p
+              style={{
+                fontSize: "0.85rem",
+                color: "var(--color-text-secondary)",
+                marginBottom: "1rem",
+              }}
+            >
               {reviewAction === "ACCEPT" &&
                 "Confirming this decision elevates it to an active architectural constraint that future code changes will be evaluated against."}
               {reviewAction === "REJECT" &&
@@ -780,7 +1006,13 @@ function DecisionMemoryContent() {
               />
             </div>
 
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "0.75rem",
+              }}
+            >
               <button
                 type="button"
                 onClick={() => setReviewingDecision(null)}
@@ -805,14 +1037,21 @@ function DecisionMemoryContent() {
                   padding: "0.45rem 1.25rem",
                   borderRadius: "6px",
                   border: "none",
-                  backgroundColor: reviewAction === "ACCEPT" ? "#10B981" : reviewAction === "REJECT" ? "#6B7280" : "#DC2626",
+                  backgroundColor:
+                    reviewAction === "ACCEPT"
+                      ? "#10B981"
+                      : reviewAction === "REJECT"
+                        ? "#6B7280"
+                        : "#DC2626",
                   color: "#FFFFFF",
                   fontSize: "0.85rem",
                   fontWeight: 600,
                   cursor: isSubmittingReview ? "not-allowed" : "pointer",
                 }}
               >
-                {isSubmittingReview ? "Processing..." : `Confirm ${reviewAction}`}
+                {isSubmittingReview
+                  ? "Processing..."
+                  : `Confirm ${reviewAction}`}
               </button>
             </div>
           </div>
@@ -850,16 +1089,38 @@ function DecisionMemoryContent() {
               boxShadow: "var(--shadow-md)",
             }}
           >
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--color-text)", marginBottom: "0.5rem" }}>
+            <h3
+              style={{
+                fontSize: "1.1rem",
+                fontWeight: 700,
+                color: "var(--color-text)",
+                marginBottom: "0.5rem",
+              }}
+            >
               Propose Engineering Decision
             </h3>
-            <p style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)", marginBottom: "1rem" }}>
-              Proposed decisions enter the <code>CANDIDATE</code> status and require human review before becoming active constraints.
+            <p
+              style={{
+                fontSize: "0.85rem",
+                color: "var(--color-text-secondary)",
+                marginBottom: "1rem",
+              }}
+            >
+              Proposed decisions enter the <code>CANDIDATE</code> status and
+              require human review before becoming active constraints.
             </p>
 
             <form onSubmit={handleCreateDecision}>
               <div style={{ marginBottom: "0.75rem" }}>
-                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text)", marginBottom: "0.25rem" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.8rem",
+                    fontWeight: 600,
+                    color: "var(--color-text)",
+                    marginBottom: "0.25rem",
+                  }}
+                >
                   Decision Title *
                 </label>
                 <input
@@ -881,7 +1142,15 @@ function DecisionMemoryContent() {
               </div>
 
               <div style={{ marginBottom: "0.75rem" }}>
-                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text)", marginBottom: "0.25rem" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.8rem",
+                    fontWeight: 600,
+                    color: "var(--color-text)",
+                    marginBottom: "0.25rem",
+                  }}
+                >
                   Summary *
                 </label>
                 <input
@@ -903,7 +1172,15 @@ function DecisionMemoryContent() {
               </div>
 
               <div style={{ marginBottom: "0.75rem" }}>
-                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text)", marginBottom: "0.25rem" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.8rem",
+                    fontWeight: 600,
+                    color: "var(--color-text)",
+                    marginBottom: "0.25rem",
+                  }}
+                >
                   Concrete Decision / Invariant *
                 </label>
                 <textarea
@@ -925,7 +1202,15 @@ function DecisionMemoryContent() {
               </div>
 
               <div style={{ marginBottom: "0.75rem" }}>
-                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text)", marginBottom: "0.25rem" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.8rem",
+                    fontWeight: 600,
+                    color: "var(--color-text)",
+                    marginBottom: "0.25rem",
+                  }}
+                >
                   Historical Rationale *
                 </label>
                 <textarea
@@ -946,9 +1231,24 @@ function DecisionMemoryContent() {
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "0.75rem",
+                  marginBottom: "0.75rem",
+                }}
+              >
                 <div>
-                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text)", marginBottom: "0.25rem" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "0.8rem",
+                      fontWeight: 600,
+                      color: "var(--color-text)",
+                      marginBottom: "0.25rem",
+                    }}
+                  >
                     Target File Path
                   </label>
                   <input
@@ -969,7 +1269,15 @@ function DecisionMemoryContent() {
                 </div>
 
                 <div>
-                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text)", marginBottom: "0.25rem" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "0.8rem",
+                      fontWeight: 600,
+                      color: "var(--color-text)",
+                      marginBottom: "0.25rem",
+                    }}
+                  >
                     Target Symbol
                   </label>
                   <input
@@ -991,12 +1299,22 @@ function DecisionMemoryContent() {
               </div>
 
               <div style={{ marginBottom: "1.25rem" }}>
-                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "var(--color-text)", marginBottom: "0.25rem" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.8rem",
+                    fontWeight: 600,
+                    color: "var(--color-text)",
+                    marginBottom: "0.25rem",
+                  }}
+                >
                   Severity
                 </label>
                 <select
                   value={newSeverity}
-                  onChange={(e) => setNewSeverity(e.target.value as DecisionSeverity)}
+                  onChange={(e) =>
+                    setNewSeverity(e.target.value as DecisionSeverity)
+                  }
                   style={{
                     width: "100%",
                     padding: "0.45rem 0.75rem",
@@ -1007,7 +1325,9 @@ function DecisionMemoryContent() {
                     fontSize: "0.85rem",
                   }}
                 >
-                  <option value="CRITICAL">CRITICAL (Merge-blocking if violated)</option>
+                  <option value="CRITICAL">
+                    CRITICAL (Merge-blocking if violated)
+                  </option>
                   <option value="HIGH">HIGH (Requires architect review)</option>
                   <option value="MEDIUM">MEDIUM (Advisory invariant)</option>
                   <option value="LOW">LOW (Informational)</option>
@@ -1015,7 +1335,13 @@ function DecisionMemoryContent() {
                 </select>
               </div>
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "0.75rem",
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
@@ -1059,7 +1385,13 @@ function DecisionMemoryContent() {
 
 export default function DecisionsPage() {
   return (
-    <Suspense fallback={<div style={{ padding: "2rem", textAlign: "center" }}>Loading Decision Memory Studio...</div>}>
+    <Suspense
+      fallback={
+        <div style={{ padding: "2rem", textAlign: "center" }}>
+          Loading Decision Memory Studio...
+        </div>
+      }
+    >
       <DecisionMemoryContent />
     </Suspense>
   );

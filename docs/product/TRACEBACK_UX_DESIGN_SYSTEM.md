@@ -5,6 +5,7 @@
 Traceback's frontend is designed for high-density, technical clarity. It rejects bloated consumer SaaS templates, generic AI gradient cards, and decorative empty states in favor of an **information-dense, high-trust developer workspace** inspired by the technical clarity of Linear and the data density of GitHub.
 
 ### Core Visual Principles
+
 1. **Evidence-First Hierarchy:** Primary surfaces prioritize Git commit SHAs, PR numbers, unified diff snippets, and author provenance over decorative illustrations.
 2. **Epistemological Distinction:** Machine assessment badges and human verdict controls are rendered in distinct visual registers, ensuring automation never masquerades as human authority.
 3. **Restrained Color Palette:** Neutral surfaces (clean whites and cool slates) punctuated by semantic status tokens:
@@ -19,6 +20,7 @@ Traceback's frontend is designed for high-density, technical clarity. It rejects
 ## 2. Theming Architecture
 
 ### Non-Negotiable Light Theme Default
+
 Per project operating rules, the **Light Theme is the non-negotiable default** upon first visit, regardless of OS dark mode settings (`prefers-color-scheme`).
 
 - **Light Theme (Default):** Soft neutral canvas (`#F8FAFC`), crisp white panel surfaces (`#FFFFFF`), dark slate typography (`#0F172A`), subtle borders (`#E2E8F0`).
@@ -31,6 +33,7 @@ Per project operating rules, the **Light Theme is the non-negotiable default** u
 ## 3. Information Architecture & Navigation Shell
 
 ### Authenticated Application Shell
+
 For authenticated users, the application provides an integrated header and contextual controls:
 
 ```
@@ -58,7 +61,9 @@ For authenticated users, the application provides an integrated header and conte
    - **Theme Toggle:** Icon-only button (`aria-label="Toggle visual theme"`).
 
 ### Unauthenticated Public Shell
+
 Before authentication, the public shell strictly isolates workspace data:
+
 - Navbar renders only Traceback branding, Sign In, Register, and Theme Toggle.
 - Protected routes automatically redirect to `/login?returnTo=<path>`, preserving deep-link destinations safely.
 - Zero workspace names, repository records, or commit history are leaked to public visitors.
@@ -68,6 +73,7 @@ Before authentication, the public shell strictly isolates workspace data:
 ## 4. Studio Layouts & Interaction Patterns
 
 ### 1. Verify Studio (`/verify`)
+
 - **Split Workspace:** Left panel accepts AI-generated explanations and optional code snippets; right panel renders extracted claims.
 - **Claim Cards:** Each claim displays its epistemological outcome badge (`SUPPORTED`, `CONTRADICTED`, `INSUFFICIENT_EVIDENCE`), confidence score, rationale, and underlying evidence citations.
 - **Evidence Inspector Drawer:** Collapsible accordion showing source type (`COMMIT`, `PR`, `ISSUE`), clickable GitHub links, author, date, and unified patch snippet.
@@ -75,6 +81,7 @@ Before authentication, the public shell strictly isolates workspace data:
 - **Decision Memory Bridge:** Clicking `🏛️ Propose Decision Candidate` instantly pushes the verified claim into Engineering Decision Memory.
 
 ### 2. Historical Intent Studio (`/intent`)
+
 - **Diff Input Panel:** Accepts unified patches with live character counter (up to 25,000 characters) and file scope filter.
 - **Outcome Banner:** Highlights whether changes introduce `DOCUMENTED_CONFLICT`, `POTENTIAL_CONFLICT`, `NO_KNOWN_CONFLICT`, or `INSUFFICIENT_CONTEXT`.
 - **Conflict Detail Cards:** Displays the affected invariant, why historical evidence establishes a conflict, and recommended review actions.
@@ -82,6 +89,7 @@ Before authentication, the public shell strictly isolates workspace data:
 - **Sessions Drawer:** Quick access to the 25 most recent intent check sessions for the repository.
 
 ### 3. Engineering Decision Memory Studio (`/decisions`)
+
 - **Lifecycle Filter Bar:** Tabs for `ALL`, `ACCEPTED`, `CANDIDATE`, `IN_REVIEW`, `SUPERSEDED`, and `DISPUTED`.
 - **Decision Card Elements:**
   - Status badge and severity rating (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `ADVISORY`).

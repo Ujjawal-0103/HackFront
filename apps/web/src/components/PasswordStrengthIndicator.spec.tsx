@@ -57,7 +57,9 @@ describe("PasswordStrengthIndicator & evaluation logic", () => {
 
       expect(screen.getByText("Fair")).toBeInTheDocument();
       expect(screen.getByText("At least 8 characters")).toBeInTheDocument();
-      expect(screen.getByText("Contains letters and numbers")).toBeInTheDocument();
+      expect(
+        screen.getByText("Contains letters and numbers"),
+      ).toBeInTheDocument();
     });
   });
 });

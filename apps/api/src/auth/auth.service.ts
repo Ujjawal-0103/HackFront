@@ -203,7 +203,11 @@ export class AuthService {
             ...user,
             passwordHash,
           };
-          this.workspacesService.registerMembership("ws_alpha", userId, "OWNER");
+          this.workspacesService.registerMembership(
+            "ws_alpha",
+            userId,
+            "OWNER",
+          );
         } else {
           throw new HttpException(
             "Database service is currently unavailable. Please try again later.",

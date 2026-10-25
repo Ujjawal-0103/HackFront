@@ -17,9 +17,13 @@ async function main() {
   console.error("[traceback-mcp] Starting Traceback MCP server v0.1.0...");
   console.error(`[traceback-mcp] Backend target API: ${config.apiUrl}`);
   if (config.apiToken) {
-    console.error("[traceback-mcp] Authentication token configured (present in environment).");
+    console.error(
+      "[traceback-mcp] Authentication token configured (present in environment).",
+    );
   } else {
-    console.error("[traceback-mcp] Warning: TRACEBACK_API_TOKEN is not set. Tools requiring authentication will fail until configured in server environment.");
+    console.error(
+      "[traceback-mcp] Warning: TRACEBACK_API_TOKEN is not set. Tools requiring authentication will fail until configured in server environment.",
+    );
   }
 
   const server = createTracebackMcpServer({ config });
@@ -38,7 +42,9 @@ async function main() {
   });
 
   await server.connect(transport);
-  console.error("[traceback-mcp] Server successfully connected to stdio transport and ready for requests.");
+  console.error(
+    "[traceback-mcp] Server successfully connected to stdio transport and ready for requests.",
+  );
 }
 
 main().catch((err) => {

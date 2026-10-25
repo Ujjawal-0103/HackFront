@@ -44,13 +44,9 @@ describe("AdvisoryController (Sprint 7 REST API)", () => {
 
     advisoryService.checkChangeAgainstDecisions.mockResolvedValue(mockResponse);
 
-    const result = await controller.checkChange(
-      "ws_alpha",
-      "repo_1",
-      {
-        diff: "diff --git a/file.ts b/file.ts\n+const x = 1;",
-      },
-    );
+    const result = await controller.checkChange("ws_alpha", "repo_1", {
+      diff: "diff --git a/file.ts b/file.ts\n+const x = 1;",
+    });
 
     expect(result).toBe(mockResponse);
     expect(advisoryService.checkChangeAgainstDecisions).toHaveBeenCalledWith({

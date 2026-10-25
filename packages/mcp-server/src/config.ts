@@ -5,7 +5,9 @@ export interface McpServerConfig {
   requestTimeoutMs: number;
 }
 
-export function loadConfig(overrides?: Partial<McpServerConfig>): McpServerConfig {
+export function loadConfig(
+  overrides?: Partial<McpServerConfig>,
+): McpServerConfig {
   const envApiUrl = process.env.TRACEBACK_API_URL?.trim();
   const envApiToken = process.env.TRACEBACK_API_TOKEN?.trim();
   const envWorkspaceId = process.env.TRACEBACK_WORKSPACE_ID?.trim();
@@ -16,7 +18,10 @@ export function loadConfig(overrides?: Partial<McpServerConfig>): McpServerConfi
   return {
     apiUrl: overrides?.apiUrl || envApiUrl || "http://localhost:3001/api",
     apiToken: overrides?.apiToken || envApiToken || undefined,
-    defaultWorkspaceId: overrides?.defaultWorkspaceId || envWorkspaceId || undefined,
-    requestTimeoutMs: overrides?.requestTimeoutMs || (Number.isFinite(envTimeout) ? envTimeout : 15000),
+    defaultWorkspaceId:
+      overrides?.defaultWorkspaceId || envWorkspaceId || undefined,
+    requestTimeoutMs:
+      overrides?.requestTimeoutMs ||
+      (Number.isFinite(envTimeout) ? envTimeout : 15000),
   };
 }

@@ -93,8 +93,14 @@ export class AdvisoryService {
     const sanitizedDesc = this.sanitizeText(rawDesc);
 
     // 4. Extract target files and symbols from diff / options
-    const targetFiles = this.extractTargetFiles(sanitizedDiff, options.filePath);
-    const targetKeywords = this.extractChangeKeywords(sanitizedDiff, sanitizedDesc);
+    const targetFiles = this.extractTargetFiles(
+      sanitizedDiff,
+      options.filePath,
+    );
+    const targetKeywords = this.extractChangeKeywords(
+      sanitizedDiff,
+      sanitizedDesc,
+    );
 
     // 5. Query historical evidence and decisions
     const primaryFile = targetFiles[0] || options.filePath;
@@ -144,7 +150,9 @@ export class AdvisoryService {
           "Removal of mutex locking in concurrency-sensitive operations historically introduced race conditions and state corruption.",
         explanation:
           "The proposed diff removes or disables a mutex/lock synchronization mechanism that was historically added to protect shared resource integrity.",
-        supportingEvidence: lockEvidence.map((e) => this.mapEvidenceReference(e)),
+        supportingEvidence: lockEvidence.map((e) =>
+          this.mapEvidenceReference(e),
+        ),
         recommendedFollowUp:
           "Verify concurrency safety with multi-threaded stress tests or retain the mutex lock.",
       });
@@ -528,7 +536,8 @@ export class AdvisoryService {
       files.push(overridePath);
     }
 
-    const diffFileRegex = /(?:^\+\+\+\s+b\/|^---\s+a\/|diff --git a\/.* b\/)(.*)$/gm;
+    const diffFileRegex =
+      /(?:^\+\+\+\s+b\/|^---\s+a\/|diff --git a\/.* b\/)(.*)$/gm;
     let match: RegExpExecArray | null;
     while ((match = diffFileRegex.exec(diff)) !== null) {
       const path = match[1]?.trim();
@@ -573,8 +582,10 @@ export class AdvisoryService {
   }
 
   private detectDisabledSecurity(diff: string): boolean {
-    const disabledAuthRegex = /^-\s*.*(?:authguard|verifytoken|isauthenticated|validatecredentials).*$/im;
-    const bypassRegex = /^\+\s*.*(?:skipauth|bypassauth|admin = true|unauthenticated = true).*$/im;
+    const disabledAuthRegex =
+      /^-\s*.*(?:authguard|verifytoken|isauthenticated|validatecredentials).*$/im;
+    const bypassRegex =
+      /^\+\s*.*(?:skipauth|bypassauth|admin = true|unauthenticated = true).*$/im;
     return disabledAuthRegex.test(diff) || bypassRegex.test(diff);
   }
 

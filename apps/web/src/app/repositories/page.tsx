@@ -1541,6 +1541,7 @@ export default function RepositoriesPage() {
                 gap: "0.5rem",
               }}
             >
+<<<<<<< HEAD
               <p
                 style={{
                   fontSize: "0.875rem",
@@ -1573,6 +1574,11 @@ export default function RepositoriesPage() {
                 Connect by GitHub URL instead ↗
               </button>
             </div>
+=======
+              Import repositories from an authorized GitHub App installation
+              into workspace <code>{workspaceId}</code>:
+            </p>
+>>>>>>> origin/main
 
             {/* Error in modal if fetching authorized repos failed */}
             {authorizedError && (

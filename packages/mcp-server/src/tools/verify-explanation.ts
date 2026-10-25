@@ -13,7 +13,9 @@ export const verifyExplanationSchema = {
     .string()
     .min(5, "Explanation must be at least 5 characters")
     .max(10000, "Explanation exceeds 10,000 character maximum")
-    .describe("The AI-generated code explanation to verify against historical records"),
+    .describe(
+      "The AI-generated code explanation to verify against historical records",
+    ),
   codeSnippet: z
     .string()
     .max(20000, "Code snippet exceeds 20,000 character maximum")
@@ -35,7 +37,9 @@ export const verifyExplanationSchema = {
     .min(1)
     .max(10)
     .optional()
-    .describe("Maximum number of claims to extract and verify (default: 5, max: 10)"),
+    .describe(
+      "Maximum number of claims to extract and verify (default: 5, max: 10)",
+    ),
 };
 
 export async function handleVerifyExplanation(
@@ -53,15 +57,19 @@ export async function handleVerifyExplanation(
       maxClaims: args.maxClaims ?? 5,
     });
 
-    const mcpClaims: VerifyExplanationMcpClaim[] = (rawResult.assessments || []).map((assessment) => {
-      const citations = (assessment.allValidatedEvidence || []).map((ev: any) => ({
-        sourceId: ev.sourceRecordId || ev.id || "unknown",
-        sourceType: ev.sourceType || "UNKNOWN",
-        referenceKey: ev.referenceKey || "unknown",
-        title: ev.title || "Evidence Record",
-        url: ev.url || "",
-        relevanceScore: ev.quality?.relevanceScore ?? 0.5,
-      }));
+    const mcpClaims: VerifyExplanationMcpClaim[] = (
+      rawResult.assessments || []
+    ).map((assessment) => {
+      const citations = (assessment.allValidatedEvidence || []).map(
+        (ev: any) => ({
+          sourceId: ev.sourceRecordId || ev.id || "unknown",
+          sourceType: ev.sourceType || "UNKNOWN",
+          referenceKey: ev.referenceKey || "unknown",
+          title: ev.title || "Evidence Record",
+          url: ev.url || "",
+          relevanceScore: ev.quality?.relevanceScore ?? 0.5,
+        }),
+      );
 
       return {
         claimId: assessment.claimId,
@@ -77,7 +85,9 @@ export async function handleVerifyExplanation(
     let overallStatus: VerificationAssessmentStatus = "INSUFFICIENT_EVIDENCE";
     if (mcpClaims.length > 0) {
       const allSupported = mcpClaims.every((c) => c.status === "SUPPORTED");
-      const anyContradicted = mcpClaims.some((c) => c.status === "CONTRADICTED");
+      const anyContradicted = mcpClaims.some(
+        (c) => c.status === "CONTRADICTED",
+      );
       const anySupported = mcpClaims.some((c) => c.status === "SUPPORTED");
 
       if (allSupported) {
@@ -93,7 +103,8 @@ export async function handleVerifyExplanation(
 
     const avgConfidence =
       mcpClaims.length > 0
-        ? mcpClaims.reduce((sum, c) => sum + c.confidenceScore, 0) / mcpClaims.length
+        ? mcpClaims.reduce((sum, c) => sum + c.confidenceScore, 0) /
+          mcpClaims.length
         : 0;
 
     const responsePayload: VerifyExplanationMcpResponse = {

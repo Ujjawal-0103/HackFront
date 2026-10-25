@@ -542,7 +542,6 @@ export interface HistoricalConflict {
   recommendedFollowUp: string;
 }
 
-
 export interface CheckChangeAgainstDecisionsRequest {
   workspaceId?: string;
   repositoryId?: string;
@@ -641,6 +640,7 @@ export interface VerificationSessionResult {
   estimatedTokensUsed: number;
   fallbackNotice?: string;
 }
+<<<<<<< HEAD
 
 // ============================================================================
 // Sprint 10: Engineering Decision Memory & Historical Intent Contracts
@@ -776,3 +776,5 @@ export interface RecordIntentDispositionDto {
 
 
 
+=======
+>>>>>>> origin/main

@@ -1,5 +1,9 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { ForbiddenException, BadRequestException, NotFoundException } from "@nestjs/common";
+import {
+  ForbiddenException,
+  BadRequestException,
+  NotFoundException,
+} from "@nestjs/common";
 import { GitHubController } from "./github.controller";
 import { GitHubService } from "./github.service";
 import { PrismaService } from "../prisma/prisma.service";
@@ -17,7 +21,9 @@ describe("GitHubController", () => {
       isMock: jest.fn().mockReturnValue(false),
       getAppSlug: jest.fn().mockReturnValue("traceback-app"),
       createConnectState: jest.fn().mockReturnValue("valid-signed-state"),
-      verifyConnectState: jest.fn().mockReturnValue({ workspaceId: "ws_alpha", userId: "user_1" }),
+      verifyConnectState: jest
+        .fn()
+        .mockReturnValue({ workspaceId: "ws_alpha", userId: "user_1" }),
       getInstallationDetails: jest.fn().mockResolvedValue({
         id: 12345,
         accountLogin: "acme-corp",
@@ -29,7 +35,8 @@ describe("GitHubController", () => {
         isMockMode: false,
         appSlug: "traceback-app",
         installation: inst,
-        installUrl: "https://github.com/apps/traceback-app/installations/new?state=valid-signed-state",
+        installUrl:
+          "https://github.com/apps/traceback-app/installations/new?state=valid-signed-state",
       })),
       listAuthorizedRepositories: jest.fn().mockResolvedValue([
         {
@@ -39,7 +46,11 @@ describe("GitHubController", () => {
           repo: "api-service",
           defaultBranch: "main",
           isPrivate: true,
-          permissions: { contents: "read", issues: "read", pullRequests: "read" },
+          permissions: {
+            contents: "read",
+            issues: "read",
+            pullRequests: "read",
+          },
         },
       ]),
       verifyRepositoryAccess: jest.fn().mockResolvedValue({
@@ -112,8 +123,13 @@ describe("GitHubController", () => {
       const req: any = { user: { id: "user_1" } };
       const res = await controller.getInstallUrl("ws_alpha", req);
 
-      expect(mockGitHubService.createConnectState).toHaveBeenCalledWith("ws_alpha", "user_1");
-      expect(res.installUrl).toContain("https://github.com/apps/traceback-app/installations/new");
+      expect(mockGitHubService.createConnectState).toHaveBeenCalledWith(
+        "ws_alpha",
+        "user_1",
+      );
+      expect(res.installUrl).toContain(
+        "https://github.com/apps/traceback-app/installations/new",
+      );
       expect(res.state).toBe("valid-signed-state");
     });
   });
@@ -130,8 +146,13 @@ describe("GitHubController", () => {
         state: "valid-signed-state",
       });
 
-      expect(mockGitHubService.verifyConnectState).toHaveBeenCalledWith("valid-signed-state", "ws_alpha");
-      expect(mockGitHubService.getInstallationDetails).toHaveBeenCalledWith(12345);
+      expect(mockGitHubService.verifyConnectState).toHaveBeenCalledWith(
+        "valid-signed-state",
+        "ws_alpha",
+      );
+      expect(mockGitHubService.getInstallationDetails).toHaveBeenCalledWith(
+        12345,
+      );
       expect(mockPrisma.gitHubInstallation.upsert).toHaveBeenCalled();
       expect(result.installationId).toBe(12345);
       expect(result.accountLogin).toBe("acme-corp");
@@ -144,7 +165,9 @@ describe("GitHubController", () => {
       };
 
       await expect(
-        controller.connectInstallation("ws_alpha", req, { installationId: 12345 }),
+        controller.connectInstallation("ws_alpha", req, {
+          installationId: 12345,
+        }),
       ).rejects.toThrow(ForbiddenException);
     });
 
@@ -155,7 +178,9 @@ describe("GitHubController", () => {
       };
 
       await expect(
-        controller.connectInstallation("ws_alpha", req, { installationId: NaN as any }),
+        controller.connectInstallation("ws_alpha", req, {
+          installationId: NaN as any,
+        }),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -180,16 +205,18 @@ describe("GitHubController", () => {
         workspaceContext: { workspaceId: "ws_alpha", role: "VIEWER" },
       };
 
-      await expect(controller.disconnectInstallation("ws_alpha", req)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(
+        controller.disconnectInstallation("ws_alpha", req),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
   describe("listRepositories", () => {
     it("should resolve installation from workspace and list authorized repositories", async () => {
       const repos = await controller.listRepositories("ws_alpha");
-      expect(mockGitHubService.listAuthorizedRepositories).toHaveBeenCalledWith(12345);
+      expect(mockGitHubService.listAuthorizedRepositories).toHaveBeenCalledWith(
+        12345,
+      );
       expect(repos).toHaveLength(1);
       expect(repos[0].fullName).toBe("acme-corp/api-service");
     });
@@ -198,7 +225,9 @@ describe("GitHubController", () => {
       mockPrisma.gitHubInstallation.findFirst.mockResolvedValueOnce(null);
       mockGitHubService.isMock.mockReturnValueOnce(false);
 
-      await expect(controller.listRepositories("ws_beta")).rejects.toThrow(NotFoundException);
+      await expect(controller.listRepositories("ws_beta")).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it("should fall back to sandbox installation 1001 when in mock mode without linked installation", async () => {
@@ -206,7 +235,9 @@ describe("GitHubController", () => {
       mockGitHubService.isMock.mockReturnValueOnce(true);
 
       await controller.listRepositories("ws_unlinked");
-      expect(mockGitHubService.listAuthorizedRepositories).toHaveBeenCalledWith(1001);
+      expect(mockGitHubService.listAuthorizedRepositories).toHaveBeenCalledWith(
+        1001,
+      );
     });
   });
 });

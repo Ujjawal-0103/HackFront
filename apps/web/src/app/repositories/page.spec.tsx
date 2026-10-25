@@ -63,8 +63,15 @@ const mockAuthorizedRepos = [
 describe("RepositoriesPage (Sprint 3 & GitHub Hardening)", () => {
   const defaultAuthContext = {
     user: { id: "user_1", email: "alex@company.com", name: "Alex Maintainer" },
-    workspaces: [{ id: "ws_alpha", name: "Alpha Corp", slug: "alpha-corp", role: "OWNER" }],
-    activeWorkspace: { id: "ws_alpha", name: "Alpha Corp", slug: "alpha-corp", role: "OWNER" },
+    workspaces: [
+      { id: "ws_alpha", name: "Alpha Corp", slug: "alpha-corp", role: "OWNER" },
+    ],
+    activeWorkspace: {
+      id: "ws_alpha",
+      name: "Alpha Corp",
+      slug: "alpha-corp",
+      role: "OWNER",
+    },
     token: "mock-token",
     isLoading: false,
     error: null,
@@ -107,10 +114,9 @@ describe("RepositoriesPage (Sprint 3 & GitHub Hardening)", () => {
     render(<RepositoriesPage />);
 
     expect(screen.getByText("Authentication Required")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /sign in to continue/i })).toHaveAttribute(
-      "href",
-      "/login?returnTo=/repositories",
-    );
+    expect(
+      screen.getByRole("link", { name: /sign in to continue/i }),
+    ).toHaveAttribute("href", "/login?returnTo=/repositories");
   });
 
   it("renders initializing session placeholder while auth is loading", () => {
@@ -209,7 +215,9 @@ describe("RepositoriesPage (Sprint 3 & GitHub Hardening)", () => {
       expect(screen.getByText("Ujjawal-0103/HackFront")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /\+ connect repository/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /\+ connect repository/i }),
+    );
 
     expect(screen.getByText("GitHub App Not Configured")).toBeInTheDocument();
   });
@@ -223,10 +231,14 @@ describe("RepositoriesPage (Sprint 3 & GitHub Hardening)", () => {
       expect(screen.getByText("Ujjawal-0103/HackFront")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /\+ connect repository/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /\+ connect repository/i }),
+    );
 
     expect(
-      screen.getByText(/No accessible repositories found in GitHub installation #1001/),
+      screen.getByText(
+        /No accessible repositories found in GitHub installation #1001/,
+      ),
     ).toBeInTheDocument();
   });
 
@@ -241,10 +253,14 @@ describe("RepositoriesPage (Sprint 3 & GitHub Hardening)", () => {
       expect(screen.getByText("Ujjawal-0103/HackFront")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /\+ connect repository/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /\+ connect repository/i }),
+    );
 
     await waitFor(() => {
-      expect(screen.getByText(/GitHub API rate limit exceeded/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/GitHub API rate limit exceeded/),
+      ).toBeInTheDocument();
     });
   });
 
@@ -297,9 +313,7 @@ describe("RepositoriesPage (Sprint 3 & GitHub Hardening)", () => {
     render(<RepositoriesPage />);
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/API Connection Warning:/),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/API Connection Warning:/)).toBeInTheDocument();
       expect(
         screen.getByText(/Cross-workspace access denied/),
       ).toBeInTheDocument();

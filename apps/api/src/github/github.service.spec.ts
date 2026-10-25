@@ -120,7 +120,9 @@ describe("GitHubService (Read-Only Least-Privilege Repository Boundary)", () => 
     });
 
     it("should reject malformed or tampered state tokens", () => {
-      expect(() => service.verifyConnectState("not-a-valid-token", "ws_alpha")).toThrow();
+      expect(() =>
+        service.verifyConnectState("not-a-valid-token", "ws_alpha"),
+      ).toThrow();
     });
   });
 
@@ -133,7 +135,8 @@ describe("GitHubService (Read-Only Least-Privilege Repository Boundary)", () => 
             useValue: {
               get: jest.fn((key: string) => {
                 if (key === "GITHUB_APP_ID") return "123456";
-                if (key === "GITHUB_APP_PRIVATE_KEY") return "not-a-valid-pem-key";
+                if (key === "GITHUB_APP_PRIVATE_KEY")
+                  return "not-a-valid-pem-key";
                 return null;
               }),
             },
@@ -165,12 +168,13 @@ describe("GitHubService (Read-Only Least-Privilege Repository Boundary)", () => 
         ],
       }).compile();
 
-      const prodCorruptService = prodCorruptModule.get<GitHubService>(GitHubService);
+      const prodCorruptService =
+        prodCorruptModule.get<GitHubService>(GitHubService);
       expect(prodCorruptService.isConfigured()).toBe(false);
       expect(prodCorruptService.isMock()).toBe(false);
-      await expect(prodCorruptService.listAuthorizedRepositories(1001)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(
+        prodCorruptService.listAuthorizedRepositories(1001),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -195,9 +199,9 @@ describe("GitHubService (Read-Only Least-Privilege Repository Boundary)", () => 
       expect(prodService.isConfigured()).toBe(false);
       expect(prodService.isMock()).toBe(false);
 
-      await expect(prodService.listAuthorizedRepositories(1001)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(
+        prodService.listAuthorizedRepositories(1001),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 });

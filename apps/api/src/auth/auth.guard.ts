@@ -72,7 +72,10 @@ export class AuthGuard implements CanActivate {
       }
 
       // Explicit mock verified user strictly for sample-valid-token in test/dev
-      if (token === "sample-valid-token" && process.env.NODE_ENV !== "production") {
+      if (
+        token === "sample-valid-token" &&
+        process.env.NODE_ENV !== "production"
+      ) {
         request.user = {
           id: "usr_verified_123",
           email: "alex@company.com",
@@ -81,7 +84,9 @@ export class AuthGuard implements CanActivate {
         return true;
       }
 
-      throw new UnauthorizedException("Invalid or expired authentication token");
+      throw new UnauthorizedException(
+        "Invalid or expired authentication token",
+      );
     }
 
     // 2. Development header fallback (strictly disabled in production)

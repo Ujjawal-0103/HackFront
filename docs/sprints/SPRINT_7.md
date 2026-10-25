@@ -3,7 +3,7 @@
 > **Sprint:** Sprint 7 — MCP Interoperability & Advisory Change Checks  
 > **Status:** Completed & Verified  
 > **Branch:** `feat/authentication-authorization`  
-> **Date:** 2026-10-15  
+> **Date:** 2026-10-15
 
 ---
 
@@ -52,6 +52,7 @@ MCP CLIENT (Claude Desktop / Cursor / VS Code)
 ## 3. Tool Specifications & Contracts
 
 ### 3.1 `verify_explanation`
+
 - **Purpose:** Verifies AI-generated explanations of code against ingested engineering records.
 - **Contract:** Input schema validated via Zod (`workspaceId`, `repositoryId`, `explanation`, optional `codeSnippet`, `targetFilePath`, `targetSymbol`, `maxClaims`).
 - **Grounding Epistemology:**
@@ -61,11 +62,13 @@ MCP CLIENT (Claude Desktop / Cursor / VS Code)
   - `MIXED`: Partial corroboration with some unverified or refuted claims.
 
 ### 3.2 `find_historical_context`
+
 - **Purpose:** Fast contextual retrieval of historical engineering records for coding assistants.
 - **Contract:** Input schema validated via Zod (`workspaceId`, `repositoryId`, `query`, optional `filePath`, `sourceTypes`, `limit`, `includeGraph`).
 - **Resilience:** If Neo4j graph cluster is unreachable, automatically falls back to PostgreSQL full-text retrieval without failing the request (ADR-005). Excerpts bounded to 500 characters.
 
 ### 3.3 `check_change_against_decisions`
+
 - **Purpose:** Advisory evaluation of proposed diffs against past engineering decisions.
 - **Contract:** Evaluates mutex removals (concurrency hazards), disabled auth guards (security regressions), re-introduced reverted code, and architectural constraints documented in ADRs.
 - **Safety Invariant:** Read-only advisory findings with documented severity bases (`HIGH`, `MEDIUM`, `LOW`).
@@ -74,19 +77,20 @@ MCP CLIENT (Claude Desktop / Cursor / VS Code)
 
 ## 4. Security & Safety Evaluation
 
-| Control | Implementation | Verification |
-|---|---|---|
-| **Stdio Channel Separation** | `stdout` reserved strictly for JSON-RPC; `console.log` redirected to `stderr`. | Verified with child_process stdio pipe tests. |
-| **Authentication & RBAC** | `AuthGuard` verifies session tokens; `WorkspaceGuard` enforces workspace membership. | Tested 401 unauthenticated and 403 cross-workspace rejection. |
-| **Prompt Injection Protection** | Diffs and repo text wrapped in `<untrusted_diff>`, secret credentials redacted, instruction directives neutralized. | Adversarial test suite passed with injected overrides. |
-| **Read-Only Invariant** | No tool has write capability. No git mutation, PR approval, or file update tools exist. | Verified statically and dynamically across all tool schemas. |
-| **Input/Output Bounding** | Diffs capped at 20,000 chars, explanations at 10,000 chars, excerpts at 500 chars, queries at 500 chars. | Zod boundary validation tests passed. |
+| Control                         | Implementation                                                                                                      | Verification                                                  |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| **Stdio Channel Separation**    | `stdout` reserved strictly for JSON-RPC; `console.log` redirected to `stderr`.                                      | Verified with child_process stdio pipe tests.                 |
+| **Authentication & RBAC**       | `AuthGuard` verifies session tokens; `WorkspaceGuard` enforces workspace membership.                                | Tested 401 unauthenticated and 403 cross-workspace rejection. |
+| **Prompt Injection Protection** | Diffs and repo text wrapped in `<untrusted_diff>`, secret credentials redacted, instruction directives neutralized. | Adversarial test suite passed with injected overrides.        |
+| **Read-Only Invariant**         | No tool has write capability. No git mutation, PR approval, or file update tools exist.                             | Verified statically and dynamically across all tool schemas.  |
+| **Input/Output Bounding**       | Diffs capped at 20,000 chars, explanations at 10,000 chars, excerpts at 500 chars, queries at 500 chars.            | Zod boundary validation tests passed.                         |
 
 ---
 
 ## 5. Test Execution & Quality Gate Results
 
 ### 5.1 MCP Protocol & Integration Tests (`@traceback/mcp-server`)
+
 ```
 PASS src/__tests__/mcp-protocol.spec.ts
   Traceback MCP Protocol Integration
@@ -115,12 +119,14 @@ Tests:       14 passed, 14 total
 ```
 
 ### 5.2 Real Stdio CLI Protocol Interoperability Test
+
 - **Command:** `node packages/mcp-server/dist/bin/cli.js`
 - **Transport:** Standard I/O (stdin/stdout)
 - **JSON-RPC Handshake:** Initialized with protocol version `2024-11-05`, returned `serverInfo: { name: "traceback-mcp", version: "0.1.0" }`.
 - **Tool Listing:** `tools/list` returned all 3 tools on clean stdout while logs remained on stderr.
 
 ### 5.3 Backend Advisory Engine Tests (`apps/api`)
+
 ```
 PASS src/advisory/advisory.service.spec.ts (6 tests passed)
 PASS src/advisory/advisory.controller.spec.ts (3 tests passed)
@@ -128,11 +134,13 @@ All API Test Suites: 40 passed, 40 total (334 passed, 334 total)
 ```
 
 ### 5.4 Frontend Web Test Suite (`apps/web`)
+
 ```
 All Web Test Suites: 10 passed, 10 total (36 passed, 36 total)
 ```
 
 ### 5.5 Production Builds
+
 - `@traceback/shared-types`: Clean build (`tsc -b`)
 - `@traceback/mcp-server`: Clean build (`tsc -b`)
 - `@traceback/api`: Clean build (`nest build`)

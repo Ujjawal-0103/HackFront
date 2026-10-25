@@ -3,17 +3,18 @@
 > **Sprint:** Sprint 8 — Quality, Security, Performance, and Usability  
 > **Status:** Completed & Fully Verified  
 > **Branch:** `feat/authentication-authorization`  
-> **Date:** 2026-10-15  
+> **Date:** 2026-10-15
 
 ---
 
 ## 1. Executive Summary
 
-Sprint 8 serves as the stabilization, hardening, and verification milestone for the Traceback project across all features implemented from Sprint 1 through Sprint 7. 
+Sprint 8 serves as the stabilization, hardening, and verification milestone for the Traceback project across all features implemented from Sprint 1 through Sprint 7.
 
 Rather than generating superficial checklists or rebuilding working subsystems, this sprint audited the actual working tree, resolved concrete security and reliability defects, expanded automated end-to-end regression suites, evaluated real performance benchmarks, performed accessibility reviews, and established a task-based usability testing protocol.
 
 ### Key Results Delivered:
+
 1. **MCP Credential Isolation (Carryover Security Fix):** Completely eliminated `apiToken` fields from public Zod schemas across all three MCP tools (`verify_explanation`, `find_historical_context`, `check_change_against_decisions`). Enforced server-side credentials exclusively via `TRACEBACK_API_TOKEN`, with error message secret redaction and regression tests.
 2. **Authentication & Authorization Hardening:** Eliminated mock `userId` login impersonation in non-test environments; hardened production token validation in `AuthGuard`; added in-memory and database session revocation tracking (`revokedTokens`) to prevent token reuse after logout.
 3. **End-to-End Workflow Verification (Flows A–G):** Created comprehensive end-to-end integration test suite (`apps/api/src/common/e2e-workflow.spec.ts`) validating complete user lifecycle, ingestion, evidence retrieval, claim verification, human review persistence, JSON report export, and advisory change checks.
@@ -26,9 +27,11 @@ Rather than generating superficial checklists or rebuilding working subsystems, 
 ## 2. Carryover Security Fix: MCP Credential Isolation
 
 ### Problem Identified
+
 The Sprint 7 report noted that MCP tool schemas contained optional `apiToken` fields, allowing model-generated tool arguments to supply bearer credentials. This created risks of token exposure in conversation transcripts, model logs, and unauthorized credential overrides.
 
 ### Remediation Applied
+
 - **Public Schema Stripping:** Removed `apiToken` from the public input schemas of `verify_explanation`, `find_historical_context`, and `check_change_against_decisions`.
 - **SDK Enforcement:** Under the official MCP SDK (`@modelcontextprotocol/sdk`), unrecognized parameters passed by model invocations are stripped and ignored.
 - **Server-Side Token Storage:** Credentials are read exclusively from environment variables (`TRACEBACK_API_TOKEN`) or the server-side configuration store.
@@ -39,14 +42,14 @@ The Sprint 7 report noted that MCP tool schemas contained optional `apiToken` fi
 
 ## 3. Application-Wide Security Audit Findings & Remediation
 
-| Area | Audit Finding | Remediation Applied | Test Verification |
-|---|---|---|---|
-| **Auth: Impersonation** | `AuthService.login({ userId })` permitted unauthenticated mock login without password outside test suites. | Added strict environment check: unauthenticated `userId` logins are rejected with `UnauthorizedException` in non-test environments. | `auth.service.spec.ts` |
-| **Auth: Token Revocation** | Tokens deleted from session stores during `logout()` could occasionally match test regexes in test fallback. | Added `revokedTokens` set in `AuthService` ensuring explicit revocation immediately invalidates the token across all validation paths. | `auth.service.spec.ts`, `e2e-workflow.spec.ts` |
-| **Auth: Production Guard** | `AuthGuard` allowed mock token fallback in production when `AuthService` failed to inject. | Enforced strict error throw in production if `AuthService` is not present; mock tokens only recognized in test/dev. | `auth.guard.spec.ts` |
-| **Workspace Isolation** | Cross-workspace requests must be rejected across all subsystems. | Verified that `WorkspaceGuard`, `IngestionSyncService`, `EvidenceSearchService`, and `AdvisoryService` strictly verify repository ownership against the user's authorized workspace. | `e2e-workflow.spec.ts` (Flows B, C, G) |
-| **Content Security** | Untrusted repository text, PR diffs, and AI explanations could contain prompt injections. | Implemented `<untrusted_diff>` fencing, regex-based directive stripping, diff size truncation (20k chars), and secret redaction. | `diff-sanitizer.spec.ts`, `mcp-protocol.spec.ts` |
-| **Data Hygiene** | Exported JSON reports must not contain internal user hashes, salts, or session tokens. | Enforced sanitized data projection conforming to `traceback.report.v1`, asserting absence of `passwordHash`, `tb_token_`, and internal secrets. | `e2e-workflow.spec.ts` (Flow F) |
+| Area                       | Audit Finding                                                                                                | Remediation Applied                                                                                                                                                                  | Test Verification                                |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| **Auth: Impersonation**    | `AuthService.login({ userId })` permitted unauthenticated mock login without password outside test suites.   | Added strict environment check: unauthenticated `userId` logins are rejected with `UnauthorizedException` in non-test environments.                                                  | `auth.service.spec.ts`                           |
+| **Auth: Token Revocation** | Tokens deleted from session stores during `logout()` could occasionally match test regexes in test fallback. | Added `revokedTokens` set in `AuthService` ensuring explicit revocation immediately invalidates the token across all validation paths.                                               | `auth.service.spec.ts`, `e2e-workflow.spec.ts`   |
+| **Auth: Production Guard** | `AuthGuard` allowed mock token fallback in production when `AuthService` failed to inject.                   | Enforced strict error throw in production if `AuthService` is not present; mock tokens only recognized in test/dev.                                                                  | `auth.guard.spec.ts`                             |
+| **Workspace Isolation**    | Cross-workspace requests must be rejected across all subsystems.                                             | Verified that `WorkspaceGuard`, `IngestionSyncService`, `EvidenceSearchService`, and `AdvisoryService` strictly verify repository ownership against the user's authorized workspace. | `e2e-workflow.spec.ts` (Flows B, C, G)           |
+| **Content Security**       | Untrusted repository text, PR diffs, and AI explanations could contain prompt injections.                    | Implemented `<untrusted_diff>` fencing, regex-based directive stripping, diff size truncation (20k chars), and secret redaction.                                                     | `diff-sanitizer.spec.ts`, `mcp-protocol.spec.ts` |
+| **Data Hygiene**           | Exported JSON reports must not contain internal user hashes, salts, or session tokens.                       | Enforced sanitized data projection conforming to `traceback.report.v1`, asserting absence of `passwordHash`, `tb_token_`, and internal secrets.                                      | `e2e-workflow.spec.ts` (Flow F)                  |
 
 ---
 
@@ -74,6 +77,7 @@ PASS src/common/e2e-workflow.spec.ts
 ```
 
 ### Detailed Flow Results:
+
 - **FLOW A (User Lifecycle):** Registered new user, verified password hash persistence, validated session restoration via token, executed logout, and confirmed that the revoked token cannot re-authenticate.
 - **FLOW B (Repository Ingestion):** Triggered manual sync for authorized workspace member, enqueued BullMQ job, and confirmed that an unauthorized user from another workspace is denied access.
 - **FLOW C (Evidence Retrieval):** Queried historical commits using keywords, applied `COMMIT` type filter, verified canonical GitHub provenance URL (`https://github.com/.../commit/7f8a9b1`), and verified clean zero-result handling.
@@ -87,16 +91,16 @@ PASS src/common/e2e-workflow.spec.ts
 
 Live benchmarks executed on local test infrastructure:
 
-| Benchmark Metric | Measured Result | Production Target | Evaluation |
-|---|---|---|---|
-| **Citation Validity Rate (CVR)** | **100.0%** | 100.0% | PASS |
-| **Abstention Quality (AQ)** | **100.0%** | >= 95.0% | PASS |
-| **Supported Precision** | **100.0%** | >= 85.0% | PASS |
-| **Claim Assessment Latency** | **2.40 ms** (avg) | < 5,000 ms | PASS (Deterministic baseline) |
-| **Tokens Consumed** | 260 tokens | Bounded | PASS |
-| **Model API Cost** | $0.0000 | Bounded | PASS |
-| **Neo4j Fallback Resilience** | Zero failed requests; graceful PostgreSQL FTS fallback | Resilient | PASS |
-| **Ingestion Worker Resilience** | Non-retryable error (401 Bad Credentials) halts; retryable error (Rate Limit) triggers backoff | Bounded retries | PASS |
+| Benchmark Metric                 | Measured Result                                                                                | Production Target | Evaluation                    |
+| -------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------- | ----------------------------- |
+| **Citation Validity Rate (CVR)** | **100.0%**                                                                                     | 100.0%            | PASS                          |
+| **Abstention Quality (AQ)**      | **100.0%**                                                                                     | >= 95.0%          | PASS                          |
+| **Supported Precision**          | **100.0%**                                                                                     | >= 85.0%          | PASS                          |
+| **Claim Assessment Latency**     | **2.40 ms** (avg)                                                                              | < 5,000 ms        | PASS (Deterministic baseline) |
+| **Tokens Consumed**              | 260 tokens                                                                                     | Bounded           | PASS                          |
+| **Model API Cost**               | $0.0000                                                                                        | Bounded           | PASS                          |
+| **Neo4j Fallback Resilience**    | Zero failed requests; graceful PostgreSQL FTS fallback                                         | Resilient         | PASS                          |
+| **Ingestion Worker Resilience**  | Non-retryable error (401 Bad Credentials) halts; retryable error (Rate Limit) triggers backoff | Bounded retries   | PASS                          |
 
 ---
 
@@ -138,14 +142,14 @@ Audited web routes: `/`, `/register`, `/login`, `/repositories`, `/evidence`, `/
 
 ## 9. Comprehensive Quality Gate Summary
 
-| Suite / Check | Command | Result |
-|---|---|---|
-| **Shared Types Build** | `npm run build --workspace=@traceback/shared-types` | PASS |
-| **MCP Server Tests** | `npm test --workspace=@traceback/mcp-server` | PASS (18/18 tests) |
-| **API Backend Tests** | `npx jest --maxWorkers=2` | PASS (346/346 tests, 41 suites) |
-| **Web Frontend Tests** | `npm test --workspace=@traceback/web` | PASS (36/36 tests, 10 suites) |
-| **TypeScript Typecheck** | `npm run typecheck` | PASS (4 packages, 0 errors) |
-| **ESLint Validation** | `npm run lint` | PASS (0 warnings, 0 errors) |
+| Suite / Check            | Command                                             | Result                          |
+| ------------------------ | --------------------------------------------------- | ------------------------------- |
+| **Shared Types Build**   | `npm run build --workspace=@traceback/shared-types` | PASS                            |
+| **MCP Server Tests**     | `npm test --workspace=@traceback/mcp-server`        | PASS (18/18 tests)              |
+| **API Backend Tests**    | `npx jest --maxWorkers=2`                           | PASS (346/346 tests, 41 suites) |
+| **Web Frontend Tests**   | `npm test --workspace=@traceback/web`               | PASS (36/36 tests, 10 suites)   |
+| **TypeScript Typecheck** | `npm run typecheck`                                 | PASS (4 packages, 0 errors)     |
+| **ESLint Validation**    | `npm run lint`                                      | PASS (0 warnings, 0 errors)     |
 
 ---
 

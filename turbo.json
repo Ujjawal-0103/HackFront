@@ -1,6 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalEnv": ["DATABASE_URL"],
+  "globalEnv": ["DATABASE_URL", "NEXT_PUBLIC_API_URL", "PORT", "NODE_ENV"],
   "tasks": {
     "prisma:generate": {
       "cache": false

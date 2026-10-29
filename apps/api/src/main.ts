@@ -42,6 +42,9 @@ async function bootstrap() {
         "max-age=31536000; includeSubDomains; preload",
       );
     }
+    if (req.headers["access-control-request-private-network"]) {
+      res.setHeader("Access-Control-Allow-Private-Network", "true");
+    }
     const correlationId =
       req.headers["x-request-id"] ||
       `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -76,11 +79,20 @@ async function bootstrap() {
       "Accept",
       "Origin",
       "X-Requested-With",
+      "Access-Control-Request-Private-Network",
     ],
   });
 
-  await app.listen(port, "0.0.0.0");
-  logger.log(`Traceback API running on http://localhost:${port}/api`);
+  const host = process.env.HOST;
+  if (host) {
+    await app.listen(port, host);
+  } else {
+    // Default to dual-stack so localhost (::1) and 127.0.0.1 (IPv4) are both reachable on Windows
+    await app.listen(port);
+  }
+  logger.log(
+    `Traceback API running on http://127.0.0.1:${port}/api and http://localhost:${port}/api`,
+  );
 }
 
 bootstrap().catch((err) => {
